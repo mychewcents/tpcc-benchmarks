@@ -3,7 +3,20 @@
 h=$(hostname -s | cut -c5-6)
 action=$1
 
-if [ $1 == "start" ]
+if [ $1 == "help" ]
+then
+  echo
+  echo
+  echo "This is simple manual for the executable."
+  echo
+  echo
+  echo "\"cdbserv\" accepts two different types of arguments:"
+  echo "   - start : To start the CockroachDB server on the localhost."
+  echo "   - stop  : To stop the local running instance of the Cockroach DB."
+  echo
+  echo
+  echo "Happy Running!"
+elif [ $1 == "start" ]
 then
   printf "**********\nStarting Cockroach DB node on : node${h}\n**********\n\n"
   if [ $h == 30 ]
