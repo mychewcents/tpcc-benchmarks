@@ -5,7 +5,7 @@ action=$1
 
 if [ $1 == "start" ]
 then
-  echo "Starting Cockroach DB node on : node${h}"
+  printf "**********\nStarting Cockroach DB node on : node${h}\n**********\n\n"
   if [ $h == 30 ]
   then
     cockroach start --insecure --store=node0 \
@@ -14,7 +14,7 @@ then
       --join=xcnc31.comp.nus.edu.sg:30001,xcnc32.comp.nus.edu.sg:30002,xcnc33.comp.nus.edu.sg:30003,xcnc34.comp.nus.edu.sg:30004 \
       --background
 
-    cockroach init --insecure --host=localhost:30000
+    # cockroach init --insecure --host=localhost:30000
 
   elif [ $h == 31 ]
   then
@@ -50,10 +50,10 @@ then
 
   fi
 
-  echo "\n\n*********\n\nStarted server on : node${h}"
+  printf "\n**********\nStarted server on : node${h}\n**********\n"
 elif [ $1 == "stop" ]
 then
-  echo "Stopping the node : node${h}..."
+  printf "**********\nStopping the node : node${h}\n**********\n\n"
   if [ $h == 30 ]
   then
     cockroach quit --insecure --host=localhost:30000
@@ -70,5 +70,5 @@ then
   then
     cockroach quit --insecure --host=localhost:30004
   fi
-
+  printf "\n**********\nStopped the node : node${h}\n**********\n"
 fi
