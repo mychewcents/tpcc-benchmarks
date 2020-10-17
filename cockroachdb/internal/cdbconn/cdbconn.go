@@ -3,6 +3,9 @@ package cdbconn
 import (
 	"database/sql"
 	"log"
+
+	// Because we're using the Postgres Driver
+	_ "github.com/lib/pq"
 )
 
 // CreateConnection returns a DB connection object
