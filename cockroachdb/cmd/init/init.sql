@@ -60,7 +60,7 @@ IMPORT INTO DISTRICT_ORIG (
   D_NEXT_O_ID
 ) CSV DATA ('nodelocal://self/project-files/data-files/district.csv');
 
-CREATE TABLE Customer_ORIG (
+CREATE TABLE CUSTOMER_ORIG (
   C_W_ID                INT,
   C_D_ID                INT,
   C_ID                  INT,
@@ -138,6 +138,7 @@ CREATE TABLE ORDER_LINE_ORIG (
   OL_W_ID int,
   OL_D_ID int,
   OL_O_ID int,
+  OL_C_ID int, -- Added new
   OL_NUMBER int,
   OL_I_ID int,
   OL_DELIVERY_D timestamp DEFAULT NULL,
@@ -145,8 +146,9 @@ CREATE TABLE ORDER_LINE_ORIG (
   OL_SUPPLY_W_ID int,
   OL_QUANTITY decimal(2,0),
   OL_DIST_INFO char(24),
+  INDEX (OL_O_ID),
   PRIMARY KEY (OL_W_ID, OL_D_ID, OL_O_ID, OL_NUMBER),
-  CONSTRAINT FK_ORDER_LINE FOREIGN KEY (OL_W_ID, OL_D_ID, OL_O_ID) REFERENCES ORDER_ORIG (O_W_ID, O_D_ID, O_ID)
+  CONSTRAINT FK_ORDER_LINE FOREIGN KEY (OL_W_ID, OL_D_ID, OL_O_ID, OL_C_ID) REFERENCES ORDER_ORIG (O_W_ID, O_D_ID, O_ID, O_C_ID)
 );
 
 IMPORT INTO ORDER_LINE_ORIG (
