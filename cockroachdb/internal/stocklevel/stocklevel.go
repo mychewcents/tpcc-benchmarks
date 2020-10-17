@@ -11,7 +11,7 @@ func ProcessTransaction(db *sql.DB, warehouseID, districtID, threshold, lastNOrd
 	var totalItems int
 	var lastOrderID int
 
-	row := db.QueryRow(`SELECT o_next_id FROM district WHERE d_w_id=$1 AND d_id=$2`, warehouseID, districtID)
+	row := db.QueryRow(`SELECT d_next_o_id FROM district WHERE d_w_id=$1 AND d_id=$2`, warehouseID, districtID)
 
 	err := row.Scan(&lastOrderID)
 	if err != nil {
