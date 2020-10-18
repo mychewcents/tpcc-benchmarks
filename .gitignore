@@ -1,2 +1,4 @@
 
 cockroachdb/cmd/app/app*
+
+cockroachdb/temp
