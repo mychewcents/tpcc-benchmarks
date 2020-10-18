@@ -86,7 +86,7 @@ func createOrderLinesTables(warehouses, districts int) {
 		
 		INSERT INTO defaultdb.ORDER_LINE_WID_DID 
 		SELECT * FROM defaultdb.ORDER_LINE
-		WHERE O_W_ID = WID AND O_D_ID = DID;
+		WHERE OL_W_ID = WID AND OL_D_ID = DID;
 	`
 
 	for i := 1; i <= warehouses; i++ {
