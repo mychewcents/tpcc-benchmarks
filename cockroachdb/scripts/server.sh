@@ -21,7 +21,7 @@ then
   printf "**********\nStarting Cockroach DB node on : node${h}\n**********\n\n"
   if [ $h == 30 ]
   then
-    cockroach start --insecure --store=~/crdb-node-files/node0 \
+    cockroach start --insecure --store=/home/stuproj/cs4224m/crdb-node-files/node0 \
       --listen-addr=localhost:30000 \
       --http-addr=localhost:40000 \
       --join=xcnc30.comp.nus.edu.sg:30000,xcnc31.comp.nus.edu.sg:30000,xcnc32.comp.nus.edu.sg:30000,xcnc33.comp.nus.edu.sg:30000,xcnc34.comp.nus.edu.sg:30000 \
@@ -31,7 +31,7 @@ then
 
   elif [ $h == 31 ]
   then
-    cockroach start --insecure --store=~/crdb-node-files/node1 \
+    cockroach start --insecure --store=/home/stuproj/cs4224m/crdb-node-files/node1 \
       --listen-addr=localhost:30000 \
       --http-addr=localhost:40000 \
       --join=xcnc30.comp.nus.edu.sg:30000,xcnc31.comp.nus.edu.sg:30000,xcnc32.comp.nus.edu.sg:30000,xcnc33.comp.nus.edu.sg:30000,xcnc34.comp.nus.edu.sg:30000 \
@@ -39,7 +39,7 @@ then
 
   elif [ $h == 32 ]
   then
-    cockroach start --insecure --store=~/crdb-node-files/node2 \
+    cockroach start --insecure --store=/home/stuproj/cs4224m/crdb-node-files/node2 \
       --listen-addr=localhost:30000 \
       --http-addr=localhost:40000 \
       --join=xcnc30.comp.nus.edu.sg:30000,xcnc31.comp.nus.edu.sg:30000,xcnc32.comp.nus.edu.sg:30000,xcnc33.comp.nus.edu.sg:30000,xcnc34.comp.nus.edu.sg:30000 \
@@ -47,7 +47,7 @@ then
 
   elif [ $h == 33 ]
   then
-    cockroach start --insecure --store=~/crdb-node-files/node3 \
+    cockroach start --insecure --store=/home/stuproj/cs4224m/crdb-node-files/node3 \
       --listen-addr=localhost:30000 \
       --http-addr=localhost:40000 \
       --join=xcnc30.comp.nus.edu.sg:30000,xcnc31.comp.nus.edu.sg:30000,xcnc32.comp.nus.edu.sg:30000,xcnc33.comp.nus.edu.sg:30000,xcnc34.comp.nus.edu.sg:30000 \
@@ -55,7 +55,7 @@ then
 
   elif [ $h == 34 ]
   then
-    cockroach start --insecure --store=~/crdb-node-files/node4 \
+    cockroach start --insecure --store=/home/stuproj/cs4224m/crdb-node-files/node4 \
       --listen-addr=localhost:30000 \
       --http-addr=localhost:40000 \
       --join=xcnc30.comp.nus.edu.sg:30000,xcnc31.comp.nus.edu.sg:30000,xcnc32.comp.nus.edu.sg:30000,xcnc33.comp.nus.edu.sg:30000,xcnc34.comp.nus.edu.sg:30000 \
