@@ -21,25 +21,25 @@ then
   printf "**********\nStarting Cockroach DB node on : node${h}\n**********\n\n"
   if [ $h == 30 ]
   then
-    cockroach start --insecure --store=/temp/cs5424-team-m/node0 \
-      --listen-addr=localhost:26257 \
+    cockroach start --insecure --store=~/crdb-node-files/node0 \
+      --listen-addr=localhost:30000 \
       --http-addr=localhost:40000 \
-      --join=xcnc30.comp.nus.edu.sg:26257,xcnc31.comp.nus.edu.sg:26257,xcnc32.comp.nus.edu.sg:26257,xcnc33.comp.nus.edu.sg:26257,xcnc34.comp.nus.edu.sg:26257 \
+      --join=xcnc30.comp.nus.edu.sg:30000,xcnc31.comp.nus.edu.sg:30000,xcnc32.comp.nus.edu.sg:30000,xcnc33.comp.nus.edu.sg:30000,xcnc34.comp.nus.edu.sg:30000 \
       --background
 
     # cockroach init --insecure --host=localhost:30000
 
   elif [ $h == 31 ]
   then
-    cockroach start --insecure --store=/temp/cs5424-team-m/node1 \
-      --listen-addr=localhost:26257 \
+    cockroach start --insecure --store=~/crdb-node-files/node1 \
+      --listen-addr=localhost:30000 \
       --http-addr=localhost:40000 \
-      --join=xcnc30.comp.nus.edu.sg:26257,xcnc31.comp.nus.edu.sg:26257,xcnc32.comp.nus.edu.sg:26257,xcnc33.comp.nus.edu.sg:26257,xcnc34.comp.nus.edu.sg:26257 \
+      --join=xcnc30.comp.nus.edu.sg:30000,xcnc31.comp.nus.edu.sg:30000,xcnc32.comp.nus.edu.sg:30000,xcnc33.comp.nus.edu.sg:30000,xcnc34.comp.nus.edu.sg:30000 \
       --background
 
   elif [ $h == 32 ]
   then
-    cockroach start --insecure --store=/temp/cs5424-team-m/node2 \
+    cockroach start --insecure --store=~/crdb-node-files/node2 \
       --listen-addr=localhost:30000 \
       --http-addr=localhost:40000 \
       --join=xcnc30.comp.nus.edu.sg:30000,xcnc31.comp.nus.edu.sg:30000,xcnc32.comp.nus.edu.sg:30000,xcnc33.comp.nus.edu.sg:30000,xcnc34.comp.nus.edu.sg:30000 \
@@ -47,7 +47,7 @@ then
 
   elif [ $h == 33 ]
   then
-    cockroach start --insecure --store=/temp/cs5424-team-m/node3 \
+    cockroach start --insecure --store=~/crdb-node-files/node3 \
       --listen-addr=localhost:30000 \
       --http-addr=localhost:40000 \
       --join=xcnc30.comp.nus.edu.sg:30000,xcnc31.comp.nus.edu.sg:30000,xcnc32.comp.nus.edu.sg:30000,xcnc33.comp.nus.edu.sg:30000,xcnc34.comp.nus.edu.sg:30000 \
@@ -55,7 +55,7 @@ then
 
   elif [ $h == 34 ]
   then
-    cockroach start --insecure --store=/temp/cs5424-team-m/node4 \
+    cockroach start --insecure --store=~/crdb-node-files/node4 \
       --listen-addr=localhost:30000 \
       --http-addr=localhost:40000 \
       --join=xcnc30.comp.nus.edu.sg:30000,xcnc31.comp.nus.edu.sg:30000,xcnc32.comp.nus.edu.sg:30000,xcnc33.comp.nus.edu.sg:30000,xcnc34.comp.nus.edu.sg:30000 \
@@ -67,11 +67,11 @@ then
 elif [ $1 == "stop" ]
 then
   printf "**********\nStopping the node : node${h}\n**********\n\n"
-  cockroach quit --insecure --host=localhost:26257
+  cockroach quit --insecure --host=localhost:30000
   printf "\n**********\nStopped the node : node${h}\n**********\n"
 elif [ $1 == "init" ]
 then
   printf "**********\nInitializing the cluster : node${h}\n**********\n\n"
-  cockroach init --insecure --host=localhost:26257
+  cockroach init --insecure --host=localhost:30000
   printf "\n**********\nStopped the node : node${h}\n**********\n"
 fi
