@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/cdbconn"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/neworder"
 )
 
 var db *sql.DB
@@ -17,7 +18,24 @@ func init() {
 }
 
 func main() {
-	// db.Exec("select * from users")
+	itemIDs := []int{
+		68195, 26567, 4114, 69343, 1836,
+		89294, 31975, 80487, 32423, 93383,
+		46279, 98511, 69351, 4679, 96983,
+	}
+	supplierIDs := []int{
+		1, 1, 1, 1, 1,
+		1, 1, 1, 1, 1,
+		1, 1, 1, 1, 1,
+	}
+	quantitys := []int{
+		1, 5, 7, 3, 1,
+		3, 6, 10, 5, 9,
+		9, 8, 4, 6, 2,
+	}
+
+	neworder.ProcessTransaction(db, 1, 1, 1279, 15, itemIDs, supplierIDs, quantitys)
+
 	// for true {
 
 	// var transaction_type byte
