@@ -8,7 +8,7 @@ import (
 
 type StockDao interface {
 	GetStockByKey(sWId int, sIId int, ch chan *table.StockTab)
-	UpdateStockDaoCAS(stOld *table.StockTab, quantity int, isRemote bool, ch chan bool)
+	UpdateStockCAS(stOld *table.StockTab, quantity int, isRemote bool, ch chan bool)
 }
 
 type stockDaoImpl struct {
@@ -39,7 +39,7 @@ func (s *stockDaoImpl) GetStockByKey(sWId int, sIId int, ch chan *table.StockTab
 	ch <- st
 }
 
-func (s *stockDaoImpl) UpdateStockDaoCAS(stOld *table.StockTab, quantity int, isRemote bool, ch chan bool) {
+func (s *stockDaoImpl) UpdateStockCAS(stOld *table.StockTab, quantity int, isRemote bool, ch chan bool) {
 	sQuantity := stOld.SQuantity - quantity
 	if sQuantity < 10 {
 		sQuantity = sQuantity + 100
@@ -61,18 +61,18 @@ func (s *stockDaoImpl) UpdateStockDaoCAS(stOld *table.StockTab, quantity int, is
 
 	applied, err := query.ScanCAS(&sQuantity, &sYtd, &sOrderCnt, &sRemoteCnt)
 	if err != nil {
-		log.Fatalf("ERROR UpdateStockDaoCAS quering. err=%v\n", err)
+		log.Fatalf("ERROR UpdateStockCAS quering. err=%v\n", err)
 		return
 	}
 
 	if !applied {
-		log.Println("CAS Failure UpdateStockDaoCAS")
+		log.Println("CAS Failure UpdateStockCAS")
 		stOld.SQuantity = sQuantity
 		stOld.SYtd = sYtd
 		stOld.SOrderCnt = sOrderCnt
 		stOld.SRemoteCnt = sRemoteCnt
 
-		s.UpdateStockDaoCAS(stOld, quantity, isRemote, ch)
+		s.UpdateStockCAS(stOld, quantity, isRemote, ch)
 	} else {
 		ch <- true
 	}

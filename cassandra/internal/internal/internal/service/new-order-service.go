@@ -43,7 +43,7 @@ func (n *newOrderServiceImpl) ProcessNewOrderTransaction(request *model.NewOrder
 	n.updateInParallel(request, stockTabMap, orderTabList, orderTab)
 
 	totalAmount = totalAmount * float64(1+customerTab.CDTax+customerTab.CWTax) * float64(1-customerTab.CDiscount)
-	return makeResponse(orderTab, orderTabList, customerTab, stockTabMap, totalAmount), nil
+	return makeNewOrderResponse(orderTab, orderTabList, customerTab, stockTabMap, totalAmount), nil
 }
 
 func (n *newOrderServiceImpl) updateInParallel(request *model.NewOrderRequest, stockTabMap map[int]map[int]*table.StockTab,
@@ -117,7 +117,7 @@ func (n *newOrderServiceImpl) setStockTabNewMap(request *model.NewOrderRequest, 
 
 	for _, ol := range request.NewOrderLineList {
 		st := stMap[ol.OlSupplyWId][ol.OlIId]
-		go n.s.UpdateStockDaoCAS(st, ol.OlQuantity, !(ol.OlSupplyWId == request.WId), ch)
+		go n.s.UpdateStockCAS(st, ol.OlQuantity, !(ol.OlSupplyWId == request.WId), ch)
 	}
 
 	for range request.NewOrderLineList {
@@ -149,7 +149,7 @@ func (n *newOrderServiceImpl) getCustomerAndStockInfo(request *model.NewOrderReq
 	return <-customerTabCh, stockTabMap
 }
 
-func makeResponse(ot *table.OrderTab, oltList []*table.OrderLineTab, customerTab *table.CustomerTab,
+func makeNewOrderResponse(ot *table.OrderTab, oltList []*table.OrderLineTab, customerTab *table.CustomerTab,
 	stMap map[int]map[int]*table.StockTab, totalAmount float64) *model.NewOrderResponse {
 
 	oliList := make([]*model.NewOrderLineInfo, len(oltList))

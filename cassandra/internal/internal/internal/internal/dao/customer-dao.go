@@ -9,6 +9,7 @@ import (
 type CustomerDao interface {
 	GetCustomerByKey(cWId int, cDId int, cId int, ch chan *table.CustomerTab)
 	GetCustomerByTopNBalance(cWId int, n int, ch chan []*table.CustomerTab)
+	UpdateCustomerCAS(ctOld *table.CustomerTab, payment float64, ch chan bool)
 }
 
 type customerDaoImpl struct {
@@ -60,4 +61,35 @@ func (c *customerDaoImpl) GetCustomerByTopNBalance(cWId int, n int, ch chan []*t
 	}
 
 	ch <- cts
+}
+
+func (c *customerDaoImpl) UpdateCustomerCAS(ctOld *table.CustomerTab, payment float64, ch chan bool) {
+
+	cBalance := ctOld.CBalance - payment
+	cYtdPayment := ctOld.CYtdPayment + payment
+	cPaymentCnt := ctOld.CPaymentCnt - 1
+
+	query := c.cassandraSession.WriteSession.Query("UPDATE customer_tab "+
+		"SET c_balance=?, c_ytd_payment=? c_payment_cnt=? "+
+		"WHERE c_w_id=? AND c_d_id=? AND c_id=? "+
+		"IF c_balance=?, c_ytd_payment=? c_payment_cnt=?", cBalance, cYtdPayment, cPaymentCnt,
+		ctOld.CWId, ctOld.CDId, ctOld.CId,
+		ctOld.CBalance, ctOld.CYtdPayment, ctOld.CPaymentCnt)
+
+	applied, err := query.ScanCAS(&cBalance, &cYtdPayment, &cPaymentCnt)
+	if err != nil {
+		log.Fatalf("ERROR UpdateWarehouseCAS quering. err=%v\n", err)
+		return
+	}
+
+	if !applied {
+		log.Println("CAS Failure UpdateWarehouseCAS")
+		ctOld.CBalance = cBalance
+		ctOld.CYtdPayment = cYtdPayment
+		ctOld.CPaymentCnt = cPaymentCnt
+
+		c.UpdateCustomerCAS(ctOld, payment, ch)
+	} else {
+		ch <- true
+	}
 }
