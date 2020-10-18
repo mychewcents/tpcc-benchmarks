@@ -23,7 +23,7 @@ type NewOrderLineInfo struct {
 	IName       string
 	SupplierWId int
 	Quantity    int
-	OlAmount    int
+	OlAmount    float32
 	SQuantity   int
 }
 

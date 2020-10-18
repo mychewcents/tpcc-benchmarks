@@ -3,12 +3,12 @@ package dao
 import (
 	"github.com/gocql/gocql"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/datamodel/table"
-	"strings"
+	"log"
 )
 
 type CustomerDao interface {
-	GetCustomerByKey(cWId int, cDId int, cId int, columns []string) (*table.CustomerTab, error)
-	GetCustomerByTopNBalance(cWId int, n int, columns []string) ([]*table.CustomerTab, error)
+	GetCustomerByKey(cWId int, cDId int, cId int, ch chan *table.CustomerTab)
+	GetCustomerByTopNBalance(cWId int, n int, ch chan []*table.CustomerTab)
 }
 
 type customerDaoImpl struct {
@@ -19,42 +19,56 @@ func NewCustomerDao(cluster *gocql.ClusterConfig) CustomerDao {
 	return &customerDaoImpl{cluster: cluster}
 }
 
-func (c *customerDaoImpl) GetCustomerByKey(cWId int, cDId int, cId int, columns []string) (*table.CustomerTab, error) {
-	session, _ := c.cluster.CreateSession()
+func (c *customerDaoImpl) GetCustomerByKey(cWId int, cDId int, cId int, ch chan *table.CustomerTab) {
+	session, err := c.cluster.CreateSession()
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer session.Close()
 
-	query := session.Query("SELECT "+strings.Join(columns, ",")+
-		" from customer_tab where c_w_id=? AND c_d_id=? and c_id=?", cWId, cDId, cId)
+	query := session.Query("SELECT * "+
+		"from customer_tab "+
+		"where c_w_id=? AND c_d_id=? and c_id=?", cWId, cDId, cId)
 
-	result := make(map[string]interface{}, len(columns))
+	result := make(map[string]interface{})
 	if err := query.MapScan(result); err != nil {
-		return nil, err
+		log.Fatalf("ERROR GetCustomerByKey error in query execution. cWId=%v, cDId=%v, cId=%v, err=%v\n", cWId, cDId, cId, err)
+		return
 	}
 
-	return table.MakeCustomerTab(result)
+	ct, err := table.MakeCustomerTab(result)
+	if err != nil {
+		log.Fatalf("ERROR GetCustomerByKey error making customer. cWId=%v, cDId=%v, cId=%v, err=%v\n", cWId, cDId, cId, err)
+		return
+	}
+
+	ch <- ct
 }
 
-func (c *customerDaoImpl) GetCustomerByTopNBalance(cWId int, n int, columns []string) ([]*table.CustomerTab, error) {
-	session, _ := c.cluster.CreateSession()
+func (c *customerDaoImpl) GetCustomerByTopNBalance(cWId int, n int, ch chan []*table.CustomerTab) {
+	session, err := c.cluster.CreateSession()
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer session.Close()
 
-	query := session.Query("SELECT "+strings.Join(columns, ",")+
-		" from customer_by_balance where c_w_id=? limit ?", cWId, n)
+	query := session.Query("SELECT * "+
+		"from customer_by_balance "+
+		"where c_w_id=? limit ?", cWId, n)
 
-	cts := make([]*table.CustomerTab, 0)
+	cts := make([]*table.CustomerTab, n)
 
 	iter := query.Iter()
 	defer iter.Close()
 
-	result := make(map[string]interface{}, len(columns))
-
-	for ; iter.MapScan(result); result = make(map[string]interface{}, len(columns)) {
+	for i, result := 0, make(map[string]interface{}); iter.MapScan(result); result, i = make(map[string]interface{}), i+1 {
 		ct, err := table.MakeCustomerTab(result)
 		if err != nil {
-			return nil, err
+			log.Fatalf("ERROR GetCustomerByKey error making customer. cWId=%v, n=%v, err=%v\n", cWId, n, err)
+			return
 		}
-		cts = append(cts, ct)
+		cts[i] = ct
 	}
 
-	return cts, nil
+	ch <- cts
 }

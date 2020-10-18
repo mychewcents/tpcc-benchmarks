@@ -2,6 +2,7 @@ package controller
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/gocql/gocql"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/handler"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/model"
@@ -28,7 +29,8 @@ func NewNewOrderTransactionController(cluster *gocql.ClusterConfig, reader *bufi
 
 func (n *newOrderControllerImpl) HandleTransaction(cmd []string) {
 	request := makeNewOrderRequest(cmd, n.r)
-	n.s.ProcessNewOrderTransaction(request)
+	resp, _ := n.s.ProcessNewOrderTransaction(request)
+	fmt.Println(resp)
 }
 
 func (n *newOrderControllerImpl) Close() error {
@@ -69,7 +71,7 @@ func makeNewOrderLineList(m int, r *bufio.Reader) []*model.NewOrderLine {
 			OlQuantity:  olQuantity,
 		}
 
-		newOrderLineList = append(newOrderLineList, newOrderLine)
+		newOrderLineList[i] = newOrderLine
 	}
 
 	return newOrderLineList

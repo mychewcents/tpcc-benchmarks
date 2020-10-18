@@ -13,7 +13,6 @@ func Start() {
 	cluster.Consistency = gocql.One
 
 	reader := bufio.NewReader(os.Stdin)
-
 	r := router.NewTransactionRouter(cluster, reader)
 
 	text, _ := reader.ReadString('\n')

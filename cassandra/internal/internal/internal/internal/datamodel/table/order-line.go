@@ -26,8 +26,8 @@ type OrderLineTab struct {
 	OlQuantity  int        `mapstructure:"ol_quantity"`
 	OlNumber    int        `mapstructure:"ol_number"`
 	OlIId       int        `mapstructure:"ol_i_id"`
-	OlIName     int        `mapstructure:"ol_i_name"`
-	OlAmount    float64    `mapstructure:"ol_amount"`
+	OlIName     string     `mapstructure:"ol_i_name"`
+	OlAmount    float32    `mapstructure:"ol_amount"`
 	OlSupplyWId int        `mapstructure:"ol_supply_w_id"`
 	OlDistInfo  string     `mapstructure:"ol_dist_info"`
 }
