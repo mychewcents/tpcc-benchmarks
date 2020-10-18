@@ -8,7 +8,7 @@ import (
 )
 
 type OrderLineDao interface {
-	BatchInsertOrderLine(oltList []*table.OrderLineTab)
+	BatchInsertOrderLine(oltList []*table.OrderLineTab, chComplete chan bool)
 }
 
 type orderLineDaoImpl struct {
@@ -19,7 +19,7 @@ func NewOrderLineDao(cassandraSession *common.CassandraSession) OrderLineDao {
 	return &orderLineDaoImpl{cassandraSession: cassandraSession}
 }
 
-func (o *orderLineDaoImpl) BatchInsertOrderLine(oltList []*table.OrderLineTab) {
+func (o *orderLineDaoImpl) BatchInsertOrderLine(oltList []*table.OrderLineTab, chComplete chan bool) {
 	batch := o.cassandraSession.WriteSession.NewBatch(gocql.LoggedBatch)
 	stmt := "INSERT INTO order_line_tab (ol_w_id, ol_d_id, ol_o_id, ol_quantity, ol_number, ol_i_id, ol_i_name, ol_amount, ol_supply_w_id, ol_dist_info) VALUES (?,?,?,?,?,?,?,?,?,?)"
 
@@ -31,4 +31,6 @@ func (o *orderLineDaoImpl) BatchInsertOrderLine(oltList []*table.OrderLineTab) {
 	if err != nil {
 		log.Fatalf("ERROR BatchInsertNewOrderLine Error Executing batch err=%v", err)
 	}
+
+	chComplete <- true
 }

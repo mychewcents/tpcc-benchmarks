@@ -40,12 +40,21 @@ func (n *newOrderServiceImpl) ProcessNewOrderTransaction(request *model.NewOrder
 	orderTabList, totalAmount := makeOrderLineList(request, oId, stockTabMap)
 	orderTab := makeOrderTab(request, oId, customerTab, totalAmount)
 
-	n.setStockTabNewMap(request, stockTabMap)
-	n.ol.BatchInsertOrderLine(orderTabList)
-	n.o.InsertOrder(orderTab)
-
 	totalAmount = totalAmount * float64(1+customerTab.CDTax+customerTab.CWTax) * float64(1-customerTab.CDiscount)
 	return makeResponse(orderTab, orderTabList, customerTab, stockTabMap, totalAmount), nil
+}
+
+func (n *newOrderServiceImpl) updateInParallel(request *model.NewOrderRequest, stockTabMap map[int]map[int]*table.StockTab,
+	orderTabList []*table.OrderLineTab, orderTab *table.OrderTab) {
+
+	ch := make(chan bool, 3)
+	n.setStockTabNewMap(request, stockTabMap, ch)
+	n.ol.BatchInsertOrderLine(orderTabList, ch)
+	n.o.InsertOrder(orderTab, ch)
+
+	<-ch
+	<-ch
+	<-ch
 }
 
 func makeOrderTab(request *model.NewOrderRequest, oId gocql.UUID, ct *table.CustomerTab, totalAmount float64) *table.OrderTab {
@@ -101,7 +110,7 @@ func makeOrderLineList(request *model.NewOrderRequest, oId gocql.UUID, stMap map
 	return otList, totalAmount
 }
 
-func (n *newOrderServiceImpl) setStockTabNewMap(request *model.NewOrderRequest, stMap map[int]map[int]*table.StockTab) {
+func (n *newOrderServiceImpl) setStockTabNewMap(request *model.NewOrderRequest, stMap map[int]map[int]*table.StockTab, chComplete chan bool) {
 	ch := make(chan bool, len(request.NewOrderLineList))
 
 	for _, ol := range request.NewOrderLineList {
@@ -112,6 +121,8 @@ func (n *newOrderServiceImpl) setStockTabNewMap(request *model.NewOrderRequest, 
 	for range request.NewOrderLineList {
 		<-ch
 	}
+
+	chComplete <- true
 }
 
 func (n *newOrderServiceImpl) getCustomerAndStockInfo(request *model.NewOrderRequest) (*table.CustomerTab, map[int]map[int]*table.StockTab) {
