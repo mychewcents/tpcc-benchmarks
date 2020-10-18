@@ -7,7 +7,7 @@ import (
 )
 
 type StockLevelService interface {
-	processStockLevelTransaction(request *model.StockLevelRequest) error
+	ProcessStockLevelTransaction(request *model.StockLevelRequest) error
 	io.Closer
 }
 
@@ -18,7 +18,7 @@ func NewStockLevelService(cassandraSession *common.CassandraSession) StockLevelS
 	return &stockLevelServiceImpl{}
 }
 
-func (s *stockLevelServiceImpl) processStockLevelTransaction(request *model.StockLevelRequest) error {
+func (s *stockLevelServiceImpl) ProcessStockLevelTransaction(request *model.StockLevelRequest) error {
 	panic("implement me")
 }
 

@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"bufio"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/handler"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/model"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/service"
 )
 
@@ -13,18 +13,21 @@ type DeliveryController interface {
 
 type deliveryControllerImpl struct {
 	s service.DeliveryService
-	r *bufio.Reader
 }
 
-func NewDeliveryTransactionController(cassandraSession *common.CassandraSession, reader *bufio.Reader) DeliveryController {
+func NewDeliveryTransactionController(cassandraSession *common.CassandraSession) DeliveryController {
 	return &deliveryControllerImpl{
 		s: service.NewDeliveryService(cassandraSession),
-		r: reader,
 	}
 }
 
-func (d *deliveryControllerImpl) HandleTransaction(i []string) {
+func (d *deliveryControllerImpl) HandleTransaction(cmd []string) {
+	request := makeDeliveryRequest(cmd)
+	d.s.ProcessDeliveryTransaction(request)
+}
 
+func makeDeliveryRequest(cmd []string) *model.DeliveryRequest {
+	panic("implement me")
 }
 
 func (d *deliveryControllerImpl) Close() error {

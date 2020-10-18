@@ -40,6 +40,8 @@ func (n *newOrderServiceImpl) ProcessNewOrderTransaction(request *model.NewOrder
 	orderTabList, totalAmount := makeOrderLineList(request, oId, stockTabMap)
 	orderTab := makeOrderTab(request, oId, customerTab, totalAmount)
 
+	n.updateInParallel(request, stockTabMap, orderTabList, orderTab)
+
 	totalAmount = totalAmount * float64(1+customerTab.CDTax+customerTab.CWTax) * float64(1-customerTab.CDiscount)
 	return makeResponse(orderTab, orderTabList, customerTab, stockTabMap, totalAmount), nil
 }
@@ -48,9 +50,9 @@ func (n *newOrderServiceImpl) updateInParallel(request *model.NewOrderRequest, s
 	orderTabList []*table.OrderLineTab, orderTab *table.OrderTab) {
 
 	ch := make(chan bool, 3)
-	n.setStockTabNewMap(request, stockTabMap, ch)
-	n.ol.BatchInsertOrderLine(orderTabList, ch)
-	n.o.InsertOrder(orderTab, ch)
+	go n.setStockTabNewMap(request, stockTabMap, ch)
+	go n.ol.BatchInsertOrderLine(orderTabList, ch)
+	go n.o.InsertOrder(orderTab, ch)
 
 	<-ch
 	<-ch

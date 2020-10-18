@@ -15,8 +15,8 @@ import (
 
 func Start() {
 	cassandraSession := makeCassandraSession()
-
 	reader := bufio.NewReader(os.Stdin)
+
 	r := router.NewTransactionRouter(cassandraSession, reader)
 
 	text, _ := reader.ReadString('\n')

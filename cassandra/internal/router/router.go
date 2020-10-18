@@ -31,11 +31,11 @@ func (t *transactionRouterImpl) HandleCommand(command string) {
 
 func (t *transactionRouterImpl) registerHandlers(cassandraSession *common.CassandraSession, reader *bufio.Reader) {
 	t.handlers["N"] = controller.NewNewOrderTransactionController(cassandraSession, reader)
-	t.handlers["P"] = controller.NewPaymentController(cassandraSession, reader)
-	t.handlers["D"] = controller.NewDeliveryTransactionController(cassandraSession, reader)
-	t.handlers["O"] = controller.NewOrderStatusTransactionController(cassandraSession, reader)
-	t.handlers["S"] = controller.NewStockLevelController(cassandraSession, reader)
-	t.handlers["I"] = controller.NewPopularItemController(cassandraSession, reader)
-	t.handlers["T"] = controller.NewTopBalanceController(cassandraSession, reader)
-	t.handlers["R"] = controller.NewRelatedCustomerController(cassandraSession, reader)
+	t.handlers["P"] = controller.NewPaymentController(cassandraSession)
+	t.handlers["D"] = controller.NewDeliveryTransactionController(cassandraSession)
+	t.handlers["O"] = controller.NewOrderStatusTransactionController(cassandraSession)
+	t.handlers["S"] = controller.NewStockLevelController(cassandraSession)
+	t.handlers["I"] = controller.NewPopularItemController(cassandraSession)
+	t.handlers["T"] = controller.NewTopBalanceController(cassandraSession)
+	t.handlers["R"] = controller.NewRelatedCustomerController(cassandraSession)
 }

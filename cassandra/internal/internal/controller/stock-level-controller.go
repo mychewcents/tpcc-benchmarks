@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"bufio"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/handler"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/model"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/service"
 )
 
@@ -13,18 +13,21 @@ type StockLevelController interface {
 
 type stockLevelControllerImpl struct {
 	s service.StockLevelService
-	r *bufio.Reader
 }
 
-func NewStockLevelController(cassandraSession *common.CassandraSession, reader *bufio.Reader) StockLevelController {
+func NewStockLevelController(cassandraSession *common.CassandraSession) StockLevelController {
 	return &stockLevelControllerImpl{
 		s: service.NewStockLevelService(cassandraSession),
-		r: reader,
 	}
 }
 
-func (s *stockLevelControllerImpl) HandleTransaction(i []string) {
+func (s *stockLevelControllerImpl) HandleTransaction(cmd []string) {
+	request := makeStockLevelRequest(cmd)
+	s.s.ProcessStockLevelTransaction(request)
+}
 
+func makeStockLevelRequest(cmd []string) *model.StockLevelRequest {
+	panic("implement me")
 }
 
 func (s *stockLevelControllerImpl) Close() error {

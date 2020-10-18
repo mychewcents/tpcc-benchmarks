@@ -1,9 +1,10 @@
 package controller
 
 import (
-	"bufio"
+	"fmt"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/handler"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/model"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/service"
 )
 
@@ -13,17 +14,26 @@ type TopBalanceController interface {
 
 type topBalanceControllerImpl struct {
 	s service.TopBalanceService
-	r *bufio.Reader
 }
 
-func NewTopBalanceController(cassandraSession *common.CassandraSession, reader *bufio.Reader) TopBalanceController {
+func NewTopBalanceController(cassandraSession *common.CassandraSession) TopBalanceController {
 	return &topBalanceControllerImpl{
 		s: service.NewTopBalanceService(cassandraSession),
-		r: reader,
 	}
 }
 
-func (t *topBalanceControllerImpl) HandleTransaction(i []string) {
+func (t *topBalanceControllerImpl) HandleTransaction(cmd []string) {
+	N := makeTopBalanceRequest(cmd)
+	response, _ := t.s.ProcessTopBalanceTransaction(N)
+	printTopBalanceResponse(response)
+}
+
+func makeTopBalanceRequest(cmd []string) int {
+	panic("")
+}
+
+func printTopBalanceResponse(r *model.TopBalanceResponse) {
+	fmt.Println(r)
 }
 
 func (t *topBalanceControllerImpl) Close() error {
