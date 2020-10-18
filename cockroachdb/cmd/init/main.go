@@ -20,11 +20,11 @@ func init() {
 }
 
 func main() {
-	createOrdersTables()
+	createOrdersTables(2, 2)
 	createOrderLinesTables()
 }
 
-func createOrdersTables() {
+func createOrdersTables(warehouses, districts int) {
 	baseSQLStatement := `
 		DROP TABLE IF EXISTS ORDERS_WID_DID;
 		
@@ -48,11 +48,12 @@ func createOrdersTables() {
 		WHERE O_W_ID = WID AND O_D_ID = DID;
 	`
 
-	for i := 1; i <= 10; i++ {
-		for j := 1; j <= 10; j++ {
+	for i := 1; i <= warehouses; i++ {
+		for j := 1; j <= districts; j++ {
 			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(i))
 			finalSQLStatement = strings.ReplaceAll(baseSQLStatement, "DID", strconv.Itoa(j))
 
+			fmt.Println(finalSQLStatement)
 			_, err := db.Exec(finalSQLStatement)
 			if err != nil {
 				fmt.Println(err)
