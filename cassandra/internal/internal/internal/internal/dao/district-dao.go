@@ -1,14 +1,16 @@
 package dao
 
-import "github.com/gocql/gocql"
+import (
+	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
+)
 
 type DistrictDao interface {
 }
 
 type districtDaoImpl struct {
-	cluster *gocql.ClusterConfig
+	cassandraSession *common.CassandraSession
 }
 
-func NewDistrictDao(cluster *gocql.ClusterConfig) DistrictDao {
-	return &districtDaoImpl{cluster: cluster}
+func NewDistrictDao(cassandraSession *common.CassandraSession) DistrictDao {
+	return &districtDaoImpl{cassandraSession: cassandraSession}
 }

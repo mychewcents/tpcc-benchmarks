@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/gocql/gocql"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/model"
 	"io"
 )
@@ -14,7 +14,7 @@ type PopularItemService interface {
 type popularItemServiceImpl struct {
 }
 
-func NewPopularItemService(cluster *gocql.ClusterConfig) PopularItemService {
+func NewPopularItemService(cassandraSession *common.CassandraSession) PopularItemService {
 	return &popularItemServiceImpl{}
 }
 

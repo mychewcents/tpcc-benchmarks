@@ -2,7 +2,7 @@ package controller
 
 import (
 	"bufio"
-	"github.com/gocql/gocql"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/handler"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/service"
 )
@@ -16,9 +16,9 @@ type topBalanceControllerImpl struct {
 	r *bufio.Reader
 }
 
-func NewTopBalanceController(cluster *gocql.ClusterConfig, reader *bufio.Reader) TopBalanceController {
+func NewTopBalanceController(cassandraSession *common.CassandraSession, reader *bufio.Reader) TopBalanceController {
 	return &topBalanceControllerImpl{
-		s: service.NewTopBalanceService(cluster),
+		s: service.NewTopBalanceService(cassandraSession),
 		r: reader,
 	}
 }

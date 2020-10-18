@@ -2,7 +2,7 @@ package controller
 
 import (
 	"bufio"
-	"github.com/gocql/gocql"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/handler"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/service"
 )
@@ -16,9 +16,9 @@ type relatedCustomerControllerImpl struct {
 	r *bufio.Reader
 }
 
-func NewRelatedCustomerController(cluster *gocql.ClusterConfig, reader *bufio.Reader) RelatedCustomerController {
+func NewRelatedCustomerController(cassandraSession *common.CassandraSession, reader *bufio.Reader) RelatedCustomerController {
 	return &relatedCustomerControllerImpl{
-		s: service.NewRelatedCustomerService(cluster),
+		s: service.NewRelatedCustomerService(cassandraSession),
 		r: reader,
 	}
 }

@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/gocql/gocql"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/model"
 	"io"
 )
@@ -14,7 +14,7 @@ type StockLevelService interface {
 type stockLevelServiceImpl struct {
 }
 
-func NewStockLevelService(cluster *gocql.ClusterConfig) StockLevelService {
+func NewStockLevelService(cassandraSession *common.CassandraSession) StockLevelService {
 	return &stockLevelServiceImpl{}
 }
 

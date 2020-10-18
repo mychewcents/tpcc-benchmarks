@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/gocql/gocql"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/model"
 	"io"
 )
@@ -14,7 +14,7 @@ type PaymentService interface {
 type paymentServiceImpl struct {
 }
 
-func NewPaymentService(cluster *gocql.ClusterConfig) PaymentService {
+func NewPaymentService(cassandraSession *common.CassandraSession) PaymentService {
 	return &paymentServiceImpl{}
 }
 

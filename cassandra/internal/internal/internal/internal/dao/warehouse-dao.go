@@ -1,14 +1,16 @@
 package dao
 
-import "github.com/gocql/gocql"
+import (
+	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
+)
 
 type WarehouseDao interface {
 }
 
 type warehouseDaoImpl struct {
-	cluster *gocql.ClusterConfig
+	cassandraSession *common.CassandraSession
 }
 
-func NewWarehouseDao(cluster *gocql.ClusterConfig) WarehouseDao {
-	return warehouseDaoImpl{cluster: cluster}
+func NewWarehouseDao(cassandraSession *common.CassandraSession) WarehouseDao {
+	return warehouseDaoImpl{cassandraSession: cassandraSession}
 }

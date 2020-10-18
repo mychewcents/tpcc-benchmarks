@@ -2,7 +2,7 @@ package controller
 
 import (
 	"bufio"
-	"github.com/gocql/gocql"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/handler"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/service"
 )
@@ -16,9 +16,9 @@ type orderStatusControllerImpl struct {
 	r *bufio.Reader
 }
 
-func NewOrderStatusTransactionController(cluster *gocql.ClusterConfig, reader *bufio.Reader) OrderStatusController {
+func NewOrderStatusTransactionController(cassandraSession *common.CassandraSession, reader *bufio.Reader) OrderStatusController {
 	return &orderStatusControllerImpl{
-		s: service.NewOrderStatusService(cluster),
+		s: service.NewOrderStatusService(cassandraSession),
 		r: reader,
 	}
 }

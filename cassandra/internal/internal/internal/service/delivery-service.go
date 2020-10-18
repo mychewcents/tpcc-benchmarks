@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/gocql/gocql"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/model"
 	"io"
 )
@@ -14,7 +14,7 @@ type DeliveryService interface {
 type deliveryServiceImpl struct {
 }
 
-func NewDeliveryService(cluster *gocql.ClusterConfig) DeliveryService {
+func NewDeliveryService(cassandraSession *common.CassandraSession) DeliveryService {
 	return &deliveryServiceImpl{}
 }
 

@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"github.com/gocql/gocql"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/dao"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/datamodel/table"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/model"
@@ -23,12 +24,12 @@ type newOrderServiceImpl struct {
 	s  dao.StockDao
 }
 
-func NewNewOrderService(cluster *gocql.ClusterConfig) NewOrderService {
+func NewNewOrderService(cassandraSession *common.CassandraSession) NewOrderService {
 	return &newOrderServiceImpl{
-		c:  dao.NewCustomerDao(cluster),
-		o:  dao.NewOrderDao(cluster),
-		ol: dao.NewOrderLineDao(cluster),
-		s:  dao.NewStockDao(cluster),
+		c:  dao.NewCustomerDao(cassandraSession),
+		o:  dao.NewOrderDao(cassandraSession),
+		ol: dao.NewOrderLineDao(cassandraSession),
+		s:  dao.NewStockDao(cassandraSession),
 	}
 }
 
@@ -171,7 +172,7 @@ func makeResponse(ot *table.OrderTab, oltList []*table.OrderLineTab, customerTab
 		OEntryD:              ot.OEntryD,
 		NoOfItems:            len(oltList),
 		TotalAmount:          totalAmount,
-		NewOrderLineInfoList: nil,
+		NewOrderLineInfoList: oliList,
 	}
 }
 

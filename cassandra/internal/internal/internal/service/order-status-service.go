@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/gocql/gocql"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/model"
 	"io"
 )
@@ -14,7 +14,7 @@ type OrderStatusService interface {
 type orderStatusServiceImpl struct {
 }
 
-func NewOrderStatusService(cluster *gocql.ClusterConfig) OrderStatusService {
+func NewOrderStatusService(cassandraSession *common.CassandraSession) OrderStatusService {
 	return &orderStatusServiceImpl{}
 }
 

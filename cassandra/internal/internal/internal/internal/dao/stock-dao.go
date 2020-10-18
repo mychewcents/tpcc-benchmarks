@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"github.com/gocql/gocql"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/datamodel/table"
 	"log"
 )
@@ -12,21 +12,15 @@ type StockDao interface {
 }
 
 type stockDaoImpl struct {
-	cluster *gocql.ClusterConfig
+	cassandraSession *common.CassandraSession
 }
 
-func NewStockDao(cluster *gocql.ClusterConfig) StockDao {
-	return &stockDaoImpl{cluster: cluster}
+func NewStockDao(cassandraSession *common.CassandraSession) StockDao {
+	return &stockDaoImpl{cassandraSession: cassandraSession}
 }
 
 func (s *stockDaoImpl) GetStockByKey(sWId int, sIId int, ch chan *table.StockTab) {
-	session, err := s.cluster.CreateSession()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer session.Close()
-
-	query := session.Query("SELECT * "+
+	query := s.cassandraSession.ReadSession.Query("SELECT * "+
 		"from stock_tab "+
 		"where s_w_id=? AND s_i_id=?", sWId, sIId)
 
@@ -46,12 +40,6 @@ func (s *stockDaoImpl) GetStockByKey(sWId int, sIId int, ch chan *table.StockTab
 }
 
 func (s *stockDaoImpl) UpdateStockDaoCAS(stOld *table.StockTab, quantity int, isRemote bool, ch chan bool) {
-	session, err := s.cluster.CreateSession()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer session.Close()
-
 	sQuantity := stOld.SQuantity - quantity
 	if sQuantity < 10 {
 		sQuantity = sQuantity + 100
@@ -64,7 +52,7 @@ func (s *stockDaoImpl) UpdateStockDaoCAS(stOld *table.StockTab, quantity int, is
 		sRemoteCnt++
 	}
 
-	query := session.Query("UPDATE stock_tab "+
+	query := s.cassandraSession.WriteSession.Query("UPDATE stock_tab "+
 		"SET s_quantity=?, s_ytd=?, s_order_cnt=?, s_remote_cnt=? "+
 		"WHERE s_w_id=? and s_i_id=? "+
 		"IF s_quantity=? AND s_ytd=? AND s_order_cnt=? AND s_remote_cnt=?", sQuantity, sYtd, sOrderCnt, sRemoteCnt,

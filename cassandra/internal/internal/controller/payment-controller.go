@@ -2,7 +2,7 @@ package controller
 
 import (
 	"bufio"
-	"github.com/gocql/gocql"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/handler"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/service"
 )
@@ -16,9 +16,9 @@ type paymentControllerImpl struct {
 	r *bufio.Reader
 }
 
-func NewPaymentController(cluster *gocql.ClusterConfig, reader *bufio.Reader) PaymentController {
+func NewPaymentController(cassandraSession *common.CassandraSession, reader *bufio.Reader) PaymentController {
 	return &paymentControllerImpl{
-		s: service.NewPaymentService(cluster),
+		s: service.NewPaymentService(cassandraSession),
 		r: reader,
 	}
 }
