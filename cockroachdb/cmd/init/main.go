@@ -51,11 +51,9 @@ func createOrdersTables(warehouses, districts int) {
 	for i := 1; i <= warehouses; i++ {
 		for j := 1; j <= districts; j++ {
 			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(i))
-			fmt.Println(finalSQLStatement)
+			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(j))
 
-			finalSQLStatement = strings.ReplaceAll(baseSQLStatement, "DID", strconv.Itoa(j))
-
-			fmt.Println(finalSQLStatement)
+			// fmt.Println(finalSQLStatement)
 			_, err := db.Exec(finalSQLStatement)
 			if err != nil {
 				fmt.Println(err)
