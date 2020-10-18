@@ -145,9 +145,9 @@ func ProcessTransaction(db *sql.DB, warehouseID, districtID, customerID, numItem
 		log.Fatalf("%v", err)
 	}
 
-	printOutputState(totalAmount)
+	printOutputState(warehouseID, districtID, customerID, totalAmount)
 }
 
-func printOutputState(totalAmount float64) {
+func printOutputState(warehouseID, districtID, customerID int, totalAmount float64) {
 	fmt.Println(totalAmount)
 }
