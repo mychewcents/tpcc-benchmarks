@@ -137,7 +137,7 @@ func outputState(warehouseID, districtID, startOrderID, lastOrderID, lastNOrder 
 	var finalPercentageString strings.Builder
 
 	for key, value := range itemOccurrancePercentageMap {
-		finalPercentageString.WriteString(fmt.Sprintf("\nItem ID: %d , Name: %s , Percentage: %0.02f", key, value.name, value.percentage))
+		finalPercentageString.WriteString(fmt.Sprintf("\nItem ID: %d , Name: %s , Percentage: %0.2f", key, value.name, value.percentage))
 	}
 
 	fmt.Println(
