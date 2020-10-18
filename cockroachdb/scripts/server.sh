@@ -22,9 +22,9 @@ then
   if [ $h == 30 ]
   then
     cockroach start --insecure --store=/temp/cs5424-team-m/node0 \
-      --listen-addr=localhost:30000 \
+      --listen-addr=localhost:26257 \
       --http-addr=localhost:40000 \
-      --join=xcnc30.comp.nus.edu.sg:30000,xcnc31.comp.nus.edu.sg:30000,xcnc32.comp.nus.edu.sg:30000,xcnc33.comp.nus.edu.sg:30000,xcnc34.comp.nus.edu.sg:30000 \
+      --join=xcnc30.comp.nus.edu.sg:26257,xcnc31.comp.nus.edu.sg:26257,xcnc32.comp.nus.edu.sg:26257,xcnc33.comp.nus.edu.sg:26257,xcnc34.comp.nus.edu.sg:26257 \
       --background
 
     # cockroach init --insecure --host=localhost:30000
@@ -32,9 +32,9 @@ then
   elif [ $h == 31 ]
   then
     cockroach start --insecure --store=/temp/cs5424-team-m/node1 \
-      --listen-addr=localhost:30000 \
+      --listen-addr=localhost:26257 \
       --http-addr=localhost:40000 \
-      --join=xcnc30.comp.nus.edu.sg:30000,xcnc31.comp.nus.edu.sg:30000,xcnc32.comp.nus.edu.sg:30000,xcnc33.comp.nus.edu.sg:30000,xcnc34.comp.nus.edu.sg:30000 \
+      --join=xcnc30.comp.nus.edu.sg:26257,xcnc31.comp.nus.edu.sg:26257,xcnc32.comp.nus.edu.sg:26257,xcnc33.comp.nus.edu.sg:26257,xcnc34.comp.nus.edu.sg:26257 \
       --background
 
   elif [ $h == 32 ]
@@ -67,11 +67,11 @@ then
 elif [ $1 == "stop" ]
 then
   printf "**********\nStopping the node : node${h}\n**********\n\n"
-  cockroach quit --insecure --host=localhost:30000
+  cockroach quit --insecure --host=localhost:26257
   printf "\n**********\nStopped the node : node${h}\n**********\n"
 elif [ $1 == "init" ]
 then
   printf "**********\nInitializing the cluster : node${h}\n**********\n\n"
-  cockroach init --insecure --host=localhost:30000
+  cockroach init --insecure --host=localhost:26257
   printf "\n**********\nStopped the node : node${h}\n**********\n"
 fi
