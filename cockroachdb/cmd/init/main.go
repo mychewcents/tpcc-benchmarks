@@ -58,7 +58,7 @@ func createOrdersTables() {
 				fmt.Println(err)
 			}
 
-			fmt.Printf("Compelete: ", i, " ", j)
+			fmt.Printf("Compelete: %d %d", i, j)
 		}
 	}
 }
