@@ -9,7 +9,8 @@ import (
 type CustomerDao interface {
 	GetCustomerByKey(cWId int, cDId int, cId int, ch chan *table.CustomerTab)
 	GetCustomerByTopNBalance(cWId int, n int, ch chan []*table.CustomerTab)
-	UpdateCustomerCAS(ctOld *table.CustomerTab, payment float64, ch chan bool)
+	UpdateCustomerPaymentCAS(ctOld *table.CustomerTab, payment float64, ch chan bool)
+	UpdateCustomerDeliveryCAS(ctOld *table.CustomerTab, olAmount float64)
 }
 
 type customerDaoImpl struct {
@@ -63,7 +64,7 @@ func (c *customerDaoImpl) GetCustomerByTopNBalance(cWId int, n int, ch chan []*t
 	ch <- cts
 }
 
-func (c *customerDaoImpl) UpdateCustomerCAS(ctOld *table.CustomerTab, payment float64, ch chan bool) {
+func (c *customerDaoImpl) UpdateCustomerPaymentCAS(ctOld *table.CustomerTab, payment float64, ch chan bool) {
 
 	cBalance := ctOld.CBalance - payment
 	cYtdPayment := ctOld.CYtdPayment + payment
@@ -88,8 +89,34 @@ func (c *customerDaoImpl) UpdateCustomerCAS(ctOld *table.CustomerTab, payment fl
 		ctOld.CYtdPayment = cYtdPayment
 		ctOld.CPaymentCnt = cPaymentCnt
 
-		c.UpdateCustomerCAS(ctOld, payment, ch)
+		c.UpdateCustomerPaymentCAS(ctOld, payment, ch)
 	} else {
 		ch <- true
+	}
+}
+
+func (c *customerDaoImpl) UpdateCustomerDeliveryCAS(ctOld *table.CustomerTab, olAmount float64) {
+	cBalance := ctOld.CBalance + olAmount
+	cDeliveryCnt := ctOld.CDeliveryCnt + 1
+
+	query := c.cassandraSession.WriteSession.Query("UPDATE customer_tab "+
+		"SET c_balance=?, c_delivery_cnt=? "+
+		"WHERE c_w_id=? AND c_d_id=? AND c_id=? "+
+		"IF c_balance=?, c_delivery_cnt=?", cBalance, cDeliveryCnt,
+		ctOld.CWId, ctOld.CDId, ctOld.CId,
+		ctOld.CBalance, ctOld.CDeliveryCnt)
+
+	applied, err := query.ScanCAS(&cBalance, &cDeliveryCnt)
+	if err != nil {
+		log.Fatalf("ERROR UpdateCustomerDeliveryCAS quering. err=%v\n", err)
+		return
+	}
+
+	if !applied {
+		log.Println("CAS Failure UpdateCustomerDeliveryCAS")
+		ctOld.CBalance = cBalance
+		ctOld.CDeliveryCnt = cDeliveryCnt
+
+		c.UpdateCustomerDeliveryCAS(ctOld, olAmount)
 	}
 }

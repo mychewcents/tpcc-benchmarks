@@ -1,13 +1,18 @@
 package dao
 
 import (
+	"github.com/gocql/gocql"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/datamodel/table"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/datamodel/view"
 	"log"
+	"time"
 )
 
 type OrderDao interface {
 	InsertOrder(ot *table.OrderTab, chComplete chan bool)
+	GetOldestUnDeliveredOrder(oWId int, oDId int) *view.OrderByCarrierView
+	UpdateOrderCAS(oWId int, oDId int, oId gocql.UUID, oCarrierId int) bool
 }
 
 type orderDaoImpl struct {
@@ -32,4 +37,38 @@ func (o *orderDaoImpl) InsertOrder(ot *table.OrderTab, chComplete chan bool) {
 	}
 
 	chComplete <- true
+}
+
+func (o *orderDaoImpl) GetOldestUnDeliveredOrder(oWId int, oDId int) *view.OrderByCarrierView {
+	query := o.cassandraSession.ReadSession.Query("SELECT * "+
+		"from order_by_customer_view "+
+		"where o_w_id=? AND o_d_id=? LIMIT 1", oWId, oDId)
+
+	result := make(map[string]interface{})
+	if err := query.MapScan(result); err != nil {
+		log.Fatalf("ERROR GetOldestUndeliveredOrder error in query execution. oWId=%v, oDId=%v, err=%v\n", oWId, oDId, err)
+	}
+
+	ov, err := view.MakeOrderByCarrierView(result)
+	if err != nil {
+		log.Fatalf("ERROR GetOldestUndeliveredOrder error making customer. oWId=%v, oDId=%v, err=%v\n", oWId, oDId, err)
+	}
+
+	return ov
+}
+
+func (o *orderDaoImpl) UpdateOrderCAS(oWId int, oDId int, oId gocql.UUID, oCarrierId int) bool {
+	query := o.cassandraSession.WriteSession.Query("UPDATE order_tab "+
+		"SET o_carrier_id=?, ol_delivery_d=? "+
+		"WHERE o_w_id=? and o_d_id=? AND o_id=? "+
+		"IF o_carrier_id=-1=? AND ol_delivery_d=null", oCarrierId, time.Now(),
+		oWId, oDId, oId)
+
+	applied, err := query.ScanCAS()
+	if err != nil {
+		log.Fatalf("ERROR UpdateOrderCAS quering. err=%v\n", err)
+		return false
+	}
+
+	return applied
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/handler"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/model"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/service"
+	"strconv"
 )
 
 type DeliveryController interface {
@@ -27,7 +28,13 @@ func (d *deliveryControllerImpl) HandleTransaction(cmd []string) {
 }
 
 func makeDeliveryRequest(cmd []string) *model.DeliveryRequest {
-	panic("implement me")
+	wId, _ := strconv.Atoi(cmd[1])
+	carrierId, _ := strconv.Atoi(cmd[2])
+
+	return &model.DeliveryRequest{
+		WId:       wId,
+		CarrierId: carrierId,
+	}
 }
 
 func (d *deliveryControllerImpl) Close() error {

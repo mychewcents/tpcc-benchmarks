@@ -51,7 +51,7 @@ func (p *paymentServiceImpl) updateWarehouseDistrictAndCustomer(wt *table.Wareho
 	ch := make(chan bool, 3)
 	go p.w.UpdateWarehouseCAS(wt, payment, ch)
 	go p.d.UpdateDistrictCAS(dt, payment, ch)
-	go p.c.UpdateCustomerCAS(ct, payment, ch)
+	go p.c.UpdateCustomerPaymentCAS(ct, payment, ch)
 
 	<-ch
 	<-ch
