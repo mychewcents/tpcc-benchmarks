@@ -66,11 +66,11 @@ then
 elif [ $1 == "stop" ]
 then
   printf "**********\nStopping the node : node${h}\n**********\n\n"
-  cockroach quit --insecure --host=$(hostname):27000
+  cockroach quit --insecure --host=$(hostname -i):27000
   printf "\n**********\nStopped the node : node${h}\n**********\n"
 elif [ $1 == "init" ]
 then
   printf "**********\nInitializing the cluster : node${h}\n**********\n\n"
-  cockroach init --insecure --host=$(hostname):27000
+  cockroach init --insecure --host=$(hostname -i):27000
   printf "\n**********\nStopped the node : node${h}\n**********\n"
 fi
