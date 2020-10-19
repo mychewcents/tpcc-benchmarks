@@ -33,7 +33,7 @@ then
   then
     cockroach start --insecure --store=/home/stuproj/cs4224m/crdb-node-files/node1 \
       --listen-addr=localhost:4050 \
-      --http-addr=localhost:40000 \
+      --http-addr=localhost:8080 \
       --join=xcnc30.comp.nus.edu.sg:4050,xcnc31.comp.nus.edu.sg:4050,xcnc32.comp.nus.edu.sg:4050,xcnc33.comp.nus.edu.sg:4050,xcnc34.comp.nus.edu.sg:4050 \
       --background
 
@@ -41,7 +41,7 @@ then
   then
     cockroach start --insecure --store=/home/stuproj/cs4224m/crdb-node-files/node2 \
       --listen-addr=localhost:4050 \
-      --http-addr=localhost:40000 \
+      --http-addr=localhost:8080 \
       --join=xcnc30.comp.nus.edu.sg:4050,xcnc31.comp.nus.edu.sg:4050,xcnc32.comp.nus.edu.sg:4050,xcnc33.comp.nus.edu.sg:4050,xcnc34.comp.nus.edu.sg:4050 \
       --background
 
@@ -49,7 +49,7 @@ then
   then
     cockroach start --insecure --store=/home/stuproj/cs4224m/crdb-node-files/node3 \
       --listen-addr=localhost:4050 \
-      --http-addr=localhost:40000 \
+      --http-addr=localhost:8080 \
       --join=xcnc30.comp.nus.edu.sg:4050,xcnc31.comp.nus.edu.sg:4050,xcnc32.comp.nus.edu.sg:4050,xcnc33.comp.nus.edu.sg:4050,xcnc34.comp.nus.edu.sg:4050 \
       --background
 
@@ -57,7 +57,7 @@ then
   then
     cockroach start --insecure --store=/home/stuproj/cs4224m/crdb-node-files/node4 \
       --listen-addr=localhost:4050 \
-      --http-addr=localhost:40000 \
+      --http-addr=localhost:8080 \
       --join=xcnc30.comp.nus.edu.sg:4050,xcnc31.comp.nus.edu.sg:4050,xcnc32.comp.nus.edu.sg:4050,xcnc33.comp.nus.edu.sg:4050,xcnc34.comp.nus.edu.sg:4050 \
       --background
 
