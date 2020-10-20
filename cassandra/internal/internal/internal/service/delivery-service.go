@@ -20,7 +20,10 @@ type deliveryServiceImpl struct {
 }
 
 func NewDeliveryService(cassandraSession *common.CassandraSession) DeliveryService {
-	return &deliveryServiceImpl{}
+	return &deliveryServiceImpl{
+		o: dao.NewOrderDao(cassandraSession),
+		c: dao.NewCustomerDao(cassandraSession),
+	}
 }
 
 func (d *deliveryServiceImpl) ProcessDeliveryTransaction(request *model.DeliveryRequest) error {

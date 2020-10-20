@@ -12,6 +12,7 @@ import (
 type OrderDao interface {
 	InsertOrder(ot *table.OrderTab, chComplete chan bool)
 	GetOldestUnDeliveredOrder(oWId int, oDId int) *view.OrderByCarrierView
+	GetCustomerLatestOrder(oWId int, oDId int, oCId int, ch chan *view.OrderByCustomerView)
 	UpdateOrderCAS(oWId int, oDId int, oId gocql.UUID, oCarrierId int) bool
 }
 
@@ -41,7 +42,7 @@ func (o *orderDaoImpl) InsertOrder(ot *table.OrderTab, chComplete chan bool) {
 
 func (o *orderDaoImpl) GetOldestUnDeliveredOrder(oWId int, oDId int) *view.OrderByCarrierView {
 	query := o.cassandraSession.ReadSession.Query("SELECT * "+
-		"from order_by_customer_view "+
+		"from order_by_carrier_view "+
 		"where o_w_id=? AND o_d_id=? LIMIT 1", oWId, oDId)
 
 	result := make(map[string]interface{})
@@ -55,6 +56,24 @@ func (o *orderDaoImpl) GetOldestUnDeliveredOrder(oWId int, oDId int) *view.Order
 	}
 
 	return ov
+}
+
+func (o *orderDaoImpl) GetCustomerLatestOrder(oWId int, oDId int, oCId int, ch chan *view.OrderByCustomerView) {
+	query := o.cassandraSession.ReadSession.Query("SELECT * "+
+		"from order_by_customer_view "+
+		"where o_w_id=? AND o_d_id=? AND o_c_id=? LIMIT 1", oWId, oDId, oCId)
+
+	result := make(map[string]interface{})
+	if err := query.MapScan(result); err != nil {
+		log.Fatalf("ERROR GetCustomerLatestOrder error in query execution. oWId=%v, oDId=%v, oCId=%v, err=%v\n", oWId, oDId, oCId, err)
+	}
+
+	ov, err := view.MakeOrderByCustomerView(result)
+	if err != nil {
+		log.Fatalf("ERROR GetCustomerLatestOrder error making customer. oWId=%v, oDId=%v, oCId=%v, err=%v\n", oWId, oDId, oCId, err)
+	}
+
+	ch <- ov
 }
 
 func (o *orderDaoImpl) UpdateOrderCAS(oWId int, oDId int, oId gocql.UUID, oCarrierId int) bool {

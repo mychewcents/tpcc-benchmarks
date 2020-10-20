@@ -9,6 +9,7 @@ import (
 
 type OrderLineDao interface {
 	BatchInsertOrderLine(oltList []*table.OrderLineTab, chComplete chan bool)
+	GetOrderLineListByKey(oWId int, oDId int, oId gocql.UUID, ch chan []*table.OrderLineTab)
 }
 
 type orderLineDaoImpl struct {
@@ -33,4 +34,26 @@ func (o *orderLineDaoImpl) BatchInsertOrderLine(oltList []*table.OrderLineTab, c
 	}
 
 	chComplete <- true
+}
+
+func (o *orderLineDaoImpl) GetOrderLineListByKey(oWId int, oDId int, oId gocql.UUID, ch chan []*table.OrderLineTab) {
+	query := o.cassandraSession.ReadSession.Query("SELECT * "+
+		"from order_line_tab "+
+		"where o_w_id=? AND o_d_id=? AND o_id=?", oWId, oDId, oId)
+
+	olts := make([]*table.OrderLineTab, 0)
+
+	iter := query.Iter()
+	defer iter.Close()
+
+	for result := make(map[string]interface{}); iter.MapScan(result); result = make(map[string]interface{}) {
+		ot, err := table.MakeOrderLineTab(result)
+		if err != nil {
+			log.Fatalf("ERROR GetOrderLineListByKey error making customer. oWId=%v, oDId=%v, oId=%v, err=%v\n", oWId, oDId, oId, err)
+			return
+		}
+		olts = append(olts, ot)
+	}
+
+	ch <- olts
 }
