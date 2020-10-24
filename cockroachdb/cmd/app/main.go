@@ -4,38 +4,39 @@ import (
 	"database/sql"
 
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/cdbconn"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/neworder"
 )
 
 var db *sql.DB
 
 func init() {
 	var err error
-	db, err = cdbconn.CreateConnection("192.168.48.179", "27000", "defaultdb", "root")
+	db, err = cdbconn.CreateConnection("localhost", "26257", "defaultdb", "root")
 	if err != nil {
 		panic(err)
 	}
 }
 
 func main() {
-	itemIDs := []int{
-		68195, 26567, 4114, 69343, 1836,
-		89294, 31975, 80487, 32423, 93383,
-		46279, 98511, 69351, 4679, 96983,
-	}
-	supplierIDs := []int{
-		1, 1, 1, 1, 1,
-		1, 1, 1, 1, 1,
-		1, 1, 1, 1, 1,
-	}
-	quantitys := []int{
-		1, 5, 7, 3, 1,
-		3, 6, 10, 5, 9,
-		9, 8, 4, 6, 2,
-	}
+	// itemIDs := []int{
+	// 	68195, 26567, 4114, 69343, 1836,
+	// 	89294, 31975, 80487, 32423, 93383,
+	// 	46279, 98511, 69351, 4679, 96983,
+	// }
+	// supplierIDs := []int{
+	// 	1, 1, 1, 1, 1,
+	// 	1, 1, 1, 1, 1,
+	// 	1, 1, 1, 1, 1,
+	// }
+	// quantitys := []int{
+	// 	1, 5, 7, 3, 1,
+	// 	3, 6, 10, 5, 9,
+	// 	9, 8, 4, 6, 2,
+	// }
 
-	neworder.ProcessTransaction(db, 1, 1, 1279, 15, itemIDs, supplierIDs, quantitys)
+	// neworder.ProcessTransaction(db, 1, 1, 1279, 15, itemIDs, supplierIDs, quantitys)
 
+	// popularitem.ProcessTransaction(db, 1, 1, 1000)
+	// stocklevel.ProcessTransaction(db, 1, 1, 15, 1000)
 	// for true {
 
 	// var transaction_type byte

@@ -1,4 +1,4 @@
-package populatitem
+package popularitem
 
 import (
 	"database/sql"
@@ -23,7 +23,7 @@ type itemPercentageName struct {
 func ProcessTransaction(db *sql.DB, warehouseID, districtID, lastNOrder int) {
 	var lastOrderID, startOrderID int
 
-	orderTable := fmt.Sprintf("ORDER_%d_%d", warehouseID, districtID)
+	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)
 	orderLineTable := fmt.Sprintf("ORDER_LINE_%d_%d", warehouseID, districtID)
 
 	row := db.QueryRow(`SELECT d_next_o_id FROM district WHERE d_w_id=$1 AND d_id=$2`, warehouseID, districtID)
@@ -72,7 +72,7 @@ func ProcessTransaction(db *sql.DB, warehouseID, districtID, lastNOrder int) {
 		}
 
 		// Fetch the Customer Information
-		sqlStatement = fmt.Sprintf(`SELECT C_FIRST, C_MIDDLE, C_LAST FROM CUSTOMERS WHERE C_W_ID=%d AND C_D_ID = %d AND C_ID = %d`, warehouseID, districtID, orderID)
+		sqlStatement = fmt.Sprintf("SELECT C_FIRST, C_MIDDLE, C_LAST FROM CUSTOMER WHERE C_W_ID=%d AND C_D_ID = %d AND C_ID = %d", warehouseID, districtID, orderID)
 
 		var cFirst, cMiddle, cLast string
 		row = db.QueryRow(sqlStatement)
@@ -82,7 +82,7 @@ func ProcessTransaction(db *sql.DB, warehouseID, districtID, lastNOrder int) {
 		}
 
 		// Fetch the Item Information
-		sqlStatement = fmt.Sprintf(`SELECT I_ID, I_NAME FROM ITEM WHERE I_ID IN (SELECT OL_I_ID FROM %s WHERE OL_O_ID = %d AND OL_QUANTITY = %d`, orderLineTable, orderID, maxQuantity)
+		sqlStatement = fmt.Sprintf("SELECT I_ID, I_NAME FROM ITEM WHERE I_ID IN (SELECT OL_I_ID FROM %s WHERE OL_O_ID = %d AND OL_QUANTITY = %d)", orderLineTable, orderID, maxQuantity)
 
 		items, err := db.Query(sqlStatement)
 		if err != nil {
@@ -106,10 +106,10 @@ func ProcessTransaction(db *sql.DB, warehouseID, districtID, lastNOrder int) {
 		}
 
 		// Calculate the Percentage of orders each items occurred in
-		for key := range itemIDs {
-			percentage := float64((itemOccurranceMap[key] / lastNOrder)) * 100
+		for key, value := range itemIDs {
+			percentage := float64((itemOccurranceMap[value] / lastNOrder)) * 100
 
-			itemOccurrancePercentageMap[key] = itemPercentageName{percentage: percentage, name: itemNames[key]}
+			itemOccurrancePercentageMap[value] = itemPercentageName{percentage: percentage, name: itemNames[key]}
 		}
 
 		ordersMap[orderID] = details{
@@ -122,10 +122,11 @@ func ProcessTransaction(db *sql.DB, warehouseID, districtID, lastNOrder int) {
 		}
 	}
 
-	outputState(warehouseID, districtID, startOrderID, lastOrderID, lastNOrder, ordersMap, itemOccurrancePercentageMap)
+	fmt.Println("Done")
+	// printOutputState(warehouseID, districtID, startOrderID, lastOrderID, lastNOrder, ordersMap, itemOccurrancePercentageMap)
 }
 
-func outputState(warehouseID, districtID, startOrderID, lastOrderID, lastNOrder int, ordersMap map[int]details, itemOccurrancePercentageMap map[int]itemPercentageName) {
+func printOutputState(warehouseID, districtID, startOrderID, lastOrderID, lastNOrder int, ordersMap map[int]details, itemOccurrancePercentageMap map[int]itemPercentageName) {
 	var ordersString strings.Builder
 
 	for key, value := range ordersMap {
@@ -137,7 +138,7 @@ func outputState(warehouseID, districtID, startOrderID, lastOrderID, lastNOrder 
 	var finalPercentageString strings.Builder
 
 	for key, value := range itemOccurrancePercentageMap {
-		finalPercentageString.WriteString(fmt.Sprintf("\nItem ID: %d , Name: %s , Percentage: %0.2f", key, value.name, value.percentage))
+		finalPercentageString.WriteString(fmt.Sprintf("\nItem ID: %d , Name: %s , Percentage: %0.6f", key, value.name, value.percentage))
 	}
 
 	fmt.Println(
