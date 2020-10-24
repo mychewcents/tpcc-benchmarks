@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/handler"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/model"
@@ -23,7 +24,12 @@ func NewStockLevelController(cassandraSession *common.CassandraSession) StockLev
 
 func (s *stockLevelControllerImpl) HandleTransaction(cmd []string) {
 	request := makeStockLevelRequest(cmd)
-	s.s.ProcessStockLevelTransaction(request)
+	response, _ := s.s.ProcessStockLevelTransaction(request)
+	printStockLevelResponse(response)
+}
+
+func printStockLevelResponse(r *model.StockLevelResponse) {
+	fmt.Println(r)
 }
 
 func makeStockLevelRequest(cmd []string) *model.StockLevelRequest {

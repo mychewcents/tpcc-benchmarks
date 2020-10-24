@@ -35,6 +35,9 @@ type OrderLineTab struct {
 	OlDistInfo  string     `mapstructure:"ol_dist_info"`
 }
 
+type OrderLineItemQuantityTab struct {
+}
+
 func MakeOrderLineTab(columns map[string]interface{}) (*OrderLineTab, error) {
 	var ot OrderLineTab
 

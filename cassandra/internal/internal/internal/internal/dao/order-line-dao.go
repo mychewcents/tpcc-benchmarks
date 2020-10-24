@@ -5,11 +5,13 @@ import (
 	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/datamodel/table"
 	"log"
+	"strings"
 )
 
 type OrderLineDao interface {
 	BatchInsertOrderLine(oltList []*table.OrderLineTab, chComplete chan bool)
 	GetOrderLineListByKey(oWId int, oDId int, oId gocql.UUID, ch chan []*table.OrderLineTab)
+	GetOrderLineItemListByKeys(oWId int, oDId int, oIds []gocql.UUID, ch chan []*table.OrderLineTab)
 }
 
 type orderLineDaoImpl struct {
@@ -49,7 +51,34 @@ func (o *orderLineDaoImpl) GetOrderLineListByKey(oWId int, oDId int, oId gocql.U
 	for result := make(map[string]interface{}); iter.MapScan(result); result = make(map[string]interface{}) {
 		ot, err := table.MakeOrderLineTab(result)
 		if err != nil {
-			log.Fatalf("ERROR GetOrderLineListByKey error making customer. oWId=%v, oDId=%v, oId=%v, err=%v\n", oWId, oDId, oId, err)
+			log.Fatalf("ERROR GetOrderLineListByKey error making orderLine. oWId=%v, oDId=%v, oId=%v, err=%v\n", oWId, oDId, oId, err)
+			return
+		}
+		olts = append(olts, ot)
+	}
+
+	ch <- olts
+}
+
+func (o *orderLineDaoImpl) GetOrderLineItemListByKeys(oWId int, oDId int, oIds []gocql.UUID, ch chan []*table.OrderLineTab) {
+	oIdString := make([]string, len(oIds))
+	for i, oId := range oIds {
+		oIdString[i] = oId.String()
+	}
+
+	query := o.cassandraSession.ReadSession.Query("SELECT * "+
+		"from order_line_tab "+
+		"where o_w_id=? AND o_d_id=? AND o_id IN (?)", oWId, oDId, strings.Join(oIdString, ","))
+
+	olts := make([]*table.OrderLineTab, 0)
+
+	iter := query.Iter()
+	defer iter.Close()
+
+	for result := make(map[string]interface{}); iter.MapScan(result); result = make(map[string]interface{}) {
+		ot, err := table.MakeOrderLineTab(result)
+		if err != nil {
+			log.Fatalf("ERROR GetOrderLineItemListByKeys error making orderLine. oWId=%v, oDId=%v, oIds=%v, err=%v\n", oWId, oDId, strings.Join(oIdString, ","), err)
 			return
 		}
 		olts = append(olts, ot)

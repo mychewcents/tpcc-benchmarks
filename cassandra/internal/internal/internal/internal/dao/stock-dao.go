@@ -4,10 +4,12 @@ import (
 	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/datamodel/table"
 	"log"
+	"strings"
 )
 
 type StockDao interface {
 	GetStockByKey(sWId int, sIId int, ch chan *table.StockTab)
+	GetItemCountWithLowStock(sWId int, sIIds []int, sQuantity int, cCh chan int)
 	UpdateStockCAS(stOld *table.StockTab, quantity int, isRemote bool, ch chan bool)
 }
 
@@ -37,6 +39,25 @@ func (s *stockDaoImpl) GetStockByKey(sWId int, sIId int, ch chan *table.StockTab
 	}
 
 	ch <- st
+}
+
+func (s *stockDaoImpl) GetItemCountWithLowStock(sWId int, sIIds []int, sQuantity int, cCh chan int) {
+	sIIdString := make([]string, len(sIIds))
+	for i, sIId := range sIIds {
+		sIIdString[i] = string(sIId)
+	}
+
+	query := s.cassandraSession.ReadSession.Query("SELECT count(*) "+
+		"from stock_tab "+
+		"where s_w_id=? AND s_i_id IN (?) AND s_quantity<?", sWId, strings.Join(sIIdString, ","), sQuantity)
+
+	var count int
+	if err := query.Scan(count); err != nil {
+		log.Fatalf("ERROR GetItemCountWithLowStock error in query execution. sWId=%v, sIId=%v, err=%v\n", sWId, strings.Join(sIIdString, ","), err)
+		return
+	}
+
+	cCh <- count
 }
 
 func (s *stockDaoImpl) UpdateStockCAS(stOld *table.StockTab, quantity int, isRemote bool, ch chan bool) {

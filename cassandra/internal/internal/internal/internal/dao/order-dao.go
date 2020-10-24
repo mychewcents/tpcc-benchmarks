@@ -13,6 +13,7 @@ type OrderDao interface {
 	InsertOrder(ot *table.OrderTab, chComplete chan bool)
 	GetOldestUnDeliveredOrder(oWId int, oDId int) *view.OrderByCarrierView
 	GetCustomerLatestOrder(oWId int, oDId int, oCId int, ch chan *view.OrderByCustomerView)
+	GetLatestNOrdersForDistrict(oWId int, oDId int, limit int) []*table.OrderTab
 	UpdateOrderCAS(oWId int, oDId int, oId gocql.UUID, oCarrierId int) bool
 }
 
@@ -70,10 +71,31 @@ func (o *orderDaoImpl) GetCustomerLatestOrder(oWId int, oDId int, oCId int, ch c
 
 	ov, err := view.MakeOrderByCustomerView(result)
 	if err != nil {
-		log.Fatalf("ERROR GetCustomerLatestOrder error making customer. oWId=%v, oDId=%v, oCId=%v, err=%v\n", oWId, oDId, oCId, err)
+		log.Fatalf("ERROR GetCustomerLatestOrder error making order. oWId=%v, oDId=%v, oCId=%v, err=%v\n", oWId, oDId, oCId, err)
 	}
 
 	ch <- ov
+}
+
+func (o *orderDaoImpl) GetLatestNOrdersForDistrict(oWId int, oDId int, limit int) []*table.OrderTab {
+	query := o.cassandraSession.ReadSession.Query("SELECT * "+
+		"from order_tab "+
+		"where o_w_id=? AND o_d_id=? LIMIT ?", oWId, oDId, limit)
+
+	ots := make([]*table.OrderTab, limit)
+
+	iter := query.Iter()
+	defer iter.Close()
+
+	for result := make(map[string]interface{}); iter.MapScan(result); result = make(map[string]interface{}) {
+		ot, err := table.MakeOrderTab(result)
+		if err != nil {
+			log.Fatalf("ERROR GetLatestNOrdersForDistrict error making order. oWId=%v, oDId=%v, limit=%v, err=%v\n", oWId, oDId, limit, err)
+		}
+		ots = append(ots, ot)
+	}
+
+	return ots
 }
 
 func (o *orderDaoImpl) UpdateOrderCAS(oWId int, oDId int, oId gocql.UUID, oCarrierId int) bool {
