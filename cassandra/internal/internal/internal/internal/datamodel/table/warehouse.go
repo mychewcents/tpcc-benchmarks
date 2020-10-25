@@ -19,7 +19,7 @@ PrimaryKey(w_id)
 */
 type WarehouseTab struct {
 	WId      int         `mapstructure:"w_id"`
-	WName    int         `mapstructure:"w_name"`
+	WName    string      `mapstructure:"w_name"`
 	WAddress udt.Address `mapstructure:"w_address"`
 	WTax     float32     `mapstructure:"w_tax"`
 	WYtd     float64     `mapstructure:"w_ytd"`

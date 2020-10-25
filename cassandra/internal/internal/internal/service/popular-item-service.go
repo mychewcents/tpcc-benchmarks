@@ -35,7 +35,7 @@ func (p *popularItemServiceImpl) ProcessPopularItemService(request *model.Popula
 	}
 
 	ch := make(chan []*table.OrderLineTab)
-	p.ol.GetOrderLineItemListByKeys(request.WId, request.DId, oIds, ch)
+	go p.ol.GetOrderLineItemListByKeys(request.WId, request.DId, oIds, ch)
 	olts := <-ch
 
 	orderToPopularItemsMap, popularItemsNameMap, itemsToOrderMap := getPopularItemInfo(olts)

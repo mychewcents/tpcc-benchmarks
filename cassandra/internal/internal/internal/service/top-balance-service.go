@@ -31,7 +31,7 @@ func (t *topBalanceServiceImpl) ProcessTopBalanceTransaction() (*model.TopBalanc
 		go t.c.GetCustomerByTopNBalance(i, 10, ch)
 	}
 
-	for i := 1; i <= 10; i++ {
+	for i := 0; i < 10; i++ {
 		topBalanceByWarehouse[i] = <-ch
 	}
 

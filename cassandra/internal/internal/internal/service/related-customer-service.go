@@ -19,7 +19,7 @@ func NewRelatedCustomerService(cassandraSession *common.CassandraSession) Relate
 }
 
 func (r *relatedCustomerServiceImpl) ProcessRelatedCustomerTransaction(request *model.RelatedCustomerRequest) (*model.RelatedCustomerResponse, error) {
-	panic("implement me")
+	return nil, nil
 }
 
 func (r *relatedCustomerServiceImpl) Close() error {

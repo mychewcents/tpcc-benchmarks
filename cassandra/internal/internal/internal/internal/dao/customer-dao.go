@@ -71,20 +71,20 @@ func (c *customerDaoImpl) UpdateCustomerPaymentCAS(ctOld *table.CustomerTab, pay
 	cPaymentCnt := ctOld.CPaymentCnt - 1
 
 	query := c.cassandraSession.WriteSession.Query("UPDATE customer_tab "+
-		"SET c_balance=?, c_ytd_payment=? c_payment_cnt=? "+
+		"SET c_balance=?, c_ytd_payment=?, c_payment_cnt=? "+
 		"WHERE c_w_id=? AND c_d_id=? AND c_id=? "+
-		"IF c_balance=?, c_ytd_payment=? c_payment_cnt=?", cBalance, cYtdPayment, cPaymentCnt,
+		"IF c_balance=? AND c_ytd_payment=? AND c_payment_cnt=?", cBalance, cYtdPayment, cPaymentCnt,
 		ctOld.CWId, ctOld.CDId, ctOld.CId,
 		ctOld.CBalance, ctOld.CYtdPayment, ctOld.CPaymentCnt)
 
 	applied, err := query.ScanCAS(&cBalance, &cYtdPayment, &cPaymentCnt)
 	if err != nil {
-		log.Fatalf("ERROR UpdateWarehouseCAS quering. err=%v\n", err)
+		log.Fatalf("ERROR UpdateCustomerPaymentCAS quering. err=%v\n", err)
 		return
 	}
 
 	if !applied {
-		log.Println("CAS Failure UpdateWarehouseCAS")
+		log.Println("CAS Failure UpdateCustomerPaymentCAS")
 		ctOld.CBalance = cBalance
 		ctOld.CYtdPayment = cYtdPayment
 		ctOld.CPaymentCnt = cPaymentCnt

@@ -29,7 +29,7 @@ func (r *relatedCustomerControllerImpl) HandleTransaction(cmd []string) {
 }
 
 func makeRelatedCustomerRequest(cmd []string) *model.RelatedCustomerRequest {
-	panic("implement me")
+	return nil
 }
 
 func printRelatedCustomerResponse(r *model.RelatedCustomerResponse) {
