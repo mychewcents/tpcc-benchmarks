@@ -19,9 +19,9 @@ func ProcessRequest(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string
 	case "D":
 	case "O":
 	case "S":
-		stocklevel.ProcessTransaction(db, transactionArgs[1:])
+		stocklevel.ProcessTransaction(db, nil, transactionArgs[1:])
 	case "I":
-		popularitem.ProcessTransaction(db, transactionArgs[1:])
+		popularitem.ProcessTransaction(db, nil, transactionArgs[1:])
 	case "T":
 	case "R":
 

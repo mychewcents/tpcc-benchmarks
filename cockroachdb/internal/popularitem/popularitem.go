@@ -1,6 +1,7 @@
 package popularitem
 
 import (
+	"bufio"
 	"database/sql"
 	"fmt"
 	"log"
@@ -21,11 +22,15 @@ type itemPercentageName struct {
 }
 
 // ProcessTransaction returns the list of the most popular items and their percentage
-func ProcessTransaction(db *sql.DB, transactionArgs []string) {
+func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) {
 	warehouseID, _ := strconv.Atoi(transactionArgs[1])
 	districtID, _ := strconv.Atoi(transactionArgs[2])
 	lastNOrders, _ := strconv.Atoi(transactionArgs[3])
 
+	execute(db, warehouseID, districtID, lastNOrders)
+}
+
+func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) {
 	var lastOrderID, startOrderID int
 
 	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)

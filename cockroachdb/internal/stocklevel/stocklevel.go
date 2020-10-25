@@ -1,6 +1,7 @@
 package stocklevel
 
 import (
+	"bufio"
 	"database/sql"
 	"fmt"
 	"log"
@@ -8,12 +9,16 @@ import (
 )
 
 // ProcessTransaction processes the Stock Level Transaction
-func ProcessTransaction(db *sql.DB, transactionArgs []string) {
+func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) {
 	warehouseID, _ := strconv.Atoi(transactionArgs[1])
 	districtID, _ := strconv.Atoi(transactionArgs[2])
 	threshold, _ := strconv.Atoi(transactionArgs[3])
 	lastNOrders, _ := strconv.Atoi(transactionArgs[4])
 
+	execute(db, warehouseID, districtID, threshold, lastNOrders)
+}
+
+func execute(db *sql.DB, warehouseID, districtID, threshold, lastNOrders int) {
 	var totalItems, lastOrderID int
 
 	row := db.QueryRow("SELECT d_next_o_id FROM district WHERE d_w_id=$1 AND d_id=$2", warehouseID, districtID)
