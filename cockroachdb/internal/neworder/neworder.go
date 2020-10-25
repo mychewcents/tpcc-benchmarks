@@ -13,7 +13,15 @@ import (
 )
 
 type itemObject struct {
-	id, quantity, supplier, remote int
+	id         int
+	quantity   int
+	supplier   int
+	remote     int
+	startStock int
+	finalStock int
+	name       string
+	price      float64
+	data       string
 }
 
 // ProcessTransaction process the new order transaction
@@ -78,31 +86,39 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 		return
 	}
 
+	var cLastName, cCredit string
+	var cDiscount float64
+	sqlStatement = fmt.Sprintf("SELECT C_LAST, C_CREDIT, C_DISCOUNT FROM CUSTOMER WHERE C_W_ID=%d AND C_D_ID = %d AND C_ID = %d", warehouseID, districtID, customerID)
+
+	row = db.QueryRow(sqlStatement)
+
+	if err := row.Scan(&cLastName, &cCredit, &cDiscount); err != nil {
+		log.Fatalf("%v", err)
+		return
+	}
+
 	var totalAmount float64
-	var orderLineEntries []string
+	var orderTimestamp string
 
 	err := crdb.ExecuteTx(context.Background(), db, nil, func(tx *sql.Tx) error {
-
-		var itemName string
-		var itemPrice float64
-		var itemCurrQty int
-		var itemDistrictData string
+		var orderLineEntries []string
 
 		for key, value := range orderLineObjects {
 			sqlStatement = fmt.Sprintf("SELECT S_I_NAME, S_I_PRICE, S_QUANTITY, S_DIST_%02d FROM STOCK WHERE S_W_ID = %d AND S_I_ID = %d", districtID, value.supplier, value.id)
 			row = tx.QueryRow(sqlStatement)
-			if err := row.Scan(&itemName, &itemPrice, &itemCurrQty, &itemDistrictData); err != nil {
+			if err := row.Scan(&value.name, &value.price, &value.startStock, &value.data); err != nil {
 				return err
 			}
 
-			adjustedQty := itemCurrQty - value.quantity
-
+			adjustedQty := value.startStock - value.quantity
 			if adjustedQty < 10 {
 				adjustedQty += 100
+
 			}
+			value.finalStock = adjustedQty
 
 			sqlStatement = fmt.Sprintf("UPDATE STOCK SET S_QUANTITY = %d, S_YTD = S_YTD + %d, S_ORDER_CNT = S_ORDER_CNT + 1, S_REMOTE_CNT = %d WHERE S_W_ID = %d AND S_I_ID = %d",
-				adjustedQty,
+				value.finalStock,
 				value.quantity,
 				value.remote,
 				value.supplier,
@@ -112,7 +128,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 				return err
 			}
 
-			orderLineAmount := itemPrice * float64(value.quantity)
+			orderLineAmount := value.price * float64(value.quantity)
 			totalAmount += orderLineAmount
 
 			// Add a new Order Line Item String
@@ -127,14 +143,15 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 					value.supplier,
 					value.quantity,
 					orderLineAmount,
-					itemDistrictData,
+					value.data,
 				))
 
 		}
 
-		sqlStatement = fmt.Sprintf("INSERT INTO %s (O_ID, O_D_ID, O_W_ID, O_C_ID, O_OL_CNT, O_ALL_LOCAL, O_TOTAL_AMOUNT) VALUES ($1, $2, $3, $4, $5, $6, $7)", orderTable)
+		sqlStatement = fmt.Sprintf("INSERT INTO %s (O_ID, O_D_ID, O_W_ID, O_C_ID, O_OL_CNT, O_ALL_LOCAL, O_TOTAL_AMOUNT) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING O_ENTRY_D", orderTable)
 
-		if _, err := tx.Exec(sqlStatement, newOrderID, districtID, warehouseID, customerID, totalUniqueItems, isLocal, totalAmount); err != nil {
+		row = tx.QueryRow(sqlStatement, newOrderID, districtID, warehouseID, customerID, totalUniqueItems, isLocal, totalAmount)
+		if err := row.Scan(&orderTimestamp); err != nil {
 			return err
 		}
 
@@ -152,9 +169,33 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 		return
 	}
 
-	printOutputState(warehouseID, districtID, customerID, totalAmount)
+	totalAmount = totalAmount * (1.0 + districtTax + warehouseTax) * (1.0 - cDiscount)
+
+	printOutputState(warehouseID, districtID, customerID, cLastName, cCredit, cDiscount,
+		newOrderID, orderTimestamp, totalUniqueItems, totalAmount, orderLineObjects)
 }
 
-func printOutputState(warehouseID, districtID, customerID int, totalAmount float64) {
-	fmt.Println(totalAmount)
+func printOutputState(warehouseID, districtID, customerID int, cLastName, cCredit string, cDiscount float64,
+	orderID int, orderTimestamp string, totalUniqueItems int, totalAmount float64, orderLineObjects []*itemObject) {
+	var newOrderString strings.Builder
+
+	newOrderString.WriteString(fmt.Sprintf("Customer Identifier => W_ID = %d, D_ID = %d, C_ID = %d \n", warehouseID, districtID, customerID))
+	newOrderString.WriteString(fmt.Sprintf("Customer Info => Last Name: %s , Credit: %s , Discount: %0.6f \n", cLastName, cCredit, cDiscount))
+	newOrderString.WriteString(fmt.Sprintf("Order Details: O_ID = %d , O_ENTRY_D = %s \n", orderID, orderTimestamp))
+	newOrderString.WriteString(fmt.Sprintf("Total Unique Items: %d \n", totalUniqueItems))
+	newOrderString.WriteString(fmt.Sprintf("Total Amount: %.2f \n", totalAmount))
+
+	newOrderString.WriteString(fmt.Sprintf("Order Items: \n"))
+	newOrderString.WriteString(fmt.Sprintf("Sr No. \t\t ID \t\t Name \t\t Supplier \t\t Qty \t\t Amount \t\t Stock"))
+	for key, value := range orderLineObjects {
+		newOrderString.WriteString(fmt.Sprintf("%d) \t\t %d \t\t %s \t\t %d \t\t %d \t\t %.2f \t\t %d",
+			key+1,
+			value.id,
+			value.name,
+			value.supplier,
+			value.quantity,
+			value.price*float64(value.quantity),
+			value.finalStock,
+		))
+	}
 }

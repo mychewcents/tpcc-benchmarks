@@ -62,7 +62,7 @@ func ProcessTransaction(db *sql.DB, transactionArgs []string) {
 
 	for rows.Next() {
 		// For each order with a maximum quantity of an Order Line item:
-		var orderID, maxQuantity int
+		var customerID, orderID, maxQuantity int
 		var cFirst, cMiddle, cLast, orderTimestamp string
 
 		if err = rows.Scan(&orderID, &maxQuantity); err != nil {
@@ -70,16 +70,16 @@ func ProcessTransaction(db *sql.DB, transactionArgs []string) {
 			return
 		}
 
-		sqlStatement = fmt.Sprintf("SELECT O_ENTRY_D FROM %s WHERE O_ID = %d", orderTable, orderID)
+		sqlStatement = fmt.Sprintf("SELECT O_C_ID, O_ENTRY_D FROM %s WHERE O_ID = %d", orderTable, orderID)
 
 		row = db.QueryRow(sqlStatement)
-		if err = row.Scan(&orderTimestamp); err != nil {
+		if err = row.Scan(&customerID, &orderTimestamp); err != nil {
 			log.Fatalf("%v", err)
 			return
 		}
 
 		// Fetch the Customer Information
-		sqlStatement = fmt.Sprintf("SELECT C_FIRST, C_MIDDLE, C_LAST FROM CUSTOMER WHERE C_W_ID=%d AND C_D_ID = %d AND C_ID = %d", warehouseID, districtID, orderID)
+		sqlStatement = fmt.Sprintf("SELECT C_FIRST, C_MIDDLE, C_LAST FROM CUSTOMER WHERE C_W_ID=%d AND C_D_ID = %d AND C_ID = %d", warehouseID, districtID, customerID)
 
 		row = db.QueryRow(sqlStatement)
 
