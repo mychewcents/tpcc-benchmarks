@@ -86,7 +86,7 @@ CREATE TABLE order_tab (
 	O_D_ID int, 
 	O_ID timeuuid,
 	O_C_ID int,
-	O_C_NAME text,
+	O_C_NAME name,
 	O_CARRIER_ID int,
 	OL_DELIVERY_D timestamp,
 	O_OL_COUNT int,

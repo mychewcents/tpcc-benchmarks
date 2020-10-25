@@ -39,7 +39,6 @@ func (c *customerDaoImpl) GetCustomerByKey(cWId int, cDId int, cId int, ch chan 
 		log.Fatalf("ERROR GetCustomerByKey error making customer. cWId=%v, cDId=%v, cId=%v, err=%v\n", cWId, cDId, cId, err)
 		return
 	}
-
 	ch <- ct
 }
 
@@ -103,7 +102,7 @@ func (c *customerDaoImpl) UpdateCustomerDeliveryCAS(ctOld *table.CustomerTab, ol
 	query := c.cassandraSession.WriteSession.Query("UPDATE customer_tab "+
 		"SET c_balance=?, c_delivery_cnt=? "+
 		"WHERE c_w_id=? AND c_d_id=? AND c_id=? "+
-		"IF c_balance=?, c_delivery_cnt=?", cBalance, cDeliveryCnt,
+		"IF c_balance=? AND c_delivery_cnt=?", cBalance, cDeliveryCnt,
 		ctOld.CWId, ctOld.CDId, ctOld.CId,
 		ctOld.CBalance, ctOld.CDeliveryCnt)
 

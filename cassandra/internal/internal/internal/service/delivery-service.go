@@ -43,12 +43,11 @@ func (d *deliveryServiceImpl) updateOldestOrderDelivery(oWId int, oDId int, oCar
 	applied := d.o.UpdateOrderCAS(oWId, oDId, ov.OId, oCarrierId)
 
 	if !applied {
+		log.Println("CAS Failure updateOldestOrderDelivery")
 		d.updateOldestOrderDelivery(oWId, oDId, oCarrierId, ch)
 	} else {
-		log.Println("CAS Failure updateOldestOrderDelivery")
-
 		cCh := make(chan *table.CustomerTab)
-		d.c.GetCustomerByKey(oWId, oDId, ov.OCId, cCh)
+		go d.c.GetCustomerByKey(oWId, oDId, ov.OCId, cCh)
 		ct := <-cCh
 		d.c.UpdateCustomerDeliveryCAS(ct, ov.OOlTotalAmount)
 
