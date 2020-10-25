@@ -6,6 +6,7 @@ import (
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/handler"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/model"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/service"
+	"strconv"
 )
 
 type PopularItemController interface {
@@ -29,7 +30,15 @@ func (p *popularItemControllerImpl) HandleTransaction(cmd []string) {
 }
 
 func makePopularItemRequest(cmd []string) *model.PopularItemRequest {
-	panic("implement me")
+	wId, _ := strconv.Atoi(cmd[1])
+	dId, _ := strconv.Atoi(cmd[2])
+	l, _ := strconv.Atoi(cmd[3])
+
+	return &model.PopularItemRequest{
+		WId:            wId,
+		DId:            dId,
+		NoOfLastOrders: l,
+	}
 }
 
 func printPopularItemResponse(r *model.PopularItemResponse) {
