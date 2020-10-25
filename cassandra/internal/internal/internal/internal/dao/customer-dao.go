@@ -3,12 +3,13 @@ package dao
 import (
 	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/datamodel/table"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/datamodel/view"
 	"log"
 )
 
 type CustomerDao interface {
 	GetCustomerByKey(cWId int, cDId int, cId int, ch chan *table.CustomerTab)
-	GetCustomerByTopNBalance(cWId int, n int, ch chan []*table.CustomerTab)
+	GetCustomerByTopNBalance(cWId int, n int, ch chan [10]*view.CustomerByBalanceView)
 	UpdateCustomerPaymentCAS(ctOld *table.CustomerTab, payment float64, ch chan bool)
 	UpdateCustomerDeliveryCAS(ctOld *table.CustomerTab, olAmount float64)
 }
@@ -42,20 +43,20 @@ func (c *customerDaoImpl) GetCustomerByKey(cWId int, cDId int, cId int, ch chan 
 	ch <- ct
 }
 
-func (c *customerDaoImpl) GetCustomerByTopNBalance(cWId int, n int, ch chan []*table.CustomerTab) {
+func (c *customerDaoImpl) GetCustomerByTopNBalance(cWId int, n int, ch chan [10]*view.CustomerByBalanceView) {
 	query := c.cassandraSession.ReadSession.Query("SELECT * "+
 		"from customer_by_balance "+
 		"where c_w_id=? limit ?", cWId, n)
 
-	cts := make([]*table.CustomerTab, n)
+	var cts [10]*view.CustomerByBalanceView
 
 	iter := query.Iter()
 	defer iter.Close()
 
 	for i, result := 0, make(map[string]interface{}); iter.MapScan(result); result, i = make(map[string]interface{}), i+1 {
-		ct, err := table.MakeCustomerTab(result)
+		ct, err := view.MakeCustomerByBalanceView(result)
 		if err != nil {
-			log.Fatalf("ERROR GetCustomerByKey error making customer. cWId=%v, n=%v, err=%v\n", cWId, n, err)
+			log.Fatalf("ERROR GetCustomerByTopNBalance error making customer. cWId=%v, n=%v, err=%v\n", cWId, n, err)
 			return
 		}
 		cts[i] = ct
