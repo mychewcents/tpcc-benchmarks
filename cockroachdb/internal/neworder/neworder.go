@@ -145,7 +145,6 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 					orderLineAmount,
 					value.data,
 				))
-
 		}
 
 		sqlStatement = fmt.Sprintf("INSERT INTO %s (O_ID, O_D_ID, O_W_ID, O_C_ID, O_OL_CNT, O_ALL_LOCAL, O_TOTAL_AMOUNT) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING O_ENTRY_D", orderTable)
