@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 )
 
@@ -20,20 +21,24 @@ type itemPercentageName struct {
 }
 
 // ProcessTransaction returns the list of the most popular items and their percentage
-func ProcessTransaction(db *sql.DB, warehouseID, districtID, lastNOrder int) {
+func ProcessTransaction(db *sql.DB, transactionArgs []string) {
+	warehouseID, _ := strconv.Atoi(transactionArgs[1])
+	districtID, _ := strconv.Atoi(transactionArgs[2])
+	lastNOrders, _ := strconv.Atoi(transactionArgs[3])
+
 	var lastOrderID, startOrderID int
 
 	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)
 	orderLineTable := fmt.Sprintf("ORDER_LINE_%d_%d", warehouseID, districtID)
 
-	row := db.QueryRow(`SELECT d_next_o_id FROM district WHERE d_w_id=$1 AND d_id=$2`, warehouseID, districtID)
+	row := db.QueryRow("SELECT d_next_o_id FROM district WHERE d_w_id=$1 AND d_id=$2", warehouseID, districtID)
 
-	err := row.Scan(&lastOrderID)
-	if err != nil {
+	if err := row.Scan(&lastOrderID); err != nil {
 		log.Fatalf("%v", err)
+		return
 	}
 
-	startOrderID = lastOrderID - lastNOrder
+	startOrderID = lastOrderID - lastNOrders
 
 	sqlStatement := fmt.Sprintf(`
 		SELECT OL_O_ID, MAX(OL_QUANTITY) 
@@ -47,6 +52,7 @@ func ProcessTransaction(db *sql.DB, warehouseID, districtID, lastNOrder int) {
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
 		log.Fatalf("%v", err)
+		return
 	}
 	defer rows.Close()
 
@@ -57,28 +63,29 @@ func ProcessTransaction(db *sql.DB, warehouseID, districtID, lastNOrder int) {
 	for rows.Next() {
 		// For each order with a maximum quantity of an Order Line item:
 		var orderID, maxQuantity int
-		err = rows.Scan(&orderID, &maxQuantity)
-		if err != nil {
+		var cFirst, cMiddle, cLast, orderTimestamp string
+
+		if err = rows.Scan(&orderID, &maxQuantity); err != nil {
 			log.Fatalf("%v", err)
+			return
 		}
 
-		sqlStatement = fmt.Sprintf(`SELECT O_ENTRY_D FROM %s WHERE O_ID = %d`, orderTable, orderID)
+		sqlStatement = fmt.Sprintf("SELECT O_ENTRY_D FROM %s WHERE O_ID = %d", orderTable, orderID)
 
-		var orderTimestamp string
 		row = db.QueryRow(sqlStatement)
-		err = row.Scan(&orderTimestamp)
-		if err != nil {
+		if err = row.Scan(&orderTimestamp); err != nil {
 			log.Fatalf("%v", err)
+			return
 		}
 
 		// Fetch the Customer Information
 		sqlStatement = fmt.Sprintf("SELECT C_FIRST, C_MIDDLE, C_LAST FROM CUSTOMER WHERE C_W_ID=%d AND C_D_ID = %d AND C_ID = %d", warehouseID, districtID, orderID)
 
-		var cFirst, cMiddle, cLast string
 		row = db.QueryRow(sqlStatement)
-		err = row.Scan(&cFirst, &cMiddle, &cLast)
-		if err != nil {
+
+		if err = row.Scan(&cFirst, &cMiddle, &cLast); err != nil {
 			log.Fatalf("%v", err)
+			return
 		}
 
 		// Fetch the Item Information
@@ -87,6 +94,7 @@ func ProcessTransaction(db *sql.DB, warehouseID, districtID, lastNOrder int) {
 		items, err := db.Query(sqlStatement)
 		if err != nil {
 			log.Fatalf("%v", err)
+			return
 		}
 		defer items.Close()
 
@@ -96,9 +104,10 @@ func ProcessTransaction(db *sql.DB, warehouseID, districtID, lastNOrder int) {
 		for items.Next() {
 			var id int
 			var name string
-			err = items.Scan(&id, &name)
-			if err != nil {
+
+			if err = items.Scan(&id, &name); err != nil {
 				log.Fatalf("%v", err)
+				return
 			}
 
 			itemIDs, itemNames = append(itemIDs, id), append(itemNames, name)
@@ -107,7 +116,7 @@ func ProcessTransaction(db *sql.DB, warehouseID, districtID, lastNOrder int) {
 
 		// Calculate the Percentage of orders each items occurred in
 		for key, value := range itemIDs {
-			percentage := float64((itemOccurranceMap[value] / lastNOrder)) * 100
+			percentage := float64((itemOccurranceMap[value] / lastNOrders)) * 100
 
 			itemOccurrancePercentageMap[value] = itemPercentageName{percentage: percentage, name: itemNames[key]}
 		}

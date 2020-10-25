@@ -4,18 +4,23 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strconv"
 )
 
 // ProcessTransaction processes the Stock Level Transaction
-func ProcessTransaction(db *sql.DB, warehouseID, districtID, threshold, lastNOrders int) {
-	var totalItems int
-	var lastOrderID int
+func ProcessTransaction(db *sql.DB, transactionArgs []string) {
+	warehouseID, _ := strconv.Atoi(transactionArgs[1])
+	districtID, _ := strconv.Atoi(transactionArgs[2])
+	threshold, _ := strconv.Atoi(transactionArgs[3])
+	lastNOrders, _ := strconv.Atoi(transactionArgs[4])
+
+	var totalItems, lastOrderID int
 
 	row := db.QueryRow("SELECT d_next_o_id FROM district WHERE d_w_id=$1 AND d_id=$2", warehouseID, districtID)
 
-	err := row.Scan(&lastOrderID)
-	if err != nil {
+	if err := row.Scan(&lastOrderID); err != nil {
 		log.Fatalf("%v", err)
+		return
 	}
 
 	startOrderID := lastOrderID - lastNOrders
@@ -32,9 +37,10 @@ func ProcessTransaction(db *sql.DB, warehouseID, districtID, threshold, lastNOrd
 	)
 
 	row = db.QueryRow(sqlStatement)
-	err = row.Scan(&totalItems)
-	if err != nil {
+
+	if err := row.Scan(&totalItems); err != nil {
 		log.Fatalf("%v", err)
+		return
 	}
 
 	printOutputState(totalItems, lastOrderID-lastNOrders, lastOrderID)
