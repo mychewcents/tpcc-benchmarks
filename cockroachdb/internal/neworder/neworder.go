@@ -113,7 +113,6 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 			adjustedQty := value.startStock - value.quantity
 			if adjustedQty < 10 {
 				adjustedQty += 100
-
 			}
 			value.finalStock = adjustedQty
 
