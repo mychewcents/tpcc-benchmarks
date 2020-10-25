@@ -10,8 +10,7 @@ import (
 )
 
 // ProcessRequest Calls the required DB function
-func ProcessRequest(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) error {
-	// var err error
+func ProcessRequest(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) {
 
 	switch transactionArgs[0] {
 	case "N":
@@ -27,5 +26,5 @@ func ProcessRequest(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string
 	case "R":
 
 	}
-	return nil
+
 }
