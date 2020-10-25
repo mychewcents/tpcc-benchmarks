@@ -10,9 +10,9 @@ import (
 )
 
 // CreateConnection returns a DB connection object
-func CreateConnection(connAddr, port, database, username string) (*sql.DB, error) {
+func CreateConnection(connAddr string, port int, database, username string) (*sql.DB, error) {
 
-	connString := fmt.Sprintf("postgres://%s@%s:%s/%s?sslmode=disable", username, connAddr, port, database)
+	connString := fmt.Sprintf("postgres://%s@%s:%d/%s?sslmode=disable", username, connAddr, port, database)
 
 	db, err := sql.Open("postgres", connString)
 	if err != nil {

@@ -1,10 +1,12 @@
 package neworder
 
 import (
+	"bufio"
 	"context"
 	"database/sql"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/cockroachdb/cockroach-go/crdb"
@@ -25,12 +27,56 @@ type newOrder struct {
 }
 
 type itemObject struct {
-	quantity, supplier int
-	remote             int
+	id, quantity, supplier, remote int
 }
 
-// ProcessTransaction process the new transaction
-func ProcessTransaction(db *sql.DB, warehouseID, districtID, customerID, numItems int, itemIDs, supplierWarehouseIDs, itemQtys []int) {
+// ProcessTransaction process the new order transaction
+func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, args []string) {
+	customerID, _ := strconv.Atoi(args[0])
+	warehouseID, _ := strconv.Atoi(args[1])
+	districtID, _ := strconv.Atoi(args[2])
+	numOfItems, _ := strconv.Atoi(args[3])
+
+	orderLineObjects := make([]*itemObject, numOfItems)
+	prevSeenOrderLineItems := make(map[int]int) // Maps the items IDs to the
+	isLocal := 1
+
+	var id, supplier, quantity, remote, totalUniqueItems int
+
+	for i := 0; i < numOfItems; i++ {
+		olArgs := strings.Split(scanner.Text(), ",")
+		id, _ = strconv.Atoi(olArgs[0])
+		supplier, _ = strconv.Atoi(olArgs[1])
+		quantity, _ = strconv.Atoi(olArgs[2])
+
+		if supplier != warehouseID {
+			remote = 1
+			if isLocal == 1 {
+				isLocal = 0
+			}
+		} else {
+			remote = 0
+		}
+
+		if _, ok := prevSeenOrderLineItems[id]; ok {
+			orderLineObjects[prevSeenOrderLineItems[id]].quantity += quantity
+		} else {
+			orderLineObjects[i] = &itemObject{
+				id:       id,
+				supplier: supplier,
+				quantity: quantity,
+				remote:   remote,
+			}
+			prevSeenOrderLineItems[id] = i
+			totalUniqueItems++
+		}
+
+	}
+
+	execute(db, warehouseID, districtID, customerID, totalUniqueItems, isLocal, totalUniqueItems, orderLineObjects[0:totalUniqueItems])
+}
+
+func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal, totalUniqueItems int, orderLineObjects []*itemObject) {
 
 	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)
 	orderLineTable := fmt.Sprintf("ORDER_LINE_%d_%d", warehouseID, districtID)
@@ -46,48 +92,19 @@ func ProcessTransaction(db *sql.DB, warehouseID, districtID, customerID, numItem
 		return
 	}
 
-	var totalUniqueItems int
-
-	allLocalFlag := 1
-	itemVisited := make(map[int]bool)
-	itemsToAttributesMap := make(map[int]itemObject)
-
-	for index, value := range itemIDs {
-		var remote int
-
-		if supplierWarehouseIDs[index] != warehouseID {
-			allLocalFlag = 0
-			remote = 1
-		}
-
-		itemsToAttributesMap[value] = itemObject{
-			supplier: supplierWarehouseIDs[index],
-			quantity: itemQtys[index],
-			remote:   remote,
-		}
-
-		if !itemVisited[value] {
-			itemVisited[value] = true
-			totalUniqueItems++
-		}
-	}
-
 	var totalAmount float64
 	var orderLineEntries []string
 
 	err = crdb.ExecuteTx(context.Background(), db, nil, func(tx *sql.Tx) error {
 
-		orderLineItemCounter := 1
+		var itemName string
+		var itemPrice float64
+		var itemCurrQty int
+		var itemDistrictData string
 
-		for key, value := range itemsToAttributesMap {
-			// Update Stock
+		for key, value := range orderLineObjects {
 
-			var itemName string
-			var itemPrice float64
-			var itemCurrQty int
-			var itemDistrictData string
-
-			sqlStatement = fmt.Sprintf("SELECT S_I_NAME, S_I_PRICE, S_QUANTITY, S_DIST_%02d FROM STOCK WHERE S_W_ID = %d AND S_I_ID = %d", districtID, value.supplier, key)
+			sqlStatement = fmt.Sprintf("SELECT S_I_NAME, S_I_PRICE, S_QUANTITY, S_DIST_%02d FROM STOCK WHERE S_W_ID = %d AND S_I_ID = %d", districtID, value.supplier, value.id)
 			row = tx.QueryRow(sqlStatement)
 			err = row.Scan(&itemName, &itemPrice, &itemCurrQty, &itemDistrictData)
 			if err != nil {
@@ -106,14 +123,8 @@ func ProcessTransaction(db *sql.DB, warehouseID, districtID, customerID, numItem
 				value.quantity,
 				value.remote,
 				value.supplier,
-				key)
-			_, err = tx.Exec("UPDATE STOCK SET S_QUANTITY = $1, S_YTD = S_YTD + $2, S_ORDER_CNT = S_ORDER_CNT + 1, S_REMOTE_CNT = $3 WHERE S_W_ID = $4 AND S_I_ID = $5",
-				adjustedQty,
-				value.quantity,
-				value.remote,
-				value.supplier,
-				key,
-			)
+				value.id)
+			_, err = tx.Exec(sqlStatement)
 
 			// fmt.Println(sqlStatement)
 
@@ -128,20 +139,19 @@ func ProcessTransaction(db *sql.DB, warehouseID, districtID, customerID, numItem
 					newOrderID,
 					districtID,
 					warehouseID,
-					orderLineItemCounter,
 					key,
+					value.id,
 					value.supplier,
 					value.quantity,
 					orderLineAmount,
 					itemDistrictData,
 				))
 
-			orderLineItemCounter++
 		}
 
 		sqlStatement = fmt.Sprintf("INSERT INTO %s (O_ID, O_D_ID, O_W_ID, O_C_ID, O_OL_CNT, O_ALL_LOCAL, O_TOTAL_AMOUNT) VALUES ($1, $2, $3, $4, $5, $6, $7)", orderTable)
 
-		if _, err := tx.Exec(sqlStatement, newOrderID, districtID, warehouseID, customerID, totalUniqueItems, allLocalFlag, totalAmount); err != nil {
+		if _, err := tx.Exec(sqlStatement, newOrderID, districtID, warehouseID, customerID, totalUniqueItems, isLocal, totalAmount); err != nil {
 			return err
 		}
 
