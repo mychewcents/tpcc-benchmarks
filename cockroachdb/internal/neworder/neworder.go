@@ -185,9 +185,9 @@ func printOutputState(warehouseID, districtID, customerID int, cLastName, cCredi
 	newOrderString.WriteString(fmt.Sprintf("Total Unique Items: %d \n", totalUniqueItems))
 	newOrderString.WriteString(fmt.Sprintf("Total Amount: %.2f \n", totalAmount))
 
-	newOrderString.WriteString(fmt.Sprintf("Sr No. \t\t ID \t\t Name \t\t\t Supplier \t\t Qty \t Amount \t\t Stock\n"))
+	newOrderString.WriteString(fmt.Sprintf(" # \t ID \t Name (Supplier, Qty, Amount, Stock) \n"))
 	for key, value := range orderLineObjects {
-		newOrderString.WriteString(fmt.Sprintf("  %02d \t\t %d \t\t %s \t\t\t %d \t\t %d \t %.2f \t\t %d",
+		newOrderString.WriteString(fmt.Sprintf(" %02d \t %d \t %s (%d, %d, %.2f, %d) \n",
 			key+1,
 			value.id,
 			value.name,
