@@ -121,7 +121,8 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 				value.quantity,
 				value.remote,
 				value.supplier,
-				value.id)
+				value.id,
+			)
 
 			if _, err := tx.Exec(sqlStatement); err != nil {
 				return err
