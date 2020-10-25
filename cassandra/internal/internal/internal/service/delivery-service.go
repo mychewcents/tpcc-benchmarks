@@ -40,10 +40,14 @@ func (d *deliveryServiceImpl) ProcessDeliveryTransaction(request *model.Delivery
 
 func (d *deliveryServiceImpl) updateOldestOrderDelivery(oWId int, oDId int, oCarrierId int, ch chan bool) {
 	ov := d.o.GetOldestUnDeliveredOrder(oWId, oDId)
+	if ov == nil {
+		ch <- false
+		return
+	}
 	applied := d.o.UpdateOrderCAS(oWId, oDId, ov.OId, oCarrierId)
 
 	if !applied {
-		log.Println("CAS Failure updateOldestOrderDelivery")
+		log.Printf("CAS Failure updateOldestOrderDelivery oWId=%v, oDId=%v, oCarrierId=%v\n", oWId, oDId, oCarrierId)
 		d.updateOldestOrderDelivery(oWId, oDId, oCarrierId, ch)
 	} else {
 		cCh := make(chan *table.CustomerTab)

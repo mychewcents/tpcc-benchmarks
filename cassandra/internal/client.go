@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 func Start() {
@@ -32,6 +33,7 @@ func makeCassandraSession() *common.CassandraSession {
 
 	readCluster := gocql.NewCluster(cassandraConfig.Hosts...)
 	readCluster.Keyspace = cassandraConfig.Keyspace
+	readCluster.Timeout = time.Second * 10
 	if strings.ToUpper(cassandraConfig.ReadConsistency) == "ONE" {
 		readCluster.Consistency = gocql.One
 	} else {
@@ -41,6 +43,7 @@ func makeCassandraSession() *common.CassandraSession {
 
 	writeCluster := gocql.NewCluster(cassandraConfig.Hosts...)
 	writeCluster.Keyspace = cassandraConfig.Keyspace
+	writeCluster.Timeout = time.Second * 10
 	if strings.ToUpper(cassandraConfig.WriteConsistency) == "ONE" {
 		writeCluster.Consistency = gocql.One
 	} else {
