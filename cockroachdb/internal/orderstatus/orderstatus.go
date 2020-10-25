@@ -26,8 +26,6 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 }
 
 func execute(db *sql.DB, warehouseID int, districtID int, customerID int) {
-	// Create secondary index on (O_C_ID, O_ID DESC)
-	// Add O_DELIVERY_D to ORDERS
 	lastOrderQuery := fmt.Sprintf("SELECT O_ID, O_DELIVERY_D, O_ENTRY_D, O_CARRIER_ID FROM ORDERS_%d_%d WHERE O_C_ID=%d ORDER BY O_ID DESC LIMIT 1",
 		warehouseID, districtID, customerID)
 	customerExistsQuery := fmt.Sprintf("SELECT C_FIRST, C_MIDDLE, C_LAST, C_BALANCE  FROM CUSTOMER WHERE C_W_ID=%d AND C_D_ID=%d AND C_ID=%d", warehouseID, districtID, customerID)
@@ -96,3 +94,4 @@ func execute(db *sql.DB, warehouseID int, districtID int, customerID int) {
 		fmt.Println(fmt.Sprintf(output, first, middle, last, balance, lastOrderID, entryDate.String, "null"))
 	}
 }
+
