@@ -12,20 +12,6 @@ import (
 	"github.com/cockroachdb/cockroach-go/crdb"
 )
 
-type newOrder struct {
-	// INPUTS
-	CustomerID, DistrictID, WarehouseID, NumItems int
-	ItemIDs, SupplierWarehouseIDs, ItemQuantities []int64
-
-	// OUTPUTS
-	lastName, creditStatus, orderTimestamp               string
-	custDiscount, totalAmount, warehouseTax, districtTax float64
-	orderID                                              int
-	itemNames                                            []string
-	itemAmount                                           []float64
-	itemStock                                            []int
-}
-
 type itemObject struct {
 	id, quantity, supplier, remote int
 }
@@ -44,33 +30,34 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, args []string) {
 	var id, supplier, quantity, remote, totalUniqueItems int
 
 	for i := 0; i < numOfItems; i++ {
-		olArgs := strings.Split(scanner.Text(), ",")
-		id, _ = strconv.Atoi(olArgs[0])
-		supplier, _ = strconv.Atoi(olArgs[1])
-		quantity, _ = strconv.Atoi(olArgs[2])
+		if scanner.Scan() {
+			olArgs := strings.Split(scanner.Text(), ",")
+			id, _ = strconv.Atoi(olArgs[0])
+			supplier, _ = strconv.Atoi(olArgs[1])
+			quantity, _ = strconv.Atoi(olArgs[2])
 
-		if supplier != warehouseID {
-			remote = 1
-			if isLocal == 1 {
-				isLocal = 0
+			if supplier != warehouseID {
+				remote = 1
+				if isLocal == 1 {
+					isLocal = 0
+				}
+			} else {
+				remote = 0
 			}
-		} else {
-			remote = 0
-		}
 
-		if _, ok := prevSeenOrderLineItems[id]; ok {
-			orderLineObjects[prevSeenOrderLineItems[id]].quantity += quantity
-		} else {
-			orderLineObjects[i] = &itemObject{
-				id:       id,
-				supplier: supplier,
-				quantity: quantity,
-				remote:   remote,
+			if _, ok := prevSeenOrderLineItems[id]; ok {
+				orderLineObjects[prevSeenOrderLineItems[id]].quantity += quantity
+			} else {
+				orderLineObjects[i] = &itemObject{
+					id:       id,
+					supplier: supplier,
+					quantity: quantity,
+					remote:   remote,
+				}
+				prevSeenOrderLineItems[id] = i
+				totalUniqueItems++
 			}
-			prevSeenOrderLineItems[id] = i
-			totalUniqueItems++
 		}
-
 	}
 
 	execute(db, warehouseID, districtID, customerID, totalUniqueItems, isLocal, totalUniqueItems, orderLineObjects[0:totalUniqueItems])
@@ -86,8 +73,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 	var newOrderID int
 	var districtTax, warehouseTax float64
 	row := db.QueryRow(sqlStatement)
-	err := row.Scan(&newOrderID, &districtTax, &warehouseTax)
-	if err != nil {
+	if err := row.Scan(&newOrderID, &districtTax, &warehouseTax); err != nil {
 		log.Fatalf("%v", err)
 		return
 	}
@@ -95,7 +81,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 	var totalAmount float64
 	var orderLineEntries []string
 
-	err = crdb.ExecuteTx(context.Background(), db, nil, func(tx *sql.Tx) error {
+	err := crdb.ExecuteTx(context.Background(), db, nil, func(tx *sql.Tx) error {
 
 		var itemName string
 		var itemPrice float64
@@ -103,15 +89,12 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 		var itemDistrictData string
 
 		for key, value := range orderLineObjects {
-
 			sqlStatement = fmt.Sprintf("SELECT S_I_NAME, S_I_PRICE, S_QUANTITY, S_DIST_%02d FROM STOCK WHERE S_W_ID = %d AND S_I_ID = %d", districtID, value.supplier, value.id)
 			row = tx.QueryRow(sqlStatement)
-			err = row.Scan(&itemName, &itemPrice, &itemCurrQty, &itemDistrictData)
-			if err != nil {
+			if err := row.Scan(&itemName, &itemPrice, &itemCurrQty, &itemDistrictData); err != nil {
 				return err
 			}
 
-			// fmt.Println(itemName, itemPrice, itemCurrQty, itemDistrictData)
 			adjustedQty := itemCurrQty - value.quantity
 
 			if adjustedQty < 10 {
@@ -124,11 +107,11 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 				value.remote,
 				value.supplier,
 				value.id)
-			_, err = tx.Exec(sqlStatement)
 
-			// fmt.Println(sqlStatement)
+			if _, err := tx.Exec(sqlStatement); err != nil {
+				return err
+			}
 
-			_, err = tx.Exec(sqlStatement)
 			orderLineAmount := itemPrice * float64(value.quantity)
 			totalAmount += orderLineAmount
 
@@ -158,7 +141,6 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 		sqlStatement = fmt.Sprintf("INSERT INTO %s (OL_O_ID, OL_D_ID, OL_W_ID, OL_NUMBER, OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DIST_INFO) VALUES %s",
 			orderLineTable, strings.Join(orderLineEntries, ", "))
 
-		// fmt.Println(sqlStatement)
 		if _, err := tx.Exec(sqlStatement); err != nil {
 			return err
 		}
@@ -167,6 +149,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 	})
 	if err != nil {
 		log.Fatalf("%v", err)
+		return
 	}
 
 	printOutputState(warehouseID, districtID, customerID, totalAmount)

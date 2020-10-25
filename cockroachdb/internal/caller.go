@@ -15,7 +15,6 @@ func ProcessRequest(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string
 	case "N":
 		neworder.ProcessTransaction(db, scanner, transactionArgs[1:])
 	case "P":
-
 	case "D":
 	case "O":
 	case "S":
