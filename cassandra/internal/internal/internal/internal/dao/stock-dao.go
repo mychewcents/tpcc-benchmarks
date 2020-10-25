@@ -48,7 +48,7 @@ func (s *stockDaoImpl) GetItemCountWithLowStock(sWId int, sIIds []int, sQuantity
 	}
 
 	query := s.cassandraSession.ReadSession.Query("SELECT count(*) "+
-		"from stock_tab "+
+		"from stock_tab_by_quantity_view "+
 		"where s_w_id=? AND s_i_id IN (?) AND s_quantity<?", sWId, strings.Join(sIIdString, ","), sQuantity)
 
 	var count int

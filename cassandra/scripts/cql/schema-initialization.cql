@@ -161,7 +161,7 @@ CREATE TABLE stock_tab (
 	S_DIST_09 text,
 	S_DIST_10 text,
 	S_DATA text,
-	PRIMARY KEY (S_W_ID, S_I_ID, S_QUANTITY)
+	PRIMARY KEY (S_W_ID, S_I_ID)
 );
 
 CREATE MATERIALIZED VIEW stock_tab_by_quantity_view AS
