@@ -22,7 +22,7 @@ func ProcessRequest(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string
 	case "P":
 		payment.ProcessTransaction(db, nil, transactionArgs[1:])
 	case "D":
-
+		delivery.ProcessTransaction(db, nil, transactionArgs[1:])
 	case "O":
 		orderstatus.ProcessTransaction(db, nil, transactionArgs[1:])
 	case "S":
