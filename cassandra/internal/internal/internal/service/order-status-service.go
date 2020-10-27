@@ -33,7 +33,7 @@ func (o *orderStatusServiceImpl) ProcessOrderStatusTransaction(request *model.Or
 	chC := make(chan *table.CustomerTab)
 	chOl := make(chan []*table.OrderLineTab)
 
-	go o.o.GetCustomerLatestOrder(request.CWId, request.CDId, request.CWId, chO)
+	go o.o.GetCustomerLatestOrder(request.CWId, request.CDId, request.CId, chO)
 	go o.c.GetCustomerByKey(request.CWId, request.CDId, request.CId, chC)
 
 	ov := <-chO
@@ -54,6 +54,7 @@ func (o *orderStatusServiceImpl) ProcessOrderStatusTransaction(request *model.Or
 
 	return &model.OrderStatusResponse{
 		CName:               model.NameModelFromUDT(&ct.CName),
+		CBalance:            ct.CBalance,
 		OId:                 ov.OId,
 		OEntryD:             ov.OEntryD,
 		OCarrierId:          ov.OCarrierId,

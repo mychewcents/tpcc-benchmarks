@@ -68,7 +68,7 @@ func (c *customerDaoImpl) UpdateCustomerPaymentCAS(ctOld *table.CustomerTab, pay
 
 	cBalance := ctOld.CBalance - payment
 	cYtdPayment := ctOld.CYtdPayment + payment
-	cPaymentCnt := ctOld.CPaymentCnt - 1
+	cPaymentCnt := ctOld.CPaymentCnt + 1
 
 	query := c.cassandraSession.WriteSession.Query("UPDATE customer_tab "+
 		"SET c_balance=?, c_ytd_payment=?, c_payment_cnt=? "+

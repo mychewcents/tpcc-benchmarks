@@ -20,7 +20,8 @@ type OrderLineStatus struct {
 }
 
 type OrderStatusResponse struct {
-	CName *Name
+	CName    *Name
+	CBalance float64
 
 	OId        gocql.UUID
 	OEntryD    time.Time
