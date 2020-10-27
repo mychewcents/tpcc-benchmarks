@@ -14,25 +14,24 @@ import (
 )
 
 // ProcessRequest Calls the required DB function
-func ProcessRequest(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) {
-
+func ProcessRequest(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) bool {
 	switch transactionArgs[0] {
 	case "N":
-		neworder.ProcessTransaction(db, scanner, transactionArgs[1:])
+		return neworder.ProcessTransaction(db, scanner, transactionArgs[1:])
 	case "P":
-		payment.ProcessTransaction(db, nil, transactionArgs[1:])
+		return payment.ProcessTransaction(db, nil, transactionArgs[1:])
 	case "D":
-		delivery.ProcessTransaction(db, nil, transactionArgs[1:])
+		return delivery.ProcessTransaction(db, nil, transactionArgs[1:])
 	case "O":
-		orderstatus.ProcessTransaction(db, nil, transactionArgs[1:])
+		return orderstatus.ProcessTransaction(db, nil, transactionArgs[1:])
 	case "S":
-		stocklevel.ProcessTransaction(db, nil, transactionArgs[1:])
+		return stocklevel.ProcessTransaction(db, nil, transactionArgs[1:])
 	case "I":
-		popularitem.ProcessTransaction(db, nil, transactionArgs[1:])
+		return popularitem.ProcessTransaction(db, nil, transactionArgs[1:])
 	case "T":
-		topbalance.ProcessTransaction(db, nil)
+		return topbalance.ProcessTransaction(db, nil)
 	case "R":
 
 	}
-
+	return false
 }

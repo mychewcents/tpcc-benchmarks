@@ -16,13 +16,14 @@ type districtOrder struct {
 }
 
 // ProcessTransaction processes the Delivery transaction
-func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) {
+func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) bool {
 	warehouseID, _ := strconv.Atoi(transactionArgs[0])
 	carrierID, _ := strconv.Atoi(transactionArgs[1])
-	execute(db, warehouseID, carrierID)
+	return execute(db, warehouseID, carrierID)
 }
 
-func execute(db *sql.DB, warehouseID int, carrierID int) {
+func execute(db *sql.DB, warehouseID int, carrierID int) bool {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	orderQuery := "SELECT O_ID FROM ORDERS_%d_%d WHERE O_CARRIER_ID=0 ORDER BY O_ID LIMIT 1"
 	updateOrderQuery := "UPDATE ORDERS_%d_%d SET (O_CARRIER_ID, O_DELIVERY_D) = (%d, now()) WHERE O_W_ID=%d AND O_D_ID=%d AND O_ID=%d RETURNING O_C_ID, O_TOTAL_AMOUNT"
@@ -43,9 +44,10 @@ func execute(db *sql.DB, warehouseID int, carrierID int) {
 	})
 	if err != nil {
 		log.Fatal(err)
+		return false
 	}
 	if len(orders) == 0 {
-		return
+		return true
 	}
 	err = crdb.ExecuteTx(context.Background(), db, nil, func(tx *sql.Tx) error {
 		for _, order := range orders {
@@ -64,5 +66,7 @@ func execute(db *sql.DB, warehouseID int, carrierID int) {
 	})
 	if err != nil {
 		log.Fatal(err)
+		return false
 	}
+	return true
 }

@@ -22,15 +22,15 @@ type itemPercentageName struct {
 }
 
 // ProcessTransaction returns the list of the most popular items and their percentage
-func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) {
+func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) bool {
 	warehouseID, _ := strconv.Atoi(transactionArgs[1])
 	districtID, _ := strconv.Atoi(transactionArgs[2])
 	lastNOrders, _ := strconv.Atoi(transactionArgs[3])
 
-	execute(db, warehouseID, districtID, lastNOrders)
+	return execute(db, warehouseID, districtID, lastNOrders)
 }
 
-func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) {
+func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) bool {
 	var lastOrderID, startOrderID int
 
 	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)
@@ -40,7 +40,7 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) {
 
 	if err := row.Scan(&lastOrderID); err != nil {
 		log.Fatalf("%v", err)
-		return
+		return false
 	}
 
 	startOrderID = lastOrderID - lastNOrders
@@ -57,7 +57,7 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) {
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
 		log.Fatalf("%v", err)
-		return
+		return false
 	}
 	defer rows.Close()
 
@@ -72,7 +72,7 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) {
 
 		if err = rows.Scan(&orderID, &maxQuantity); err != nil {
 			log.Fatalf("%v", err)
-			return
+			return false
 		}
 
 		sqlStatement = fmt.Sprintf("SELECT O_C_ID, O_ENTRY_D FROM %s WHERE O_ID = %d", orderTable, orderID)
@@ -80,7 +80,7 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) {
 		row = db.QueryRow(sqlStatement)
 		if err = row.Scan(&customerID, &orderTimestamp); err != nil {
 			log.Fatalf("%v", err)
-			return
+			return false
 		}
 
 		// Fetch the Customer Information
@@ -90,7 +90,7 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) {
 
 		if err = row.Scan(&cFirst, &cMiddle, &cLast); err != nil {
 			log.Fatalf("%v", err)
-			return
+			return false
 		}
 
 		// Fetch the Item Information
@@ -99,7 +99,7 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) {
 		items, err := db.Query(sqlStatement)
 		if err != nil {
 			log.Fatalf("%v", err)
-			return
+			return false
 		}
 		defer items.Close()
 
@@ -112,7 +112,7 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) {
 
 			if err = items.Scan(&id, &name); err != nil {
 				log.Fatalf("%v", err)
-				return
+				return false
 			}
 
 			itemIDs, itemNames = append(itemIDs, id), append(itemNames, name)
@@ -138,6 +138,7 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) {
 
 	fmt.Println("Done")
 	// printOutputState(warehouseID, districtID, startOrderID, lastOrderID, lastNOrder, ordersMap, itemOccurrancePercentageMap)
+	return true
 }
 
 func printOutputState(warehouseID, districtID, startOrderID, lastOrderID, lastNOrder int, ordersMap map[int]details, itemOccurrancePercentageMap map[int]itemPercentageName) {

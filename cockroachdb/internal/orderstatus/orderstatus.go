@@ -17,15 +17,17 @@ type orderItem struct {
 }
 
 // ProcessTransaction processes the Order Status Transaction
-func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) {
+func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) bool {
 	warehouseID, _ := strconv.Atoi(transactionArgs[0])
 	districtID, _ := strconv.Atoi(transactionArgs[1])
 	customerID, _ := strconv.Atoi(transactionArgs[2])
 
-	execute(db, warehouseID, districtID, customerID)
+	return execute(db, warehouseID, districtID, customerID)
 }
 
-func execute(db *sql.DB, warehouseID int, districtID int, customerID int) {
+func execute(db *sql.DB, warehouseID int, districtID int, customerID int) bool {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	lastOrderQuery := fmt.Sprintf("SELECT O_ID, O_DELIVERY_D, O_ENTRY_D, O_CARRIER_ID FROM ORDERS_%d_%d WHERE O_C_ID=%d ORDER BY O_ID DESC LIMIT 1",
 		warehouseID, districtID, customerID)
 	customerExistsQuery := fmt.Sprintf("SELECT C_FIRST, C_MIDDLE, C_LAST, C_BALANCE  FROM CUSTOMER WHERE C_W_ID=%d AND C_D_ID=%d AND C_ID=%d", warehouseID, districtID, customerID)
@@ -33,22 +35,16 @@ func execute(db *sql.DB, warehouseID int, districtID int, customerID int) {
 
 	var first, middle, last string
 	var balance float64
-	err := crdb.ExecuteTx(context.Background(), db, nil, func(tx *sql.Tx) error {
-		if err := tx.QueryRow(customerExistsQuery).Scan(&first, &middle, &last, &balance); err != nil {
-			return err
-		}
-		return nil
-	})
-	if err == sql.ErrNoRows {
-		fmt.Println("Customer not found!")
-		return
+	if err := db.QueryRow(customerExistsQuery).Scan(&first, &middle, &last, &balance); err != nil {
+		log.Fatal(err)
+		return false
 	}
 
 	var orderLines []orderItem
 	var lastOrderID int
 	var carrierID sql.NullInt32
 	var deliveryDate, entryDate sql.NullString
-	err = crdb.ExecuteTx(context.Background(), db, nil, func(tx *sql.Tx) error {
+	err := crdb.ExecuteTx(context.Background(), db, nil, func(tx *sql.Tx) error {
 		if err := tx.QueryRow(lastOrderQuery).Scan(&lastOrderID, &deliveryDate, &entryDate, &carrierID); err != nil {
 			return err
 		}
@@ -63,14 +59,12 @@ func execute(db *sql.DB, warehouseID int, districtID int, customerID int) {
 			}
 			orderLines = append(orderLines, orderLine)
 		}
+		defer rows.Close()
 		return nil
 	})
-	if err == sql.ErrNoRows {
-		fmt.Println("No records found!")
-		return
-	}
 	if err != nil {
 		log.Fatal(err)
+		return false
 	}
 
 	output := "Customer name: %s %s %s \nBalance: %f\nOrder: %d\nEntry date: %s\nCarrier: %s\n"
@@ -93,5 +87,6 @@ func execute(db *sql.DB, warehouseID int, districtID int, customerID int) {
 	} else {
 		fmt.Println(fmt.Sprintf(output, first, middle, last, balance, lastOrderID, entryDate.String, "null"))
 	}
+	return true
 }
 
