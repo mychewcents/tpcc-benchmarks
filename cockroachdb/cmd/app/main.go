@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 	"sort"
+	"fmt"
 
 	caller "github.com/mychewcents/ddbms-project/cockroachdb/internal"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/cdbconn"
@@ -17,7 +18,7 @@ var db *sql.DB
 
 var (
 	connPtr     = flag.String("host", "localhost", "URL / IP of the DB Server")
-	portPtr     = flag.Int("port", 26257, "Port to contact the server's CDB Service")
+	portPtr     = flag.Int("port", 27000, "Port to contact the server's CDB Service")
 	dbPtr       = flag.String("database", "defaultdb", "Database to connect")
 	usernamePtr = flag.String("username", "root", "Username to connect with")
 )
@@ -32,42 +33,44 @@ func init() {
 	}
 }
 
-func outputStats(latencies []int64) {
-	sort.Slice(latencies)
-	
-	elapsedTime := 0
-	processedTxs = len(times)
-	for latency := range latencies {
+func outputStats(latencies []float64) {
+	sort.Float64s(latencies)
+
+	elapsedTime := 0.
+	processedTxs := len(latencies)
+	for _, latency := range latencies {
 		elapsedTime += latency
 	}
 	
-	throughput := processedTxs / elapsedTime
-	avgLatency := elapsedTime / processedTxs
-	
-	if processedTxs % 2 {
-		medianLatency := latencies[(processedTxs - 1) / 2]
+	throughput := float64(processedTxs) * 1000 / elapsedTime
+	avgLatency := elapsedTime / float64(processedTxs)
+	var medianLatency float64
+	if processedTxs % 2 > 0 {
+		medianLatency = latencies[(processedTxs - 1) / 2]
 	} else {
-		medianLatency := (latencies[processedTxs / 2 + 1] + latencies[processedTxs / 2]) / 2
+		medianLatency = (latencies[processedTxs / 2] + latencies[processedTxs / 2 - 1]) / 2
 	}
-	p99 := latencies[int(.99 * processedTxs)]
-	p95 := latencies[int(.95 * processedTxs)]
+	p99 := latencies[99 * processedTxs / 100]
+	p95 := latencies[95 * processedTxs / 100]
 
 	outputStr := "Total number of transactions processed: %d\n"
-	outputStr += "Total elapsed time(s): %f\n"
+	outputStr += "Total elapsed time: %fs\n"
 	outputStr += "Throughput: %f\n"
-	outputStr += "Average Latency(ms): %f\n"
-	outputStr += "Median Latency(ms): %f\n"
-	outputStr += "p99 Latency(ms): %f\n"
-	outputStr += "p95 Latency(ms): %f"
+	outputStr += "Average Latency: %fms\n"
+	outputStr += "Median Latency(ms): %fms\n"
+	outputStr += "p99 Latency(ms): %fms\n"
+	outputStr += "p95 Latency(ms): %fms"
 
-	fmt.Println(outputStr,
-		processedTxs,
-		elapsedTime / 1000,
-		throughput,
-		avgLatency,
-		medianLatency,
-		p99,
-		p95
+	fmt.Println(
+		fmt.Sprintf(outputStr,
+			processedTxs,
+			elapsedTime / 1000,
+			throughput,
+			avgLatency,
+			medianLatency,
+			p99,
+			p95,
+		),
 	)
 }
 
@@ -75,16 +78,15 @@ func main() {
 	var txArgs []string
 
 	scanner := bufio.NewScanner(os.Stdin)
-	var processingTimes = []int64
+	var latencies []float64
 	for scanner.Scan() {
 		txArgs = strings.Split(scanner.Text(), ",")
 
 		start := time.Now()
 		status := caller.ProcessRequest(db, scanner, txArgs)
 		if status == true {
-			processingTimes = append(processingTimes, 1. * time.Since(start) / time.Millisecond)
+			latencies = append(latencies, float64(time.Since(start)) / float64(time.Millisecond))
 		}
 	}
-
-	outputStats(processingTimes)
+	outputStats(latencies)
 }

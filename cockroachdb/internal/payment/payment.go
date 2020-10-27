@@ -67,7 +67,7 @@ func execute(db *sql.DB, customerWHID int, customerDistrictID int, customerID in
 		cBalance,
 		wStreet1, wStreet2, wCity, wState, wZip,
 		dStreet1, dStreet2, dCity, dState, dZip,
-		payment
+		payment,
 	)
 	fmt.Println(output)
 	return true
