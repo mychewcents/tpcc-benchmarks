@@ -1,5 +1,5 @@
 
-cockroachdb/cmd/app/app*
+**/*/app*
 cockroachdb/cmd/init/init*
 
 cockroachdb/temp
