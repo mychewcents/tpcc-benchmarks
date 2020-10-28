@@ -44,7 +44,8 @@ func makeStockLevelRequest(cmd []string) *model.StockLevelRequest {
 }
 
 func printStockLevelResponse(r *model.StockLevelResponse) {
-	fmt.Println(r)
+	//fmt.Println(r)
+	fmt.Sprintf("1.The total number of items in S:%v\n", countCh)
 }
 
 func (s *stockLevelControllerImpl) Close() error {

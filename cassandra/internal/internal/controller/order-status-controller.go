@@ -42,7 +42,10 @@ func makeOrderStatusRequest(cmd []string) *model.OrderStatusRequest {
 }
 
 func printOrderStatusResponse(r *model.OrderStatusResponse) {
-	fmt.Println(r)
+	//fmt.Println(r)
+	fmt.Sprintf("1.Customer's name:%v\n", model.NameModelFromUDT(&ct.CName))
+    fmt.Sprintf("2.For the customer's last order OId:%v\n OEntryD:%v\n OCarrierId:%v\n", ov.OId, ov.OEntryD, ov.OCarrierId)
+    fmt.Sprintf("3.For each item in the customer's last order:%v\n", olS)
 }
 
 func (n *orderStatusControllerImpl) Close() error {

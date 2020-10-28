@@ -28,7 +28,8 @@ func (t *topBalanceControllerImpl) HandleTransaction(cmd []string) {
 }
 
 func printTopBalanceResponse(r *model.TopBalanceResponse) {
-	fmt.Println(r)
+	//fmt.Println(r)
+	fmt.Sprintf("For each customer in C ranked in descending order of C_BALANCE:%v\n", ci)
 }
 
 func (t *topBalanceControllerImpl) Close() error {
