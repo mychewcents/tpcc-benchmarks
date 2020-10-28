@@ -12,16 +12,17 @@ import (
 )
 
 // ProcessTransaction processes the Payment transaction
-func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) {
+func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) bool {
 	warehouseID, _ := strconv.Atoi(transactionArgs[0])
 	districtID, _ := strconv.Atoi(transactionArgs[1])
 	customerID, _ := strconv.Atoi(transactionArgs[2])
 	paymentAmt, _ := strconv.ParseFloat(transactionArgs[3], 64)
-	execute(db, warehouseID, districtID, customerID, paymentAmt)
+	return execute(db, warehouseID, districtID, customerID, paymentAmt)
 }
 
-func execute(db *sql.DB, customerWHID int, customerDistrictID int, customerID int, payment float64) {
-	// QUERIES
+func execute(db *sql.DB, customerWHID int, customerDistrictID int, customerID int, payment float64) bool {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	updateDistrict := fmt.Sprintf(`UPDATE DISTRICT SET D_YTD = D_YTD + %f WHERE D_W_ID = %d AND D_ID = %d RETURNING D_STREET_1, D_STREET_2, D_CITY, D_STATE, D_ZIP`,
 		payment, customerWHID, customerDistrictID)
 
@@ -48,12 +49,9 @@ func execute(db *sql.DB, customerWHID int, customerDistrictID int, customerID in
 		return nil
 	})
 
-	if err == sql.ErrNoRows {
-		fmt.Println("No records found!")
-		return
-	}
 	if err != nil {
 		log.Fatalf("%v", err)
+		return false
 	}
 
 	outputStr := "Customer identifier: (%d, %d, %d)\nName: (%s, %s, %s)\nAddress: (%s, %s, %s, %s, %s)\nPhone: %s\nMember Since:%s\nCredit and Limit: (%s, %s)\nDiscount: %s\nBalance: %s"
@@ -71,6 +69,6 @@ func execute(db *sql.DB, customerWHID int, customerDistrictID int, customerID in
 		dStreet1, dStreet2, dCity, dState, dZip,
 		payment,
 	)
-
 	fmt.Println(output)
+	return true
 }

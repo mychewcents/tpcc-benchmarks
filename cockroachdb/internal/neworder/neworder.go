@@ -25,7 +25,7 @@ type itemObject struct {
 }
 
 // ProcessTransaction process the new order transaction
-func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, args []string) {
+func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, args []string) bool {
 	customerID, _ := strconv.Atoi(args[0])
 	warehouseID, _ := strconv.Atoi(args[1])
 	districtID, _ := strconv.Atoi(args[2])
@@ -68,10 +68,10 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, args []string) {
 		}
 	}
 
-	execute(db, warehouseID, districtID, customerID, totalUniqueItems, isLocal, totalUniqueItems, orderLineObjects[0:totalUniqueItems])
+	return execute(db, warehouseID, districtID, customerID, totalUniqueItems, isLocal, totalUniqueItems, orderLineObjects[0:totalUniqueItems])
 }
 
-func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal, totalUniqueItems int, orderLineObjects []*itemObject) {
+func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal, totalUniqueItems int, orderLineObjects []*itemObject) bool {
 
 	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)
 	orderLineTable := fmt.Sprintf("ORDER_LINE_%d_%d", warehouseID, districtID)
@@ -83,7 +83,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 	row := db.QueryRow(sqlStatement)
 	if err := row.Scan(&newOrderID, &districtTax, &warehouseTax); err != nil {
 		log.Fatalf("%v", err)
-		return
+		return false
 	}
 
 	var cLastName, cCredit string
@@ -94,7 +94,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 
 	if err := row.Scan(&cLastName, &cCredit, &cDiscount); err != nil {
 		log.Fatalf("%v", err)
-		return
+		return false
 	}
 
 	var totalAmount float64
@@ -165,13 +165,14 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 	})
 	if err != nil {
 		log.Fatalf("%v", err)
-		return
+		return false
 	}
 
 	totalAmount = totalAmount * (1.0 + districtTax + warehouseTax) * (1.0 - cDiscount)
 
 	printOutputState(warehouseID, districtID, customerID, cLastName, cCredit, cDiscount,
 		newOrderID, orderTimestamp, totalUniqueItems, totalAmount, orderLineObjects)
+	return true
 }
 
 func printOutputState(warehouseID, districtID, customerID int, cLastName, cCredit string, cDiscount float64,

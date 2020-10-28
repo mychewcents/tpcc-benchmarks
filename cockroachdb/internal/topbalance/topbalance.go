@@ -16,12 +16,13 @@ type txnOutput struct {
 	balance                                          float64
 }
 
-func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner) {
-	execute(db)
+func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner) bool {
+	return execute(db)
 }
 
-func execute(db *sql.DB) {
-	// Index on C_BALANCE
+func execute(db *sql.DB) bool {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	customerQuery := "SELECT C_FIRST, C_MIDDLE, C_LAST, C_W_ID, C_D_ID, C_BALANCE FROM CUSTOMER ORDER BY C_BALANCE DESC LIMIT 10";
 	districtQuery := "SELECT D_NAME FROM DISTRICT WHERE D_W_ID=%d AND D_ID=%d"
 	warehouseQuery := "SELECT W_NAME FROM WAREHOUSE WHERE W_ID=%d"
@@ -47,14 +48,17 @@ func execute(db *sql.DB) {
 				return err
 			}
 		}
+		defer rows.Close()
 		return nil
 	})
 	if err != nil {
 		log.Fatal(err)
+		return false
 	}
 
 	for _, customer := range customers {
 		fmt.Println(fmt.Sprintf("Customer: %s %s %s, Balance: %f, Warehouse: %s, District: %s",
 			customer.first, customer.middle, customer.last, customer.balance, customer.warehouseName, customer.districtName))
 	}
+	return true
 }
