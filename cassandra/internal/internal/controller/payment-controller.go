@@ -44,7 +44,11 @@ func makePaymentRequest(cmd []string) *model.PaymentRequest {
 }
 
 func printPaymentResponse(r *model.PaymentResponse) {
-	fmt.Println(r)
+	//fmt.Println(r)
+	fmt.Sprintf("1.Customer's identifier CWId:%v\n CDId:%v\n CId:%v\n CName:%v\n CAddress:%v\n CPhone:%v\n CSince:%v\n CCredit:%v\n CCreditLim:%v\n CDiscount:%v\n CBalance:%v\n",ct.CWId, ct.CDId, ct.CId, model.NameModelFromUDT(&ct.CName), model.AddressModelFromUDT(&ct.CAddress), ct.CPhone, ct.CSince, ct.CCredit, ct.CCreditLim, ct.CDiscount, ct.CBalance)
+	fmt.Sprintf("2.Warehouse's address WAddress:%v\n", model.AddressModelFromUDT(&wt.WAddress))
+	fmt.Sprintf("3.District's address DAddress:%v\n", model.AddressModelFromUDT(&dt.DAddress))       
+	fmt.Sprintf("4.payment amount:%v\n", payment)
 }
 
 func (p *paymentControllerImpl) Close() error {

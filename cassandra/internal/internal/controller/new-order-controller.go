@@ -71,7 +71,13 @@ func makeNewOrderLineList(m int, r *bufio.Reader) []*model.NewOrderLine {
 }
 
 func printNewOrderResponse(r *model.NewOrderResponse) {
-	fmt.Println(r)
+	//fmt.Println(r)
+	fmt.Sprintf("1.Customer identifier WId:%v\n DId:%v\n CId:%v\n", ot.OWId, ot.ODId, ot.OCId)
+	fmt.Sprintf("customer lastname:%v\n" CCredit:%v\n CDiscount:%v\n",customerTab.ctname,customerTab.CCredit,customerTab.CDiscount)                     
+	fmt.Sprintf("2.warehpuse tax rate WTax:%v\n district tax rate DTax%v\n:", customerTab.CWTax,customerTab.CDTax)	 
+	fmt.Sprintf("3.order number OId:%v\n entry date OEntryD:%v\n",ot.OId,ot.OEntryD)
+	fmt.Sprintf("4.Number of items NoOfItems:%v\n Total amount for order TotalAmount:%v\n", len(oltList), totalAmount)
+	fmt.Sprintf("5.For each ordered item NewOrderLineInfoList:%v\n", oliList) 
 }
 
 func (n *newOrderControllerImpl) Close() error {
