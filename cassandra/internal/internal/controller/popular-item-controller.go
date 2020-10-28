@@ -42,10 +42,26 @@ func makePopularItemRequest(cmd []string) *model.PopularItemRequest {
 }
 
 func printPopularItemResponse(r *model.PopularItemResponse) {
-	//fmt.Println(r)
-	fmt.Sprintf("1.district identifier, & Number of last orders to be examined L:%v\n", response)
-    fmt.Sprintf("3.For each order number x in S:%v\n", response.OrderItemInfoList)
-    fmt.Sprintf("4.The percentage of examined orders that contain each popular item:%v\n", response.PopularItemStatList)
+	fmt.Println("*********************** Popular Item Transaction Output ***********************")
+	fmt.Printf("1. District Identifier - WId:%v DId:%v\n", r.WId, r.DId)
+	fmt.Printf("2. Number of last orders to be examined: %v\n", r.NoOfLastOrders)
+	fmt.Printf("3. For each order examined:\n")
+	for _, o := range r.OrderItemInfoList {
+		fmt.Printf("\ta. Order Number: %v, Order Entry Date: %v\n", o.OId, o.OEntryD)
+		fmt.Printf("\tb. Name of customer: %+v\n", o.CName)
+		fmt.Printf("\tc. Popular Items:\n")
+		for _, p := range o.PopularItemInfoList {
+			fmt.Printf("\t\ti. Item Name:%v\n", p.IName)
+			fmt.Printf("\t\tii. Quantity Ordered:%v\n", p.OlQuantity)
+		}
+	}
+	fmt.Printf("4. The percentage of examined orders that contain each popular item:\n")
+	fmt.Println()
+	for _, p := range r.PopularItemStatList {
+		fmt.Printf("\ti. Item Name:%v\n", p.IName)
+		fmt.Printf("\tii. The percentage of orders that contain the popular item:%.2f\n", p.OrderPercentage)
+	}
+	fmt.Println()
 }
 
 func (p *popularItemControllerImpl) Close() error {

@@ -179,6 +179,7 @@ func makeNewOrderResponse(ot *table.OrderTab, oltList []*table.OrderLineTab, cus
 		CId:                  ot.OCId,
 		CCredit:              customerTab.CCredit,
 		CDiscount:            customerTab.CDiscount,
+		CLast:                customerTab.CName.LastName,
 		WTax:                 customerTab.CWTax,
 		DTax:                 customerTab.CDTax,
 		OId:                  ot.OId,

@@ -42,10 +42,23 @@ func makeOrderStatusRequest(cmd []string) *model.OrderStatusRequest {
 }
 
 func printOrderStatusResponse(r *model.OrderStatusResponse) {
-	//fmt.Println(r)
-	fmt.Sprintf("1.Customer's name:%v\n", model.NameModelFromUDT(&ct.CName))
-    fmt.Sprintf("2.For the customer's last order OId:%v\n OEntryD:%v\n OCarrierId:%v\n", ov.OId, ov.OEntryD, ov.OCarrierId)
-    fmt.Sprintf("3.For each item in the customer's last order:%v\n", olS)
+	fmt.Println("*********************** Order Status Transaction Output ***********************")
+	fmt.Printf("1. Customer's name: %v %v %v, Customer Balance: %.2f.\n", r.CName.FirstName, r.CName.MiddleName, r.CName.LastName, r.CBalance)
+	fmt.Printf("2. For the customer's last order OId:%v OEntryD:%v OCarrierId:%v\n", r.OId, r.OEntryD, r.OCarrierId)
+	fmt.Printf("3. For each item in the customer's last order:\n")
+	for _, o := range r.OrderLineStatusList {
+		fmt.Println()
+		fmt.Printf("\ta. Item Number: %v\n", o.OlIId)
+		fmt.Printf("\tb. Supplying warehouse number: %v\n", o.OlSupplyWId)
+		fmt.Printf("\tc. Quantity ordered: %v\n", o.OlQuantity)
+		fmt.Printf("\td. Total price for ordered item: %.2f\n", o.OlAmount)
+		if o.OlDeliveryD.IsZero() {
+			fmt.Printf("\te. Data and time of delivery: null\n")
+		} else {
+			fmt.Printf("\te. Data and time of delivery: %v\n", o.OlDeliveryD)
+		}
+	}
+	fmt.Println()
 }
 
 func (n *orderStatusControllerImpl) Close() error {

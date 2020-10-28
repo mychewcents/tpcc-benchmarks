@@ -28,8 +28,16 @@ func (t *topBalanceControllerImpl) HandleTransaction(cmd []string) {
 }
 
 func printTopBalanceResponse(r *model.TopBalanceResponse) {
-	//fmt.Println(r)
-	fmt.Sprintf("For each customer in C ranked in descending order of C_BALANCE:%v\n", ci)
+	fmt.Println("*********************** Top Balance Transaction Output ***********************")
+	fmt.Println("1. Customers ranked in descending order of their Balance:")
+	fmt.Println()
+	for _, c := range r.CustomerInfoList {
+		fmt.Printf("\ta. Name of Customer: %+v\n", c.CName)
+		fmt.Printf("\tb. Balance of customer’s outstanding payment: %.2f\n", c.CBalance)
+		fmt.Printf("\tc. Warehouse name of customer: %+v\n", c.WName)
+		fmt.Printf("\td. District name of customer: %+v\n\n", c.DName)
+	}
+	fmt.Println()
 }
 
 func (t *topBalanceControllerImpl) Close() error {

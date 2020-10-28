@@ -71,13 +71,23 @@ func makeNewOrderLineList(m int, r *bufio.Reader) []*model.NewOrderLine {
 }
 
 func printNewOrderResponse(r *model.NewOrderResponse) {
-	//fmt.Println(r)
-	fmt.Sprintf("1.Customer identifier WId:%v\n DId:%v\n CId:%v\n", ot.OWId, ot.ODId, ot.OCId)
-	fmt.Sprintf("customer lastname:%v\n CCredit:%v\n CDiscount:%v\n",customerTab.ctname,customerTab.CCredit,customerTab.CDiscount)                     
-	fmt.Sprintf("2.warehpuse tax rate WTax:%v\n district tax rate DTax%v\n:", customerTab.CWTax,customerTab.CDTax)	 
-	fmt.Sprintf("3.order number OId:%v\n entry date OEntryD:%v\n",ot.OId,ot.OEntryD)
-	fmt.Sprintf("4.Number of items NoOfItems:%v\n Total amount for order TotalAmount:%v\n", len(oltList), totalAmount)
-	fmt.Sprintf("5.For each ordered item NewOrderLineInfoList:%v\n", oliList) 
+	fmt.Println("*********************** New Order Transaction Output ***********************")
+	fmt.Printf("1. Customer identifier - (WId:%v DId:%v CId:%v), ", r.WId, r.DId, r.CId)
+	fmt.Printf("Customer Lastname:%v, CCredit:%v, CDiscount:%v.\n", r.CLast, r.CCredit, r.CDiscount)
+	fmt.Printf("2. Warehouse tax rate: %.2f, District tax rate: %.2f.\n", r.WTax, r.DTax)
+	fmt.Printf("3. Order number: %v, Entry Date: %v.\n", r.OId, r.OEntryD)
+	fmt.Printf("4. Number of items NoOfItems: %v, Total amount for order: %.2f.\n", len(r.NewOrderLineInfoList), r.TotalAmount)
+	fmt.Printf("5. For each ordered item: \n")
+	for _, info := range r.NewOrderLineInfoList {
+		fmt.Println()
+		fmt.Printf("\ta. Item Number: %v\n", info.IId)
+		fmt.Printf("\tb. Item Name: %v\n", info.IName)
+		fmt.Printf("\tc. Supplier Warehouse: %v\n", info.SupplierWId)
+		fmt.Printf("\td. Quantity: %v\n", info.Quantity)
+		fmt.Printf("\te. OlAmount: %.2f\n", info.OlAmount)
+		fmt.Printf("\tf. SQuantity: %v\n", info.SQuantity)
+	}
+	fmt.Println()
 }
 
 func (n *newOrderControllerImpl) Close() error {

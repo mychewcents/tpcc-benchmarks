@@ -33,7 +33,13 @@ func makeRelatedCustomerRequest(cmd []string) *model.RelatedCustomerRequest {
 }
 
 func printRelatedCustomerResponse(r *model.RelatedCustomerResponse) {
-	fmt.Println(r)
+	fmt.Println("*********************** Related Customer Transaction Output ***********************")
+	fmt.Printf("1. Customer Identifier: %+v\n", r.CustomerIdentifier)
+	fmt.Println("2. Related Customers:")
+	for _, c := range r.RelatedCustomerIdentifiers {
+		fmt.Printf("\tRelated Customer Identifier: %+v\n", c)
+	}
+	fmt.Println()
 }
 
 func (r *relatedCustomerControllerImpl) Close() error {

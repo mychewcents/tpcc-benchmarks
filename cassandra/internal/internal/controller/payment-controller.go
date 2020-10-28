@@ -44,11 +44,12 @@ func makePaymentRequest(cmd []string) *model.PaymentRequest {
 }
 
 func printPaymentResponse(r *model.PaymentResponse) {
-	//fmt.Println(r)
-	fmt.Sprintf("1.Customer's identifier CWId:%v\n CDId:%v\n CId:%v\n CName:%v\n CAddress:%v\n CPhone:%v\n CSince:%v\n CCredit:%v\n CCreditLim:%v\n CDiscount:%v\n CBalance:%v\n",ct.CWId, ct.CDId, ct.CId, model.NameModelFromUDT(&ct.CName), model.AddressModelFromUDT(&ct.CAddress), ct.CPhone, ct.CSince, ct.CCredit, ct.CCreditLim, ct.CDiscount, ct.CBalance)
-	fmt.Sprintf("2.Warehouse's address WAddress:%v\n", model.AddressModelFromUDT(&wt.WAddress))
-	fmt.Sprintf("3.District's address DAddress:%v\n", model.AddressModelFromUDT(&dt.DAddress))       
-	fmt.Sprintf("4.payment amount:%v\n", payment)
+	fmt.Println("*********************** Payment Transaction Output ***********************")
+	fmt.Printf("1. Customer's identifier - (CWId: %v CDId: %v CId: %v), CName:%+v, CAddress:%+v CPhone:%v CSince:%v CCredit:%v CCreditLim:%.2f CDiscount:%.2f CBalance:%.2f\n", r.CWId, r.CDId, r.CId, r.CName, r.CAddress, r.CPhone, r.CSince, r.CCredit, r.CCreditLim, r.CDiscount, r.CBalance)
+	fmt.Printf("2. Warehouse's address: %+v\n", r.WAddress)
+	fmt.Printf("3. District's address: %+v\n", r.DAddress)
+	fmt.Printf("4. Payment amount: %v\n", r.Payment)
+	fmt.Println()
 }
 
 func (p *paymentControllerImpl) Close() error {

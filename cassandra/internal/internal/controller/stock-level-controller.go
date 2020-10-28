@@ -44,8 +44,9 @@ func makeStockLevelRequest(cmd []string) *model.StockLevelRequest {
 }
 
 func printStockLevelResponse(r *model.StockLevelResponse) {
-	//fmt.Println(r)
-	fmt.Sprintf("1.The total number of items in S:%v\n", countCh)
+	fmt.Println("*********************** Stock Level Transaction Output ***********************")
+	fmt.Println("Total number of items in examined orders where its stock quantity at warehouse is below the threshold: ", r.Count)
+	fmt.Println()
 }
 
 func (s *stockLevelControllerImpl) Close() error {

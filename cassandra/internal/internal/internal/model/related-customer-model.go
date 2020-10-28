@@ -6,10 +6,13 @@ type RelatedCustomerRequest struct {
 	CId  int
 }
 
-type RelatedCustomerResponse struct {
+type CustomerIdentifier struct {
 	CWId int
 	CDId int
 	CId  int
+}
 
-	RelatedCIds []int
+type RelatedCustomerResponse struct {
+	CustomerIdentifier         *CustomerIdentifier
+	RelatedCustomerIdentifiers []*CustomerIdentifier
 }
