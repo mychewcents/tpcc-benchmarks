@@ -164,7 +164,7 @@ CREATE TABLE stock_tab (
 	PRIMARY KEY (S_W_ID, S_I_ID)
 );
 
-CREATE MATERIALIZED VIEW stock_tab_by_quantity_view AS
+CREATE MATERIALIZED VIEW stock_by_quantity_view AS
 SELECT S_W_ID, S_I_ID, S_QUANTITY FROM stock_tab
 WHERE S_W_ID IS NOT NULL
   AND S_I_ID IS NOT NULL
