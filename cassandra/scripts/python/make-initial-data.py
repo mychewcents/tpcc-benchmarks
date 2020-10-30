@@ -128,8 +128,36 @@ item_cols.columns = ["i_id", "i_name"]
 item_ol_join = item_cols.set_index(["i_id"]).join(ol_o_join.set_index(["i_id"]), on=["i_id"])
 item_ol_join.reset_index(inplace=True)
 
-item_ol_join.columns = ['ol_i_id', 'ol_i_name', 'ol_w_id', 'ol_d_id', 'ol_o_id_old', 'ol_o_id', 'ol_number', 'ol_delivery_d', 'ol_amount', 'ol_supply_w_id', 'ol_quantity',
-                       'ol_dist_info', 'ol_total_amount']
+order_line_group_sum = item_ol_join[['w_id', 'd_id', 'o_id', 'i_id', 'ol_supply_w_id', 'ol_quantity']].groupby(by=['w_id', 'd_id', 'o_id', 'i_id', 'ol_supply_w_id'])
+order_line_group_sum = order_line_group_sum.sum()
 
-order_line_tab = item_ol_join[['ol_w_id', 'ol_d_id', 'ol_o_id', 'ol_quantity', 'ol_number', 'ol_i_id', 'ol_i_name', 'ol_amount', 'ol_supply_w_id', 'ol_dist_info']]
+order_line_group_min = item_ol_join[['w_id', 'd_id', 'o_id', 'i_id', 'ol_supply_w_id', 'ol_dist_info']].groupby(by=['w_id', 'd_id', 'o_id', 'i_id', 'ol_supply_w_id'])
+order_line_group_min = order_line_group_min.min()
+
+order_line = order_line_group_sum.join(order_line_group_min)
+order_line = order_line.reset_index()
+
+order_line['ol_w_to_quantity'] = order_line['ol_supply_w_id'].apply(str) + ':' + order_line['ol_quantity'].apply(str)
+order_line['ol_w_to_dist_info'] = order_line['ol_supply_w_id'].apply(str) + ':' + order_line['ol_dist_info'].apply(str)
+
+order_line_group_list = order_line[['w_id', 'd_id', 'o_id', 'i_id', 'ol_w_to_quantity', 'ol_w_to_dist_info']].groupby(by=['w_id', 'd_id', 'o_id', 'i_id'])
+order_line_list = order_line_group_list.agg(lambda x: list(x))
+
+order_line_group_total_quantity = order_line[['w_id', 'd_id', 'o_id', 'i_id', 'ol_quantity']].groupby(by=['w_id', 'd_id', 'o_id', 'i_id'])
+order_line_total = order_line_group_total_quantity.sum()
+
+order_line_group_first = item_ol_join.groupby(by=['w_id', 'd_id', 'o_id', 'i_id'])
+order_line_first = order_line_group_first.first()
+
+ol = order_line_list.join(order_line_total)
+ol = ol.join(order_line_first[['i_name', 'new_o_id', 'ol_number', 'ol_delivery_d', 'ol_amount', 'ol_supply_w_id', 'ol_dist_info', 'ol_total_amount']])
+ol = ol.reset_index()
+
+ol['ol_w_to_quantity'] = ol['ol_w_to_quantity'].apply(lambda x: "{" + ",".join(x) +"}")
+ol['ol_w_to_dist_info'] = ol['ol_w_to_dist_info'].apply(lambda x: "{" + ",".join(x) +"}")
+
+ol.columns = ['ol_w_id', 'ol_d_id', 'ol_old_o_id', 'ol_i_id', 'ol_w_to_quantity', 'ol_w_to_dist_info',
+              'ol_quantity', 'ol_i_name', 'ol_o_id', 'ol_number', 'ol_delivery_d',
+              'ol_amount', 'ol_supply_w_id', 'ol_dist_info', 'ol_total_amount']
+order_line_tab = ol[['ol_w_id', 'ol_d_id', 'ol_o_id', 'ol_quantity', 'ol_number', 'ol_i_id', 'ol_i_name', 'ol_amount', 'ol_w_to_quantity', 'ol_w_to_dist_info']]
 order_line_tab.to_csv("assets/data/processed/order-line.csv", index=False)
