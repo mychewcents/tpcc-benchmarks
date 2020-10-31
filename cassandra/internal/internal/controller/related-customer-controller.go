@@ -6,6 +6,7 @@ import (
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/handler"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/model"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/service"
+	"strconv"
 )
 
 type RelatedCustomerController interface {
@@ -29,7 +30,15 @@ func (r *relatedCustomerControllerImpl) HandleTransaction(cmd []string) {
 }
 
 func makeRelatedCustomerRequest(cmd []string) *model.RelatedCustomerRequest {
-	return nil
+	cWId, _ := strconv.Atoi(cmd[1])
+	cDId, _ := strconv.Atoi(cmd[2])
+	cId, _ := strconv.Atoi(cmd[3])
+
+	return &model.RelatedCustomerRequest{CustomerIdentifier: &model.CustomerIdentifier{
+		CWId: cWId,
+		CDId: cDId,
+		CId:  cId,
+	}}
 }
 
 func printRelatedCustomerResponse(r *model.RelatedCustomerResponse) {

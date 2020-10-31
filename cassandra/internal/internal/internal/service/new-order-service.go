@@ -22,6 +22,7 @@ type newOrderServiceImpl struct {
 	o  dao.OrderDao
 	ol dao.OrderLineDao
 	s  dao.StockDao
+	ci dao.CustomerItemOrderPairDao
 }
 
 func NewNewOrderService(cassandraSession *common.CassandraSession) NewOrderService {
@@ -30,10 +31,14 @@ func NewNewOrderService(cassandraSession *common.CassandraSession) NewOrderServi
 		o:  dao.NewOrderDao(cassandraSession),
 		ol: dao.NewOrderLineDao(cassandraSession),
 		s:  dao.NewStockDao(cassandraSession),
+		ci: dao.NewCustomerItemOrderPairDao(cassandraSession),
 	}
 }
 
 func (n *newOrderServiceImpl) ProcessNewOrderTransaction(request *model.NewOrderRequest) (*model.NewOrderResponse, error) {
+	ch := make(chan bool)
+	n.insertCustomerItemPair(request, ch)
+
 	customerTab, stockTabMap := n.getCustomerAndStockInfo(request)
 
 	oId := gocql.TimeUUID()
@@ -43,7 +48,42 @@ func (n *newOrderServiceImpl) ProcessNewOrderTransaction(request *model.NewOrder
 	n.updateInParallel(request, stockTabMap, orderTabList, orderTab)
 
 	totalAmount = totalAmount * float64(1+customerTab.CDTax+customerTab.CWTax) * float64(1-customerTab.CDiscount)
-	return makeNewOrderResponse(orderTab, orderTabList, customerTab, stockTabMap, totalAmount), nil
+
+	response := makeNewOrderResponse(orderTab, orderTabList, customerTab, stockTabMap, totalAmount)
+	<-ch
+	return response, nil
+}
+
+func (n *newOrderServiceImpl) insertCustomerItemPair(request *model.NewOrderRequest, ch chan bool) {
+	itemIdList := make([]int, 0)
+	itemIdMap := make(map[int]bool)
+
+	for _, ol := range request.NewOrderLineList {
+		if !itemIdMap[ol.OlIId] {
+			itemIdMap[ol.OlIId] = true
+			itemIdList = append(itemIdList, ol.OlIId)
+		}
+	}
+
+	cls := make([]*table.CustomerItemOrderPair, (len(itemIdList)*(len(itemIdList)-1))/2)
+	i := 0
+
+	for _, iId1 := range itemIdList {
+		for _, iId2 := range itemIdList {
+			if iId1 < iId2 {
+				cls[i] = &table.CustomerItemOrderPair{
+					CWId: request.WId,
+					CDId: request.DId,
+					CId:  request.CId,
+					IId1: iId1,
+					IId2: iId2,
+				}
+				i++
+			}
+		}
+	}
+
+	go n.ci.BatchInsertCustomerItemOrderPair(cls, ch)
 }
 
 func (n *newOrderServiceImpl) updateInParallel(request *model.NewOrderRequest, stockTabMap map[int]map[int]*table.StockTab,
