@@ -26,7 +26,7 @@ CREATE TYPE name (
 CREATE TABLE warehouse_tab (
 	W_ID int,
 	W_NAME text,
-	W_ADDRESS address,
+	W_ADDRESS frozen<address>,
 	W_TAX float,
 	W_YTD double,
 	PRIMARY KEY (W_ID)
@@ -36,7 +36,7 @@ CREATE TABLE district_tab (
 	D_W_ID int,
 	D_ID int,
     D_NAME text, 
-	D_ADDRESS address,
+	D_ADDRESS frozen<address>,
 	D_TAX float,
 	D_YTD double,
 	PRIMARY KEY ((D_W_ID, D_ID))
@@ -50,8 +50,8 @@ CREATE TABLE customer_tab (
 	C_W_TAX float,
 	C_D_NAME text,
 	C_D_TAX float,
-    C_NAME name,
-	C_ADDRESS address,
+    C_NAME frozen<name>,
+	C_ADDRESS frozen<address>,
 	C_PHONE text,
 	C_SINCE timestamp,
 	C_CREDIT text,
@@ -86,7 +86,7 @@ CREATE TABLE order_tab (
 	O_D_ID int, 
 	O_ID timeuuid,
 	O_C_ID int,
-	O_C_NAME name,
+	O_C_NAME frozen<name>,
 	O_CARRIER_ID int,
 	OL_DELIVERY_D timestamp,
 	O_OL_COUNT int,
@@ -134,8 +134,8 @@ CREATE TABLE order_line_tab (
 	OL_I_ID int,
 	OL_I_NAME text,
 	OL_AMOUNT float,
-	OL_SUPPLY_W_ID int,
-	OL_DIST_INFO text,
+    OL_W_TO_QUANTITY frozen<map<int, int>>,
+    OL_W_TO_DIST_INFO frozen<map<int, text>>,
 	PRIMARY KEY ((OL_W_ID, OL_D_ID), OL_O_ID, OL_QUANTITY, OL_NUMBER)
 ) WITH CLUSTERING ORDER BY (OL_O_ID ASC, OL_QUANTITY DESC);
 
@@ -171,3 +171,19 @@ WHERE S_W_ID IS NOT NULL
   AND S_QUANTITY IS NOT NULL
 PRIMARY KEY (S_W_ID, S_I_ID, S_QUANTITY)
 WITH CLUSTERING ORDER BY (S_QUANTITY DESC);
+
+CREATE TABLE customer_item_order_pair_tab (
+    C_W_ID int,
+    C_D_ID int,
+    C_ID int,
+    I_ID_PAIR frozen<tuple<int, int>>,
+    PRIMARY KEY ((C_W_ID, C_D_ID), C_ID, I_ID_PAIR)
+);
+
+CREATE MATERIALIZED VIEW customer_item_order_pair_by_item_pair AS
+SELECT C_W_ID, C_D_ID, I_ID_PAIR, C_ID FROM customer_item_order_pair_tab
+WHERE C_W_ID IS NOT NULL
+  AND C_D_ID IS NOT NULL
+  AND I_ID_PAIR IS NOT NULL
+  AND C_ID IS NOT NULL
+PRIMARY KEY ((C_W_ID, C_D_ID), I_ID_PAIR, C_ID);

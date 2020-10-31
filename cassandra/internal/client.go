@@ -37,6 +37,7 @@ func init() {
 
 func Start() {
 	log.Printf("Starting Client %v", clientId)
+	defer log.Printf("Stopping Client %v", clientId)
 	time.Sleep(10 * time.Second)
 
 	cassandraSession := makeCassandraSession()
@@ -50,7 +51,6 @@ func Start() {
 		r.HandleCommand(text)
 		text, _ = reader.ReadString('\n')
 	}
-	log.Printf("Stopping Client %v", clientId)
 }
 
 func makeCassandraSession() *common.CassandraSession {
@@ -85,7 +85,7 @@ func makeCassandraSession() *common.CassandraSession {
 }
 
 func makeCassandraConfig() *config.CassandraConfig {
-	xmlFile, err := os.Open("configs/cassandra-config.xml")
+	xmlFile, err := os.Open("configs/local/cassandra-config.xml")
 	if err != nil {
 		log.Fatal(err)
 	}

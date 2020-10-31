@@ -41,15 +41,19 @@ func (o *orderStatusServiceImpl) ProcessOrderStatusTransaction(request *model.Or
 	ct := <-chC
 	olt := <-chOl
 
-	olS := make([]*model.OrderLineStatus, len(olt))
-	for i, ol := range olt {
-		olS[i] = &model.OrderLineStatus{
-			OlIId:       ol.OlIId,
-			OlSupplyWId: ol.OlSupplyWId,
-			OlQuantity:  ol.OlQuantity,
-			OlAmount:    ol.OlAmount,
-			OlDeliveryD: ov.OlDeliveryD,
+	olS := make([]*model.OrderLineStatus, 0)
+	for _, ol := range olt {
+		for sWId, quantity := range ol.OlWToQuantity {
+			ol := &model.OrderLineStatus{
+				OlIId:       ol.OlIId,
+				OlSupplyWId: sWId,
+				OlQuantity:  quantity,
+				OlAmount:    ol.OlAmount * float32(quantity) / float32(ol.OlQuantity),
+				OlDeliveryD: ov.OlDeliveryD,
+			}
+			olS = append(olS, ol)
 		}
+
 	}
 
 	return &model.OrderStatusResponse{

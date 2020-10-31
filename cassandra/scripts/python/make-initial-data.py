@@ -128,8 +128,63 @@ item_cols.columns = ["i_id", "i_name"]
 item_ol_join = item_cols.set_index(["i_id"]).join(ol_o_join.set_index(["i_id"]), on=["i_id"])
 item_ol_join.reset_index(inplace=True)
 
-item_ol_join.columns = ['ol_i_id', 'ol_i_name', 'ol_w_id', 'ol_d_id', 'ol_o_id_old', 'ol_o_id', 'ol_number', 'ol_delivery_d', 'ol_amount', 'ol_supply_w_id', 'ol_quantity',
-                       'ol_dist_info', 'ol_total_amount']
+order_line_group_sum = item_ol_join[['w_id', 'd_id', 'o_id', 'i_id', 'ol_supply_w_id', 'ol_quantity']].groupby(by=['w_id', 'd_id', 'o_id', 'i_id', 'ol_supply_w_id'])
+order_line_group_sum = order_line_group_sum.sum()
 
-order_line_tab = item_ol_join[['ol_w_id', 'ol_d_id', 'ol_o_id', 'ol_quantity', 'ol_number', 'ol_i_id', 'ol_i_name', 'ol_amount', 'ol_supply_w_id', 'ol_dist_info']]
+order_line_group_min = item_ol_join[['w_id', 'd_id', 'o_id', 'i_id', 'ol_supply_w_id', 'ol_dist_info']].groupby(by=['w_id', 'd_id', 'o_id', 'i_id', 'ol_supply_w_id'])
+order_line_group_min = order_line_group_min.min()
+
+order_line = order_line_group_sum.join(order_line_group_min)
+order_line = order_line.reset_index()
+
+order_line['ol_w_to_quantity'] = order_line['ol_supply_w_id'].apply(str) + ':' + order_line['ol_quantity'].apply(str)
+order_line['ol_w_to_dist_info'] = order_line['ol_supply_w_id'].apply(str) + ':' + order_line['ol_dist_info'].apply(str)
+
+order_line_group_list = order_line[['w_id', 'd_id', 'o_id', 'i_id', 'ol_w_to_quantity', 'ol_w_to_dist_info']].groupby(by=['w_id', 'd_id', 'o_id', 'i_id'])
+order_line_list = order_line_group_list.agg(lambda x: list(x))
+
+order_line_group_total_quantity = order_line[['w_id', 'd_id', 'o_id', 'i_id', 'ol_quantity']].groupby(by=['w_id', 'd_id', 'o_id', 'i_id'])
+order_line_total = order_line_group_total_quantity.sum()
+
+order_line_group_first = item_ol_join.groupby(by=['w_id', 'd_id', 'o_id', 'i_id'])
+order_line_first = order_line_group_first.first()
+
+ol = order_line_list.join(order_line_total)
+ol = ol.join(order_line_first[['i_name', 'new_o_id', 'ol_number', 'ol_delivery_d', 'ol_amount', 'ol_supply_w_id', 'ol_dist_info', 'ol_total_amount']])
+ol = ol.reset_index()
+
+ol['ol_w_to_quantity'] = ol['ol_w_to_quantity'].apply(lambda x: "{" + ",".join(x) +"}")
+ol['ol_w_to_dist_info'] = ol['ol_w_to_dist_info'].apply(lambda x: "{" + ",".join(x) +"}")
+
+ol.columns = ['ol_w_id', 'ol_d_id', 'ol_old_o_id', 'ol_i_id', 'ol_w_to_quantity', 'ol_w_to_dist_info',
+              'ol_quantity', 'ol_i_name', 'ol_o_id', 'ol_number', 'ol_delivery_d',
+              'ol_amount', 'ol_supply_w_id', 'ol_dist_info', 'ol_total_amount']
+order_line_tab = ol[['ol_w_id', 'ol_d_id', 'ol_o_id', 'ol_quantity', 'ol_number', 'ol_i_id', 'ol_i_name', 'ol_amount', 'ol_w_to_quantity', 'ol_w_to_dist_info']]
 order_line_tab.to_csv("assets/data/processed/order-line.csv", index=False)
+
+# Customer Item Pair
+cols=["w_id", "d_id", "o_id", "c_id", "o_carrier_id", "o_ol_cnt", "o_all_local", "o_entry_d"]
+order = pd.read_csv("assets/data/raw/order.csv", header=None, names=cols)
+order.sort_values(["c_id", "o_id"], inplace=True)
+
+cols=["w_id", "d_id", "o_id", "ol_number", "i_id", "ol_delivery_d", "ol_amount", "ol_supply_w_id", "ol_quantity", "ol_dist_info"]
+order_line = pd.read_csv("assets/data/raw/order-line.csv", header=None, names=cols)
+order_line.sort_values(["w_id", "d_id", "o_id", "ol_number"], inplace=True)
+
+o_ol_join = order.set_index(["w_id", "d_id", "o_id"]).join(order_line.set_index(["w_id", "d_id", "o_id"]))
+o_ol_join = o_ol_join.reset_index()
+o_ol_join = o_ol_join[["w_id", "d_id", "o_id", "c_id", "i_id"]]
+
+item_pair = o_ol_join.set_index(["w_id", "d_id", "o_id"]).join(o_ol_join.set_index(["w_id", "d_id", "o_id"]), lsuffix="l")
+
+item_pair_distinct = item_pair[item_pair['i_idl'] < item_pair['i_id']]
+item_pair_distinct = item_pair_distinct.reset_index()
+
+item_pair_distinct['i_id_pair'] = "(" + item_pair_distinct['i_idl'].apply(str) + "," + item_pair_distinct['i_id'].apply(str) + ")"
+
+item_pair_distinct_tab = item_pair_distinct[["w_id", "d_id", "c_id", "i_id_pair"]]
+item_pair_distinct_tab.columns = ["c_w_id", "c_d_id", "c_id", "i_id_pair"]
+
+import csv
+item_pair_distinct_tab.to_csv("assets/data/processed/customer-item-order-pair.csv", index=False, quoting=csv.QUOTE_NONE, escapechar="\\")
+
