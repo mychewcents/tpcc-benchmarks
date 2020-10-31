@@ -7,6 +7,7 @@ import (
 	"github.com/gocql/gocql"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/config"
+	"github.com/mychewcents/ddbms-project/cassandra/internal/performance"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/router"
 	"io/ioutil"
 	"log"
@@ -44,13 +45,21 @@ func Start() {
 	reader := bufio.NewReader(os.Stdin)
 
 	r := router.NewTransactionRouter(cassandraSession, reader)
+	m := performance.NewPerformanceMonitor()
 
-	text, _ := reader.ReadString('\n')
+	for {
+		start := time.Now()
 
-	for text != "" {
+		text, _ := reader.ReadString('\n')
+		if text == "" {
+			break
+		}
 		r.HandleCommand(text)
-		text, _ = reader.ReadString('\n')
+
+		end := time.Now()
+		m.StoreLatency(int(end.Sub(start).Milliseconds()))
 	}
+	m.StorePerformanceMetrics("metrics", experimentId, clientId)
 }
 
 func makeCassandraSession() *common.CassandraSession {
