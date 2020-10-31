@@ -171,3 +171,19 @@ WHERE S_W_ID IS NOT NULL
   AND S_QUANTITY IS NOT NULL
 PRIMARY KEY (S_W_ID, S_I_ID, S_QUANTITY)
 WITH CLUSTERING ORDER BY (S_QUANTITY DESC);
+
+CREATE TABLE customer_item_order_pair_tab (
+    C_W_ID int,
+    C_D_ID int,
+    C_ID int,
+    I_ID_PAIR frozen<tuple<int, int>>,
+    PRIMARY KEY ((C_W_ID, C_D_ID), C_ID, I_ID_PAIR)
+);
+
+CREATE MATERIALIZED VIEW customer_item_order_pair_by_item_pair AS
+SELECT C_W_ID, C_D_ID, I_ID_PAIR, C_ID FROM customer_item_order_pair_tab
+WHERE C_W_ID IS NOT NULL
+  AND C_D_ID IS NOT NULL
+  AND I_ID_PAIR IS NOT NULL
+  AND C_ID IS NOT NULL
+PRIMARY KEY ((C_W_ID, C_D_ID), I_ID_PAIR, C_ID);

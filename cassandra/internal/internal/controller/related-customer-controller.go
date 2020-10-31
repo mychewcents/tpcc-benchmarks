@@ -33,6 +33,9 @@ func makeRelatedCustomerRequest(cmd []string) *model.RelatedCustomerRequest {
 }
 
 func printRelatedCustomerResponse(r *model.RelatedCustomerResponse) {
+	if r == nil {
+		return
+	}
 	fmt.Println("*********************** Related Customer Transaction Output ***********************")
 	fmt.Printf("1. Customer Identifier: %+v\n", r.CustomerIdentifier)
 	fmt.Println("2. Related Customers:")

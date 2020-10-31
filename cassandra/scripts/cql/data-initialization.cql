@@ -5,3 +5,4 @@ COPY district_tab (d_w_id, d_id, d_name, d_address, d_tax,d_ytd) FROM 'assets/da
 COPY customer_tab (c_w_id, c_d_id, c_id, c_w_name, c_w_tax, c_d_name, c_d_tax, c_name, c_address, c_phone, c_since, c_credit, c_credit_lim, c_discount, c_balance, c_ytd_payment, c_payment_cnt, c_delivery_cnt, c_data) FROM 'assets/data/processed/customer.csv' WITH HEADER = true ;
 COPY order_tab (o_w_id, o_d_id, o_id, o_c_id, o_c_name, o_carrier_id, ol_delivery_d, o_ol_count, o_ol_total_amount, o_all_local, o_entry_d) FROM 'assets/data/processed/order.csv' WITH HEADER = true ;
 COPY order_line_tab (ol_w_id, ol_d_id, ol_o_id, ol_quantity, ol_number, ol_i_id, ol_i_name, ol_amount, ol_w_to_quantity, ol_w_to_dist_info) FROM 'assets/data/processed/order-line.csv' WITH HEADER = true ;
+COPY customer_item_order_pair_tab (c_w_id, c_d_id , c_id , i_id_pair) FROM 'assets/data/processed/customer-item-order-pair.csv' WITH HEADER = true ;
