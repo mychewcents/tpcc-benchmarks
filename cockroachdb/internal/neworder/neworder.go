@@ -56,13 +56,13 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, args []string) bool 
 			if _, ok := prevSeenOrderLineItems[id]; ok {
 				orderLineObjects[prevSeenOrderLineItems[id]].quantity += quantity
 			} else {
-				orderLineObjects[i] = &itemObject{
+				orderLineObjects[totalUniqueItems] = &itemObject{
 					id:       id,
 					supplier: supplier,
 					quantity: quantity,
 					remote:   remote,
 				}
-				prevSeenOrderLineItems[id] = i
+				prevSeenOrderLineItems[id] = totalUniqueItems
 				totalUniqueItems++
 			}
 		}
@@ -73,6 +73,7 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, args []string) bool 
 
 func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal, totalUniqueItems int, orderLineObjects []*itemObject) bool {
 
+	fmt.Println(orderLineObjects, totalUniqueItems, numItems)
 	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)
 	orderLineTable := fmt.Sprintf("ORDER_LINE_%d_%d", warehouseID, districtID)
 
@@ -104,6 +105,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 		var orderLineEntries []string
 
 		for key, value := range orderLineObjects {
+			fmt.Println(key, value)
 			sqlStatement = fmt.Sprintf("SELECT S_I_NAME, S_I_PRICE, S_QUANTITY, S_DIST_%02d FROM STOCK WHERE S_W_ID = %d AND S_I_ID = %d", districtID, value.supplier, value.id)
 			row = tx.QueryRow(sqlStatement)
 			if err := row.Scan(&value.name, &value.price, &value.startStock, &value.data); err != nil {
