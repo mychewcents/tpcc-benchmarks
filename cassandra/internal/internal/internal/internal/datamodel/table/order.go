@@ -7,20 +7,6 @@ import (
 	"time"
 )
 
-const (
-	OWId           = "o_w_id"
-	ODId           = "o_d_id"
-	OId            = "o_id"
-	OCId           = "o_c_id"
-	OCName         = "o_c_name"
-	OCarrierId     = "o_carrier_id"
-	OlDeliveryD    = "ol_delivery_d"
-	OOlCount       = "o_ol_count"
-	OOlTotalAmount = "o_ol_total_amount"
-	OAllLocal      = "o_all_local"
-	OEntryD        = "o_entry_d"
-)
-
 /*
 OrderTab maps to the order_tab in cassandra
 PrimaryKey((o_w_id, o_d_id), o_id DESC)

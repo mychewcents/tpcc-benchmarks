@@ -6,28 +6,6 @@ import (
 	"time"
 )
 
-const (
-	CWId         = "c_w_id"
-	CWName       = "c_w_name"
-	CWTax        = "c_w_tax"
-	CDId         = "c_d_id"
-	CDName       = "c_d_name"
-	CDTax        = "c_d_tax"
-	CId          = "c_id"
-	CName        = "c_name"
-	CAddress     = "c_address"
-	CPhone       = "c_phone"
-	CSince       = "c_since"
-	CCredit      = "c_credit"
-	CCreditLim   = "c_credit_lim"
-	CDiscount    = "c_discount"
-	CBalance     = "c_balance"
-	CYTDPayment  = "c_ytd_payment"
-	CPaymentCnt  = "c_payment_cnt"
-	CDeliveryCnt = "c_delivery_cnt"
-	CData        = "c_data"
-)
-
 /*
 CustomerTab maps to the customer_tab in cassandra
 PrimaryKey(c_w_id), c_d_id ASC, c_id ASC))
