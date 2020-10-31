@@ -10,10 +10,10 @@ import (
 
 // ProcessTransaction processes the Stock Level Transaction
 func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) bool {
-	warehouseID, _ := strconv.Atoi(transactionArgs[1])
-	districtID, _ := strconv.Atoi(transactionArgs[2])
-	threshold, _ := strconv.Atoi(transactionArgs[3])
-	lastNOrders, _ := strconv.Atoi(transactionArgs[4])
+	warehouseID, _ := strconv.Atoi(transactionArgs[0])
+	districtID, _ := strconv.Atoi(transactionArgs[1])
+	threshold, _ := strconv.Atoi(transactionArgs[2])
+	lastNOrders, _ := strconv.Atoi(transactionArgs[3])
 
 	return execute(db, warehouseID, districtID, threshold, lastNOrders)
 }
