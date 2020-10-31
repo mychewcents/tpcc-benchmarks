@@ -85,7 +85,7 @@ func makeCassandraSession() *common.CassandraSession {
 }
 
 func makeCassandraConfig() *config.CassandraConfig {
-	xmlFile, err := os.Open("configs/cassandra-config.xml")
+	xmlFile, err := os.Open("configs/local/cassandra-config.xml")
 	if err != nil {
 		log.Fatal(err)
 	}
