@@ -1,6 +1,4 @@
 #!/bin/bash
-cd "$(dirname "$0")/.."
-
 rm -rf assets/data
 
 mkdir assets/data
