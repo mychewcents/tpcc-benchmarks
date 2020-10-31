@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"errors"
 	"github.com/gocql/gocql"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/datamodel/table"
@@ -30,7 +31,7 @@ func (o *orderDaoImpl) InsertOrder(ot *table.OrderTab, chComplete chan bool) {
 		"order_tab (o_w_id, o_d_id, o_id, o_c_id, o_c_name, o_carrier_id, ol_delivery_d, o_ol_count, o_ol_total_amount, o_all_local, o_entry_d) " +
 		"VALUES (?,?,?,?,?,?,?,?,?,?,?)"
 
-	query := o.cassandraSession.WriteSession.Query(stmt, ot.OWId, ot.ODId, ot.OId, ot.OCId, ot.OCName.GetNameString(), ot.OCarrierId, ot.OlDeliveryD,
+	query := o.cassandraSession.WriteSession.Query(stmt, ot.OWId, ot.ODId, ot.OId, ot.OCId, ot.OCName, ot.OCarrierId, ot.OlDeliveryD,
 		ot.OOlCount, ot.OOlTotalAmount, ot.OAllLocal, ot.OEntryD)
 
 	err := query.Exec()
@@ -44,10 +45,13 @@ func (o *orderDaoImpl) InsertOrder(ot *table.OrderTab, chComplete chan bool) {
 func (o *orderDaoImpl) GetOldestUnDeliveredOrder(oWId int, oDId int) *view.OrderByCarrierView {
 	query := o.cassandraSession.ReadSession.Query("SELECT * "+
 		"from order_by_carrier_view "+
-		"where o_w_id=? AND o_d_id=? LIMIT 1", oWId, oDId)
+		"where o_w_id=? AND o_d_id=? AND o_carrier_id=-1 LIMIT 1", oWId, oDId)
 
 	result := make(map[string]interface{})
 	if err := query.MapScan(result); err != nil {
+		if errors.Is(err, gocql.ErrNotFound) {
+			return nil
+		}
 		log.Fatalf("ERROR GetOldestUndeliveredOrder error in query execution. oWId=%v, oDId=%v, err=%v\n", oWId, oDId, err)
 	}
 
@@ -87,12 +91,12 @@ func (o *orderDaoImpl) GetLatestNOrdersForDistrict(oWId int, oDId int, limit int
 	iter := query.Iter()
 	defer iter.Close()
 
-	for result := make(map[string]interface{}); iter.MapScan(result); result = make(map[string]interface{}) {
+	for i, result := 0, make(map[string]interface{}); iter.MapScan(result); i, result = i+1, make(map[string]interface{}) {
 		ot, err := table.MakeOrderTab(result)
 		if err != nil {
 			log.Fatalf("ERROR GetLatestNOrdersForDistrict error making order. oWId=%v, oDId=%v, limit=%v, err=%v\n", oWId, oDId, limit, err)
 		}
-		ots = append(ots, ot)
+		ots[i] = ot
 	}
 
 	return ots
@@ -102,10 +106,11 @@ func (o *orderDaoImpl) UpdateOrderCAS(oWId int, oDId int, oId gocql.UUID, oCarri
 	query := o.cassandraSession.WriteSession.Query("UPDATE order_tab "+
 		"SET o_carrier_id=?, ol_delivery_d=? "+
 		"WHERE o_w_id=? and o_d_id=? AND o_id=? "+
-		"IF o_carrier_id=-1=? AND ol_delivery_d=null", oCarrierId, time.Now(),
+		"IF o_carrier_id=-1", oCarrierId, time.Now(),
 		oWId, oDId, oId)
 
-	applied, err := query.ScanCAS()
+	var newOCarrierId int
+	applied, err := query.ScanCAS(&newOCarrierId)
 	if err != nil {
 		log.Fatalf("ERROR UpdateOrderCAS quering. err=%v\n", err)
 		return false
