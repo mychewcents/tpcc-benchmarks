@@ -1,40 +1,72 @@
-#! /bin/sh
+#! /bin/bash
 
-env=$1
-exp=$2
-host_or_client=$3
-
-if [ "$#" -eq 3 ] 
+if [ $1 == "help" ]
 then
-  if [ $exp -gt 4 ] && [ $exp -lt 9 ] 
+  echo
+  echo
+  echo "This is a simple manual for the \"run.sh\" file."
+  echo
+  echo
+  echo "\"run.sh\" accepts 3 command line argument and SHOULD BE run from the \"cockroachdb\" directory"
+  echo
+  echo
+  echo "First Argument - Type of the environment"
+  echo "   - dev    : To run a single client instance"
+  echo "   - prod   : To run parallel client instances"
+  echo
+  echo
+  echo "Second Argument - Experiment number to run"
+  echo "   - <number>    : Should be [5, 8]"
+  echo
+  echo
+  echo "Third Argument - Host to run on or the client instance to run with"
+  echo "   - <number>    : - Acts as a host number when run with \"prod\""
+  echo "                   - Acts as a client number when run with \"dev\""
+  echo
+  echo
+  echo "Happy Running!"
+  echo
+  echo
+elif [ "$#" -eq 3 ] 
+then
+  if [ $1 == "dev" ] || [ $1 == "prod" ]
   then
-    go build -o app cmd/app/main.go
-    chmod a+x ./app
-
-    if [ $env == 'dev' ]
+    env=$1
+    exp=$2
+    host_or_client=$3
+    if [ $exp -gt 4 ] && [ $exp -lt 9 ] 
     then
-      ./app -exp=$exp -client=$host_or_client < assets/data/transactions/$host_or_client.txt
-    else 
-      skip=5
-      total=20
+      go build -o app cmd/app/main.go
+      chmod a+x ./app
 
-      case $exp in
-        5) skip=4
-        ;;
-        6) skip=5
-        ;;
-        7) skip=4
-        total=40
-        ;;
-        8) skip=5
-        total=40
-        ;;
-      esac
+      if [ $env == 'dev' ]
+      then
+        ./app -exp=$exp -client=$host_or_client < assets/data/transactions/$host_or_client.txt
+      elif [ $env == 'prod' ]
+      then
+        skip=5
+        total=20
 
-      for (( i=host_or_client; i<=total; i=i+skip ))
-      do
-        ./app -exp=$exp -client=$i -config=configs/prod/node_$host_or_client.json < assets/data/transactions/$i.txt &
-      done
+        case $exp in
+          5) skip=4
+          ;;
+          6) skip=5
+          ;;
+          7) skip=4
+          total=40
+          ;;
+          8) skip=5
+          total=40
+          ;;
+        esac
+
+        for (( i=host_or_client; i<=total; i=i+skip ))
+        do
+          ./app -exp=$exp -client=$i -config=configs/prod/node_$host_or_client.json < assets/data/transactions/$i.txt &
+        done
+      fi
     fi
   fi
+else
+  echo "Use the \"help\" command to learn how to use this file"
 fi
