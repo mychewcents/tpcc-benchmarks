@@ -196,13 +196,16 @@ func createOrderLinesTables(warehouses, districts int) error {
 			OL_DIST_INFO char(24),
 			INDEX (OL_O_ID),
 			INDEX (OL_I_ID),
-			PRIMARY KEY (OL_W_ID, OL_D_ID, OL_O_ID, OL_NUMBER),
-			CONSTRAINT FK_ORDER_LINE FOREIGN KEY (OL_W_ID, OL_D_ID, OL_O_ID) REFERENCES defaultdb.ORDERS_WID_DID (O_W_ID, O_D_ID, O_ID)
+			PRIMARY KEY (OL_W_ID, OL_D_ID, OL_O_ID, OL_NUMBER)
 		);
 		
 		INSERT INTO defaultdb.ORDER_LINE_WID_DID 
 		SELECT * FROM defaultdb.ORDER_LINE
 		WHERE OL_W_ID = WID AND OL_D_ID = DID;
+
+		ALTER TABLE defaultdb.ORDER_LINE_WID_DID 
+		ADD CONSTRAINT FK_ORDER_LINE_WID_DID FOREIGN KEY (OL_W_ID, OL_D_ID, OL_O_ID) 
+		REFERENCES defaultdb.ORDERS_WID_DID (O_W_ID, O_D_ID, O_ID);
 	`
 
 	errFound := false
