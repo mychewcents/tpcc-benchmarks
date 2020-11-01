@@ -17,12 +17,9 @@ import (
 var db *sql.DB
 
 var (
-	experiment  = flag.Int("exp", 0, "Experiment Number")
-	client      = flag.Int("client", 0, "Client Number")
-	connPtr     = flag.String("host", "localhost", "URL / IP of the DB Server")
-	portPtr     = flag.Int("port", 27000, "Port to contact the server's CDB Service")
-	dbPtr       = flag.String("database", "defaultdb", "Database to connect")
-	usernamePtr = flag.String("username", "root", "Username to connect with")
+	experiment = flag.Int("exp", 0, "Experiment Number")
+	client     = flag.Int("client", 0, "Client Number")
+	configPath = flag.String("config", "configs/dev/local.json", "Path of the DB Server configuration")
 )
 
 func init() {
@@ -32,7 +29,7 @@ func init() {
 	if *experiment == 0 || *client == 0 {
 		panic("Provide Experiment and Client number to proceed")
 	}
-	db, err = cdbconn.CreateConnection(*connPtr, *portPtr, *dbPtr, *usernamePtr)
+	db, err = cdbconn.CreateConnection(*configPath)
 	if err != nil {
 		panic(err)
 	}
@@ -69,10 +66,9 @@ func outputStats(latencies []float64) {
 
 	outputStr := fmt.Sprintf("%d,%d,%d,%f,%f,%f,%f,%f,%f", experiment, client, processedTxs, elapsedTime/1000, throughput, avgLatency, medianLatency, p99, p95)
 
-	csvFile, err := os.Create(fmt.Sprintf("%d_%d.csv", *experiment, *client))
+	csvFile, err := os.Create(fmt.Sprintf("metrics/%d_%d.csv", *experiment, *client))
 	if err != nil {
 		fmt.Println(err)
-		fmt.Println(outputStr)
 		return
 	}
 	defer csvFile.Close()
@@ -80,7 +76,6 @@ func outputStats(latencies []float64) {
 	if _, err := csvFile.WriteString(outputStr); err != nil {
 		fmt.Println(err)
 	}
-
 }
 
 func main() {
