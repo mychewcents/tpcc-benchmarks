@@ -22,7 +22,7 @@ func Start() {
 	experimentId, _ = strconv.Atoi(os.Args[1])
 	clientId, _ = strconv.Atoi(os.Args[2])
 
-	fileName := fmt.Sprintf("log/logs_exp_%v_client%v", experimentId, clientId)
+	fileName := fmt.Sprintf("log/logs_exp_%v_client_%v", experimentId, clientId)
 	file, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatal(err)
@@ -32,6 +32,7 @@ func Start() {
 
 	log.Printf("Starting Client %v", clientId)
 	defer log.Printf("Stopping Client %v", clientId)
+
 	time.Sleep(10 * time.Second)
 
 	cassandraSession := common.MakeCassandraSession(os.Args[3])
