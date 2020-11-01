@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -13,7 +14,11 @@ var db *sql.DB
 
 func init() {
 	var err error
-	db, err = cdbconn.CreateConnection("localhost", 26257, "defaultdb", "root")
+
+	if len(os.Args) != 2 {
+		panic("Missing configuration file path")
+	}
+	db, err = cdbconn.CreateConnection(os.Args[1])
 	if err != nil {
 		panic(err)
 	}

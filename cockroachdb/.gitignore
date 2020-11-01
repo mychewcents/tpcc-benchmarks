@@ -3,9 +3,6 @@ assets/data/*
 
 app
 
-**/*/app*
-**/*/init*
-
 temp
 
 **/*/cdbserv
