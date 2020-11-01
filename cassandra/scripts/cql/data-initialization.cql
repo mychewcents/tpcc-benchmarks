@@ -1,4 +1,5 @@
 use cassandra;
+CONSISTENCY ALL ;
 COPY stock_tab (s_w_id,s_i_id,s_quantity,s_i_name,s_i_price,s_i_im_id,s_i_data,s_ytd,s_order_cnt,s_remote_cnt,s_dist_01,s_dist_02,s_dist_03,s_dist_04,s_dist_05,s_dist_06,s_dist_07,s_dist_08,s_dist_09,s_dist_10,s_data) FROM 'assets/data/processed/stock.csv' WITH HEADER = true ;
 COPY warehouse_tab (w_id, w_name, w_address, w_tax, w_ytd) FROM 'assets/data/processed/warehouse.csv' WITH HEADER = true ;
 COPY district_tab (d_w_id, d_id, d_name, d_address, d_tax,d_ytd) FROM 'assets/data/processed/district.csv' WITH HEADER = true ;

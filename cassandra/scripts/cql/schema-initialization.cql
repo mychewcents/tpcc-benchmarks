@@ -4,7 +4,7 @@ DROP KEYSPACE IF EXISTS cassandra;
 CREATE KEYSPACE IF NOT EXISTS cassandra WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};
 
 USE cassandra;
-
+CONSISTENCY ALL ;
 -- creating the userdefined types tables
 
 CREATE TYPE address (
