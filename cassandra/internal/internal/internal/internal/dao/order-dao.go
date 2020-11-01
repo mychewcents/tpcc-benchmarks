@@ -90,7 +90,7 @@ func (o *orderDaoImpl) GetLatestNOrdersForDistrict(oWId int, oDId int, limit int
 		"from order_tab "+
 		"where o_w_id=? AND o_d_id=? LIMIT ?", oWId, oDId, limit)
 
-	ots := make([]*table.OrderTab, limit)
+	ots := make([]*table.OrderTab, 0)
 
 	iter := query.Iter()
 	defer iter.Close()
@@ -100,7 +100,7 @@ func (o *orderDaoImpl) GetLatestNOrdersForDistrict(oWId int, oDId int, limit int
 		if err != nil {
 			log.Fatalf("ERROR GetLatestNOrdersForDistrict error making order. oWId=%v, oDId=%v, limit=%v, err=%v\n", oWId, oDId, limit, err)
 		}
-		ots[i] = ot
+		ots = append(ots, ot)
 	}
 
 	return ots

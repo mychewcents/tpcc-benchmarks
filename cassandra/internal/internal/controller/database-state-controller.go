@@ -30,7 +30,7 @@ func (d *databaseStateControllerImpl) SaveDatabaseState(path string, experimentN
 	}
 	defer file.Close()
 
-	databaseState := fmt.Sprintf("%d,%.2f,%.2f,%s,%.2f,%.2f,%d,%d,%v,%d,%.2f,%d,%d,%d,%d,%d", experimentNo, state.SumWYTD, state.SumDYTD, "N/A",
+	databaseState := fmt.Sprintf("%d,%.2f,%.2f,'%s',%.2f,%.2f,%d,%d,%v,%d,%.2f,%d,%d,%d,%d,%d", experimentNo, state.SumWYTD, state.SumDYTD, "N/A",
 		state.SumCBalance, state.SumCYTDPayment, state.SumCPaymentCnt, state.SumCDeliveryCnt,
 		state.MaxOId, state.SumOOlCnt, state.SumOlAmount, state.SumOlQuantity,
 		state.SumSQuantity, state.SumSYTD, state.SumSOrderCnt, state.SumSRemoteCnt)
