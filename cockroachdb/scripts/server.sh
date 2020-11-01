@@ -64,7 +64,7 @@ then
     printf "**********\nUploadng the init files : node${2}\n***********\n\n"
     orig=$GOPATH/src/github.com/mychewcents/ddbms-project/cockroachdb/assets/data/raw
     cd $orig
-    mkdir $node_store/node$2/extern/assets/raw
+    mkdir -p $node_store/node$2/extern/assets/raw
     for FILE in *; 
     do 
       cp $FILE $node_store/node$2/extern/assets/raw/$FILE
