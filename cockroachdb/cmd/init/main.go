@@ -2,10 +2,13 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/cdbconn"
 )
@@ -22,15 +25,56 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
+	fileName := fmt.Sprintf("logs/logs_init_%s", time.Now())
+	file, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.SetOutput(file)
 }
 
 func main() {
-	createOrdersTables(10, 10)
-	createOrderLinesTables(10, 10)
-	updateOrdersTotalAmount(10, 10)
+	log.Println("Starting the loading of the raw database files")
+	if err := loadRawDataset(db, "cmd/init/init.sql"); err != nil {
+		fmt.Println(err)
+		return
+	}
+	log.Println("Finished the loading of the raw database files")
+
+	log.Println("Starting the creation of partitioned Orders table...")
+	if err := createOrdersTables(10, 10); err != nil {
+		fmt.Println(err)
+		return
+	}
+	log.Println("Finished the creation of partitionied Orders table...")
+
+	log.Println("Starting the creation of partitioned Order Line table...")
+	if err := createOrderLinesTables(10, 10); err != nil {
+		fmt.Println(err)
+		return
+	}
+	log.Println("Finished the creation of partitionied Order Line table...")
+
+	log.Println("Updating the Orders table with the Total Amount for each order...")
+	if err := updateOrdersTotalAmount(10, 10); err != nil {
+		fmt.Println(err)
+		return
+	}
+	log.Println("Finished updated the Orders table with the Total Amount...")
+
+	log.Println("Starting the creation of Customer <-> Two Item Pair table...")
+	if err := createOrderItemsPairTables(10); err != nil {
+		fmt.Println(err)
+		return
+	}
+	log.Println("Finished the creation of ORDER_ITEMS_CUSTOMERS tables for each warehouse")
+
+	fmt.Println("Done")
 }
 
-func createOrdersTables(warehouses, districts int) {
+func createOrdersTables(warehouses, districts int) error {
 	baseSQLStatement := `
 		DROP TABLE IF EXISTS defaultdb.ORDERS_WID_DID;
 		
@@ -57,23 +101,27 @@ func createOrdersTables(warehouses, districts int) {
 		WHERE O_W_ID = WID AND O_D_ID = DID;
 	`
 
+	errFound := false
 	for i := 1; i <= warehouses; i++ {
 		for j := 1; j <= districts; j++ {
 			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(i))
 			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(j))
 
-			// fmt.Println(finalSQLStatement)
-			_, err := db.Exec(finalSQLStatement)
-			if err != nil {
-				fmt.Println(err)
+			log.Println(finalSQLStatement)
+			if _, err := db.Exec(finalSQLStatement); err != nil {
+				log.Fatalf("Err: %v", err)
+				errFound = true
 			}
-
-			fmt.Println("Compelete: ", i, j)
 		}
 	}
+
+	if errFound {
+		return errors.New("error was found. Please check the logs")
+	}
+	return nil
 }
 
-func createOrderLinesTables(warehouses, districts int) {
+func createOrderLinesTables(warehouses, districts int) error {
 	baseSQLStatement := `
 		DROP TABLE IF EXISTS defaultdb.ORDER_LINE_WID_DID;
 		CREATE TABLE IF NOT EXISTS defaultdb.ORDER_LINE_WID_DID (
@@ -98,40 +146,78 @@ func createOrderLinesTables(warehouses, districts int) {
 		WHERE OL_W_ID = WID AND OL_D_ID = DID;
 	`
 
+	errFound := false
 	for i := 1; i <= warehouses; i++ {
 		for j := 1; j <= districts; j++ {
 			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(i))
 			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(j))
 
-			// fmt.Println(finalSQLStatement)
-			_, err := db.Exec(finalSQLStatement)
-			if err != nil {
-				fmt.Println(err)
+			log.Println(finalSQLStatement)
+			if _, err := db.Exec(finalSQLStatement); err != nil {
+				log.Fatalf("Err: %v", err)
+				errFound = true
 			}
-
-			fmt.Println("Compelete: ", i, j)
 		}
 	}
+
+	if errFound {
+		return errors.New("error was found. Please check the logs")
+	}
+	return nil
 }
 
-func updateOrdersTotalAmount(warehouses, districts int) {
-	fmt.Println("Starting the update of O_TOTAL_AMOUNT column...")
-	baseSQLStatement := `
-		UPDATE ORDERS_WID_DID SET O_TOTAL_AMOUNT = (SELECT SUM(OL_AMOUNT) FROM ORDER_LINE_WID_DID WHERE OL_O_ID = O_ID);
-	`
+func updateOrdersTotalAmount(warehouses, districts int) error {
+	baseSQLStatement := "UPDATE ORDERS_WID_DID SET O_TOTAL_AMOUNT = (SELECT SUM(OL_AMOUNT) FROM ORDER_LINE_WID_DID WHERE OL_O_ID = O_ID)"
 
+	errFound := false
 	for i := 1; i <= warehouses; i++ {
 		for j := 1; j <= districts; j++ {
 			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(i))
 			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(j))
 
-			// fmt.Println(finalSQLStatement)
-			_, err := db.Exec(finalSQLStatement)
-			if err != nil {
-				fmt.Println(err)
+			log.Println(finalSQLStatement)
+			if _, err := db.Exec(finalSQLStatement); err != nil {
+				log.Fatalf("Err: %v", err)
+				errFound = true
 			}
-
-			fmt.Println("Compelete: ", i, j)
 		}
 	}
+
+	if errFound {
+		return errors.New("error was found. Please check the logs")
+	}
+	return nil
+}
+
+func createOrderItemsPairTables(warehouses int) error {
+	baseSQLStatement := `
+		DROP TABLE IF EXISTS defaultdb.ORDER_ITEMS_CUSTOMERS_WID;
+		
+		CREATE TABLE IF NOT EXISTS defaultdb.ORDER_ITEMS_CUSTOMERS_WID (
+			IC_W_ID int,
+			IC_D_ID int,
+			IC_C_ID int,
+			IC_I_1_ID int,
+			IC_I_2_ID int,
+			INDEX (IC_W_ID, IC_D_ID, IC_C_ID),
+			PRIMARY KEY (IC_W_ID, IC_D_ID, IC_C_ID, IC_I_1_ID, IC_I_2_ID),
+			CONSTRAINT FK_ORDERS FOREIGN KEY (IC_W_ID, IC_D_ID, IC_C_ID) REFERENCES defaultdb.CUSTOMER (C_W_ID, C_D_ID, C_ID)
+		);
+	`
+
+	errFound := false
+	for i := 1; i <= warehouses; i++ {
+		finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(i))
+
+		log.Println(finalSQLStatement)
+		if _, err := db.Exec(finalSQLStatement); err != nil {
+			log.Fatalf("Err: %v", err)
+			errFound = true
+		}
+	}
+
+	if errFound {
+		return errors.New("error was found. Please check the logs")
+	}
+	return nil
 }
