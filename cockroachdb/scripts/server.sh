@@ -66,7 +66,7 @@ then
     cd $orig
     for FILE in *; 
     do 
-      cp $FILE $node_store/node$2/extern/assets/raw/$FILE --insecure --host=$(hostname -i):27000
+      cp $FILE $node_store/node$2/extern/assets/raw/$FILE
     done
     printf "\n**********\nUploaded the init files : node${2}\n**********\n\n"
   fi
