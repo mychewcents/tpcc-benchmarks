@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -32,6 +33,8 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, args []string) bool 
 	numOfItems, _ := strconv.Atoi(args[3])
 
 	orderLineObjects := make([]*itemObject, numOfItems)
+	orderItems := make([]int, numOfItems)
+
 	prevSeenOrderLineItems := make(map[int]int) // Maps the items IDs to the
 	isLocal := 1
 
@@ -63,19 +66,24 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, args []string) bool 
 					remote:   remote,
 				}
 				prevSeenOrderLineItems[id] = totalUniqueItems
+				orderItems[totalUniqueItems] = id
 				totalUniqueItems++
 			}
 		}
 	}
 
-	return execute(db, warehouseID, districtID, customerID, totalUniqueItems, isLocal, totalUniqueItems, orderLineObjects[0:totalUniqueItems])
+	orderLineObjects = orderLineObjects[0:totalUniqueItems]
+	orderItems = orderItems[0:totalUniqueItems]
+	sort.Ints(orderItems)
+
+	return execute(db, warehouseID, districtID, customerID, totalUniqueItems, isLocal, totalUniqueItems, orderLineObjects, orderItems)
 }
 
-func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal, totalUniqueItems int, orderLineObjects []*itemObject) bool {
+func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal, totalUniqueItems int, orderLineObjects []*itemObject, sortedOrderItems []int) bool {
 
-	fmt.Println(orderLineObjects, totalUniqueItems, numItems)
 	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)
 	orderLineTable := fmt.Sprintf("ORDER_LINE_%d_%d", warehouseID, districtID)
+	orderItemCustomerPairTable := fmt.Sprintf("ORDER_ITEMS_CUSTOMERS_%d", warehouseID)
 
 	sqlStatement := fmt.Sprintf("UPDATE District SET D_NEXT_O_ID = D_NEXT_O_ID + 1 WHERE D_W_ID = %d AND D_ID = %d RETURNING D_NEXT_O_ID, D_TAX, D_W_TAX", warehouseID, districtID)
 
@@ -101,11 +109,18 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 	var totalAmount float64
 	var orderTimestamp string
 
+	var orderItemCustomerPair strings.Builder
+
+	for i := 0; i < len(sortedOrderItems)-1; i++ {
+		for j := i + 1; j < len(sortedOrderItems); j++ {
+			orderItemCustomerPair.WriteString(fmt.Sprintf("(%d, %d, %d, %d, %d),", warehouseID, districtID, customerID, sortedOrderItems[i], sortedOrderItems[j]))
+		}
+	}
+
 	err := crdb.ExecuteTx(context.Background(), db, nil, func(tx *sql.Tx) error {
 		var orderLineEntries []string
 
 		for key, value := range orderLineObjects {
-			fmt.Println(key, value)
 			sqlStatement = fmt.Sprintf("SELECT S_I_NAME, S_I_PRICE, S_QUANTITY, S_DIST_%02d FROM STOCK WHERE S_W_ID = %d AND S_I_ID = %d", districtID, value.supplier, value.id)
 			row = tx.QueryRow(sqlStatement)
 			if err := row.Scan(&value.name, &value.price, &value.startStock, &value.data); err != nil {
@@ -163,6 +178,13 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 			return err
 		}
 
+		sqlStatement = fmt.Sprintf("UPSERT INTO %s (IC_W_ID, IC_D_ID, IC_C_ID, IC_I_1_ID, IC_I_2_ID) VALUES %s", orderItemCustomerPairTable, orderItemCustomerPair.String())
+		sqlStatement = sqlStatement[0 : len(sqlStatement)-1]
+
+		if _, err := tx.Exec(sqlStatement); err != nil {
+			return err
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -172,8 +194,8 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 
 	totalAmount = totalAmount * (1.0 + districtTax + warehouseTax) * (1.0 - cDiscount)
 
-	printOutputState(warehouseID, districtID, customerID, cLastName, cCredit, cDiscount,
-		newOrderID, orderTimestamp, totalUniqueItems, totalAmount, orderLineObjects)
+	// printOutputState(warehouseID, districtID, customerID, cLastName, cCredit, cDiscount,
+	// 	newOrderID, orderTimestamp, totalUniqueItems, totalAmount, orderLineObjects)
 	return true
 }
 

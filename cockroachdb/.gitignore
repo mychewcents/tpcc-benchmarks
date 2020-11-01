@@ -1,8 +1,7 @@
 
 assets/data/*
 
-app
-
 temp
 
 **/*/cdbserv
+**/*/*.csv
