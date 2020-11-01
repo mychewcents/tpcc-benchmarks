@@ -6,5 +6,6 @@ cockroachdb/temp
 
 **/*/cdbserv
 
+logs/*
 .DS_Store
 .idea/
