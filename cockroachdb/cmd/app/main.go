@@ -69,7 +69,7 @@ func outputStats(latencies []float64) {
 
 	outputStr := fmt.Sprintf("%d,%d,%d,%f,%f,%f,%f,%f,%f", experiment, client, processedTxs, elapsedTime/1000, throughput, avgLatency, medianLatency, p99, p95)
 
-	csvFile, err := os.Create(fmt.Sprintf("%d-%d.csv", experiment, client))
+	csvFile, err := os.Create(fmt.Sprintf("%d_%d.csv", *experiment, *client))
 	if err != nil {
 		fmt.Println(err)
 		fmt.Println(outputStr)

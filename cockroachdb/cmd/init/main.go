@@ -40,6 +40,7 @@ func createOrdersTables(warehouses, districts int) {
 			O_ENTRY_D timestamp DEFAULT CURRENT_TIMESTAMP,
 			O_TOTAL_AMOUNT decimal(12,2),
 			O_DELIVERY_D timestamp DEFAULT NULL,
+			O_OL_ITEM_IDS string DEFAULT NULL,
 			INDEX (O_C_ID, O_ID DESC),
 			INDEX (O_CARRIER_ID, O_ID),
 			PRIMARY KEY (O_W_ID, O_D_ID, O_ID),

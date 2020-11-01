@@ -22,7 +22,7 @@ then
   if [ $h == 30 ]
   then
     cockroach start --insecure --store=/home/stuproj/cs4224m/crdb-node-files/node0 \
-      --listen-addr=192.168.48.179:27000 \
+      --listen-addr=$(hostname -i):27000 \
       --http-addr=0.0.0.0:40000 \
       --join=192.168.48.179:27000,192.168.48.180:27000,192.168.48.181:27000,192.168.48.182:27000,192.168.48.183:27000 \
       --background
@@ -73,4 +73,9 @@ then
   printf "**********\nInitializing the cluster : node${h}\n**********\n\n"
   cockroach init --insecure --host=$(hostname -i):27000
   printf "\n**********\nStopped the node : node${h}\n**********\n"
+elif [ $1 == "sql" ]
+then
+  printf "**********\nStarting the SQL Client : node${h}\n***********\n\n"
+  cockroach sql --insecure --host=$(hostname -i):27000
+  printf "\n**********\nStopped the SQL Client : node${h}\n**********\n\n"
 fi
