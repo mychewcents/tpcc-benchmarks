@@ -1,6 +1,6 @@
 <CassandraConfig>
     <Hosts>
-        <Host>127.0.0.1</Host>
+        <Host>127.0.0.1:9042</Host>
     </Hosts>
     <WriteConsistency>ONE</WriteConsistency>
     <ReadConsistency>ONE</ReadConsistency>
