@@ -6,7 +6,7 @@
 # project files for data and transaction.
 #############################################
 
-if [ $1 == 'local' ]
+if [ "$#" -eq 0 ]
 then
   if [ ! -d "/temp/cs5424-team-m/cdb-server" ]
   then
