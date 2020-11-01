@@ -28,6 +28,25 @@ func NewStockLevelService(cassandraSession *common.CassandraSession) StockLevelS
 	}
 }
 
+func (s *stockLevelServiceImpl) ProcessStockLevelTransaction(request *model.StockLevelRequest) (*model.StockLevelResponse, error) {
+	ots := s.o.GetLatestNOrdersForDistrict(request.WId, request.DId, request.NoOfLastOrders)
+
+	oIds := make([]gocql.UUID, request.NoOfLastOrders)
+	for i, ot := range ots {
+		oIds[i] = ot.OId
+	}
+
+	ch := make(chan []*table.OrderLineTab)
+	go s.ol.GetOrderLineItemListByKeys(request.WId, request.DId, oIds, ch)
+	olts := <-ch
+
+	iIds := getUniqueItems(olts)
+	countCh := make(chan int)
+	go s.s.GetItemCountWithLowStock(request.WId, iIds, request.Threshold, countCh)
+
+	return &model.StockLevelResponse{Count: <-countCh}, nil
+}
+
 func getUniqueItems(olts []*table.OrderLineTab) []int {
 	iIdMap := make(map[int]bool)
 	iIds := make([]int, 0)
@@ -40,25 +59,6 @@ func getUniqueItems(olts []*table.OrderLineTab) []int {
 	}
 
 	return iIds
-}
-
-func (s *stockLevelServiceImpl) ProcessStockLevelTransaction(request *model.StockLevelRequest) (*model.StockLevelResponse, error) {
-	ots := s.o.GetLatestNOrdersForDistrict(request.WId, request.DId, request.NoOfLastOrders)
-
-	oIds := make([]gocql.UUID, request.NoOfLastOrders)
-	for i, ot := range ots {
-		oIds[i] = ot.OId
-	}
-
-	ch := make(chan []*table.OrderLineTab)
-	s.ol.GetOrderLineItemListByKeys(request.WId, request.DId, oIds, ch)
-	olts := <-ch
-
-	iIds := getUniqueItems(olts)
-	countCh := make(chan int)
-	s.s.GetItemCountWithLowStock(request.WId, iIds, request.Threshold, countCh)
-
-	return &model.StockLevelResponse{Count: <-countCh}, nil
 }
 
 func (s *stockLevelServiceImpl) Close() error {

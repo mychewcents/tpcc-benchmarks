@@ -8,5 +8,5 @@ type TopBalanceCustomerInfo struct {
 }
 
 type TopBalanceResponse struct {
-	CustomerInfoList []*TopBalanceCustomerInfo
+	CustomerInfoList [10]*TopBalanceCustomerInfo
 }

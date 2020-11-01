@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"fmt"
 	"github.com/gocql/gocql"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/datamodel/table"
@@ -24,10 +25,10 @@ func NewOrderLineDao(cassandraSession *common.CassandraSession) OrderLineDao {
 
 func (o *orderLineDaoImpl) BatchInsertOrderLine(oltList []*table.OrderLineTab, chComplete chan bool) {
 	batch := o.cassandraSession.WriteSession.NewBatch(gocql.LoggedBatch)
-	stmt := "INSERT INTO order_line_tab (ol_w_id, ol_d_id, ol_o_id, ol_quantity, ol_number, ol_i_id, ol_i_name, ol_amount, ol_supply_w_id, ol_dist_info) VALUES (?,?,?,?,?,?,?,?,?,?)"
+	stmt := "INSERT INTO order_line_tab (ol_w_id, ol_d_id, ol_o_id, ol_quantity, ol_number, ol_i_id, ol_i_name, ol_amount, ol_w_to_quantity, ol_w_to_dist_info) VALUES (?,?,?,?,?,?,?,?,?,?)"
 
 	for _, ol := range oltList {
-		batch.Query(stmt, ol.OlWId, ol.OlDId, ol.OlOId, ol.OlQuantity, ol.OlNumber, ol.OlIId, ol.OlIName, ol.OlAmount, ol.OlSupplyWId, ol.OlDistInfo)
+		batch.Query(stmt, ol.OlWId, ol.OlDId, ol.OlOId, ol.OlQuantity, ol.OlNumber, ol.OlIId, ol.OlIName, ol.OlAmount, ol.OlWToQuantity, ol.OlWToDistInfo)
 	}
 
 	err := o.cassandraSession.WriteSession.ExecuteBatch(batch)
@@ -41,7 +42,7 @@ func (o *orderLineDaoImpl) BatchInsertOrderLine(oltList []*table.OrderLineTab, c
 func (o *orderLineDaoImpl) GetOrderLineListByKey(oWId int, oDId int, oId gocql.UUID, ch chan []*table.OrderLineTab) {
 	query := o.cassandraSession.ReadSession.Query("SELECT * "+
 		"from order_line_tab "+
-		"where o_w_id=? AND o_d_id=? AND o_id=?", oWId, oDId, oId)
+		"where ol_w_id=? AND ol_d_id=? AND ol_o_id=?", oWId, oDId, oId)
 
 	olts := make([]*table.OrderLineTab, 0)
 
@@ -65,11 +66,11 @@ func (o *orderLineDaoImpl) GetOrderLineItemListByKeys(oWId int, oDId int, oIds [
 	for i, oId := range oIds {
 		oIdString[i] = oId.String()
 	}
-
-	query := o.cassandraSession.ReadSession.Query("SELECT * "+
+	stmt := fmt.Sprintf("SELECT * "+
 		"from order_line_tab "+
-		"where o_w_id=? AND o_d_id=? AND o_id IN (?)", oWId, oDId, strings.Join(oIdString, ","))
+		"where ol_w_id=%v AND ol_d_id=%v AND ol_o_id IN (%v)", oWId, oDId, strings.Join(oIdString, ","))
 
+	query := o.cassandraSession.ReadSession.Query(stmt)
 	olts := make([]*table.OrderLineTab, 0)
 
 	iter := query.Iter()
@@ -83,6 +84,5 @@ func (o *orderLineDaoImpl) GetOrderLineItemListByKeys(oWId int, oDId int, oIds [
 		}
 		olts = append(olts, ot)
 	}
-
 	ch <- olts
 }

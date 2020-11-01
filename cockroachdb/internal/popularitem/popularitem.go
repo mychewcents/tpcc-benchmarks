@@ -23,9 +23,9 @@ type itemPercentageName struct {
 
 // ProcessTransaction returns the list of the most popular items and their percentage
 func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) bool {
-	warehouseID, _ := strconv.Atoi(transactionArgs[1])
-	districtID, _ := strconv.Atoi(transactionArgs[2])
-	lastNOrders, _ := strconv.Atoi(transactionArgs[3])
+	warehouseID, _ := strconv.Atoi(transactionArgs[0])
+	districtID, _ := strconv.Atoi(transactionArgs[1])
+	lastNOrders, _ := strconv.Atoi(transactionArgs[2])
 
 	return execute(db, warehouseID, districtID, lastNOrders)
 }

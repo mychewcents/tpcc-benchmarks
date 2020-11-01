@@ -33,6 +33,7 @@ type NewOrderResponse struct {
 	CId                  int
 	CCredit              string
 	CDiscount            float32
+	CLast                string
 	WTax                 float32
 	DTax                 float32
 	OId                  gocql.UUID

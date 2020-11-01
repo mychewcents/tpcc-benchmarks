@@ -1,15 +1,16 @@
 package model
 
-type RelatedCustomerRequest struct {
+type CustomerIdentifier struct {
 	CWId int
 	CDId int
 	CId  int
 }
 
-type RelatedCustomerResponse struct {
-	CWId int
-	CDId int
-	CId  int
+type RelatedCustomerRequest struct {
+	CustomerIdentifier *CustomerIdentifier
+}
 
-	RelatedCIds []int
+type RelatedCustomerResponse struct {
+	CustomerIdentifier         *CustomerIdentifier
+	RelatedCustomerIdentifiers []*CustomerIdentifier
 }

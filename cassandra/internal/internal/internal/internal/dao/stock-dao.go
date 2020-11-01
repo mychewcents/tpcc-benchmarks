@@ -1,16 +1,18 @@
 package dao
 
 import (
+	"fmt"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
 	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/datamodel/table"
 	"log"
+	"strconv"
 	"strings"
 )
 
 type StockDao interface {
 	GetStockByKey(sWId int, sIId int, ch chan *table.StockTab)
 	GetItemCountWithLowStock(sWId int, sIIds []int, sQuantity int, cCh chan int)
-	UpdateStockCAS(stOld *table.StockTab, quantity int, isRemote bool, ch chan bool)
+	UpdateStockCAS(stOld *table.StockTab, quantity int, isRemote bool, isOrder bool, ch chan bool)
 }
 
 type stockDaoImpl struct {
@@ -44,15 +46,17 @@ func (s *stockDaoImpl) GetStockByKey(sWId int, sIId int, ch chan *table.StockTab
 func (s *stockDaoImpl) GetItemCountWithLowStock(sWId int, sIIds []int, sQuantity int, cCh chan int) {
 	sIIdString := make([]string, len(sIIds))
 	for i, sIId := range sIIds {
-		sIIdString[i] = string(sIId)
+		sIIdString[i] = strconv.Itoa(sIId)
 	}
 
-	query := s.cassandraSession.ReadSession.Query("SELECT count(*) "+
-		"from stock_tab "+
-		"where s_w_id=? AND s_i_id IN (?) AND s_quantity<?", sWId, strings.Join(sIIdString, ","), sQuantity)
+	stmt := fmt.Sprintf("SELECT count(*) "+
+		"from stock_by_quantity_view "+
+		"where s_w_id=%v AND s_i_id IN (%v) AND s_quantity<%v", sWId, strings.Join(sIIdString, ","), sQuantity)
+
+	query := s.cassandraSession.ReadSession.Query(stmt)
 
 	var count int
-	if err := query.Scan(count); err != nil {
+	if err := query.Scan(&count); err != nil {
 		log.Fatalf("ERROR GetItemCountWithLowStock error in query execution. sWId=%v, sIId=%v, err=%v\n", sWId, strings.Join(sIIdString, ","), err)
 		return
 	}
@@ -60,13 +64,17 @@ func (s *stockDaoImpl) GetItemCountWithLowStock(sWId int, sIIds []int, sQuantity
 	cCh <- count
 }
 
-func (s *stockDaoImpl) UpdateStockCAS(stOld *table.StockTab, quantity int, isRemote bool, ch chan bool) {
+func (s *stockDaoImpl) UpdateStockCAS(stOld *table.StockTab, quantity int, isRemote bool, isOrder bool, ch chan bool) {
 	sQuantity := stOld.SQuantity - quantity
 	if sQuantity < 10 {
 		sQuantity = sQuantity + 100
 	}
 	sYtd := stOld.SYtd + quantity
-	sOrderCnt := stOld.SOrderCnt + 1
+
+	sOrderCnt := stOld.SOrderCnt
+	if isOrder {
+		sOrderCnt++
+	}
 
 	sRemoteCnt := stOld.SRemoteCnt
 	if isRemote {
@@ -93,7 +101,7 @@ func (s *stockDaoImpl) UpdateStockCAS(stOld *table.StockTab, quantity int, isRem
 		stOld.SOrderCnt = sOrderCnt
 		stOld.SRemoteCnt = sRemoteCnt
 
-		s.UpdateStockCAS(stOld, quantity, isRemote, ch)
+		s.UpdateStockCAS(stOld, quantity, isRemote, isOrder, ch)
 	} else {
 		ch <- true
 	}

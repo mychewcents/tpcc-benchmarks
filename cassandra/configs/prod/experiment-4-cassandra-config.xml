@@ -1,0 +1,12 @@
+<CassandraConfig>
+    <Hosts>
+        <Host>192.168.48.179</Host>
+        <Host>192.168.48.180</Host>
+        <Host>192.168.48.181</Host>
+        <Host>192.168.48.182</Host>
+        <Host>192.168.48.183</Host>
+    </Hosts>
+    <Keyspace>cassandra</Keyspace>
+    <WriteConsistency>ALL</WriteConsistency>
+    <ReadConsistency>ONE</ReadConsistency>
+</CassandraConfig>
