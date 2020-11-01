@@ -1,8 +1,0 @@
-
-**/*/app*
-cockroachdb/cmd/init/init*
-
-cockroachdb/temp
-
-**/*/*.txt
-**/*/cdbserv
