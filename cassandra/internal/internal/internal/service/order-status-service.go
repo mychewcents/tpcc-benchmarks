@@ -37,6 +37,9 @@ func (o *orderStatusServiceImpl) ProcessOrderStatusTransaction(request *model.Or
 	go o.c.GetCustomerByKey(request.CWId, request.CDId, request.CId, chC)
 
 	ov := <-chO
+	if ov == nil {
+		return nil, nil
+	}
 	go o.ol.GetOrderLineListByKey(request.CWId, request.CDId, ov.OId, chOl)
 	ct := <-chC
 	olt := <-chOl

@@ -39,6 +39,7 @@ CREATE TABLE district_tab (
 	D_ADDRESS frozen<address>,
 	D_TAX float,
 	D_YTD double,
+	D_NEXT_O_ID int,
 	PRIMARY KEY ((D_W_ID, D_ID))
 );
 
