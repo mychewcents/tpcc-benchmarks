@@ -6,15 +6,18 @@
 # project files for data and transaction.
 #############################################
 
-if [ ! -d "/temp/cs5424-team-m/cdb-server" ]
+if [ $1 == 'local' ]
 then
-  echo "Creating the server installation script directory"
-  mkdir /temp/cs5424-team-m/cdb-server
-fi
+  if [ ! -d "/temp/cs5424-team-m/cdb-server" ]
+  then
+    echo "Creating the server installation script directory"
+    mkdir /temp/cs5424-team-m/cdb-server
+  fi
 
-cp scripts/server.sh scripts/cdbserv
-chmod a+x scripts/cdbserv
-mv scripts/cdbserv /temp/cs5424-team-m/cdb-server/
+  cp scripts/server.sh cdbserv
+  chmod a+x cdbserv
+  mv cdbserv /temp/cs5424-team-m/cdb-server/
+fi
 
 rm -rf assets/data
 
