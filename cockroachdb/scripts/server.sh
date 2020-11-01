@@ -34,7 +34,7 @@ then
     if [ $2 -gt 0 ] && [ $2 -lt 6 ]
     then
       printf "**********\nStarting Cockroach DB node on : node${2}\n**********\n\n"
-      echo cockroach start --insecure --store=$node_store/node$2 \
+      cockroach start --insecure --store=$node_store/node$2 \
         --listen-addr=$(hostname -i):27000 \
         --http-addr=0.0.0.0:40000 \
         --join=192.168.48.179:27000,192.168.48.180:27000,192.168.48.181:27000,192.168.48.182:27000,192.168.48.183:27000 \
