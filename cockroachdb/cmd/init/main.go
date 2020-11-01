@@ -39,6 +39,13 @@ func init() {
 }
 
 func main() {
+	log.Println("Starting the drop of partitioned Orders and Order Line table...")
+	if err := dropOrdersTable(10, 10); err != nil {
+		fmt.Println(err)
+		return
+	}
+	log.Println("Finished the drop of partitioned Orders and Order Line table...")
+
 	log.Println("Starting the loading of the raw database files")
 	if err := loadRawDataset(db, "cmd/init/init.sql"); err != nil {
 		fmt.Println(err)
@@ -97,6 +104,31 @@ func loadRawDataset(db *sql.DB, file string) error {
 			log.Fatalf("Err: %v", err)
 			return errors.New("error occurred. Please check the logs")
 		}
+	}
+	return nil
+}
+
+func dropOrdersTable(warehouses, districts int) error {
+	baseSQLStatement := `
+		DROP TABLE IF EXISTS defaultdb.ORDER_LINE_WID_DID;
+		DROP TABLE IF EXISTS defaultdb.ORDERS_WID_DID;
+	`
+
+	errFound := false
+	for i := 1; i <= warehouses; i++ {
+		for j := 1; j <= districts; j++ {
+			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(i))
+			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(j))
+
+			log.Println(finalSQLStatement)
+			if _, err := db.Exec(finalSQLStatement); err != nil {
+				log.Fatalf("Err: %v", err)
+				errFound = true
+			}
+		}
+	}
+	if errFound {
+		return errors.New("error was found. Please check the logs")
 	}
 	return nil
 }
