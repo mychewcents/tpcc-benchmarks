@@ -29,7 +29,9 @@ func init() {
 	fileName := fmt.Sprintf("logs/logs_init_%s", time.Now())
 	file, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
+		fmt.Println(err)
 		log.Fatal(err)
+		return
 	}
 
 	log.SetOutput(file)
