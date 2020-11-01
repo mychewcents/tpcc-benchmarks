@@ -1,7 +1,4 @@
-#! /bin/sh
-
-h=$(hostname -s | cut -c5-6)
-action=$1
+#! /bin/bash
 
 if [ $1 == "help" ]
 then
@@ -10,72 +7,56 @@ then
   echo "This is simple manual for the executable."
   echo
   echo
-  echo "\"cdbserv\" accepts two different types of arguments:"
-  echo "   - start : To start the CockroachDB server on the 0.0.0.0."
-  echo "   - stop  : To stop the local running instance of the Cockroach DB."
+  echo "\"cdbserv\" accepts two command line arguments:"
+  echo
+  echo
+  echo "First Argument - action to perform"
+  echo "   - init  : To initialize the Cockroach DB Instance"
+  echo "   - start : To start the CockroachDB server on the localhost"
+  echo "   - stop  : To stop the local running instance of the Cockroach DB"
+  echo "   - sql   : To start the SQL Client for the localhost"
+  echo
+  echo
+  echo "Second Argument - host number to be used - Only used when creating directories"
+  echo "   - <number>  : Should be [1, 5]"
   echo
   echo
   echo "Happy Running!"
-elif [ $1 == "start" ]
+  echo
+  echo
+elif [ "$#" -eq 2 ]
 then
-  printf "**********\nStarting Cockroach DB node on : node${h}\n**********\n\n"
-  if [ $h == 30 ]
+  if [ $1 == "start" ]
   then
-    cockroach start --insecure --store=/home/stuproj/cs4224m/crdb-node-files/node0 \
-      --listen-addr=$(hostname -i):27000 \
-      --http-addr=0.0.0.0:40000 \
-      --join=192.168.48.179:27000,192.168.48.180:27000,192.168.48.181:27000,192.168.48.182:27000,192.168.48.183:27000 \
-      --background
+    if [ $2 -gt 0 ] && [ $2 -lt 6 ]
+    then
+      printf "**********\nStarting Cockroach DB node on : node${2}\n**********\n\n"
+      echo cockroach start --insecure --store=/home/stuproj/cs4224m/crdb-node-files/node$2 \
+        --listen-addr=$(hostname -i):27000 \
+        --http-addr=0.0.0.0:40000 \
+        --join=192.168.48.179:27000,192.168.48.180:27000,192.168.48.181:27000,192.168.48.182:27000,192.168.48.183:27000 \
+        --background
 
-    # cockroach init --insecure --host=0.0.0.0:30000
-
-  elif [ $h == 31 ]
+      printf "\n**********\nStarted server on : node${2}\n**********\n"
+    else
+      echo "Use the host number from 1 to 5 ONLY...."
+    fi
+  elif [ $1 == "stop" ]
   then
-    cockroach start --insecure --store=/home/stuproj/cs4224m/crdb-node-files/node1 \
-      --listen-addr=192.168.48.180:27000 \
-      --http-addr=0.0.0.0:40000 \
-      --join=192.168.48.179:27000,192.168.48.180:27000,192.168.48.181:27000,192.168.48.182:27000,192.168.48.183:27000 \
-      --background
-
-  elif [ $h == 32 ]
+    printf "**********\nStopping the node : node${2}\n**********\n\n"
+    cockroach quit --insecure --host=$(hostname -i):27000
+    printf "\n**********\nStopped the node : node${2}\n**********\n"
+  elif [ $1 == "init" ]
   then
-    cockroach start --insecure --store=/home/stuproj/cs4224m/crdb-node-files/node2 \
-      --listen-addr=192.168.48.181:27000 \
-      --http-addr=0.0.0.0:40000 \
-      --join=192.168.48.179:27000,192.168.48.180:27000,192.168.48.181:27000,192.168.48.182:27000,192.168.48.183:27000 \
-      --background
-
-  elif [ $h == 33 ]
+    printf "**********\nInitializing the cluster : node${2}\n**********\n\n"
+    cockroach init --insecure --host=$(hostname -i):27000
+    printf "\n**********\nStopped the node : node${2}\n**********\n"
+  elif [ $1 == "sql" ]
   then
-    cockroach start --insecure --store=/home/stuproj/cs4224m/crdb-node-files/node3 \
-      --listen-addr=192.168.48.182:27000 \
-      --http-addr=0.0.0.0:40000 \
-      --join=192.168.48.179:27000,192.168.48.180:27000,192.168.48.181:27000,192.168.48.182:27000,192.168.48.183:27000 \
-      --background
-
-  elif [ $h == 34 ]
-  then
-    cockroach start --insecure --store=/home/stuproj/cs4224m/crdb-node-files/node4 \
-      --listen-addr=192.168.48.183:27000 \
-      --http-addr=0.0.0.0:40000 \
-      --join=192.168.48.179:27000,192.168.48.180:27000,192.168.48.181:27000,192.168.48.182:27000,192.168.48.183:27000 \
-      --background
-
+    printf "**********\nStarting the SQL Client : node${2}\n***********\n\n"
+    cockroach sql --insecure --host=$(hostname -i):27000
+    printf "\n**********\nStopped the SQL Client : node${2}\n**********\n\n"
   fi
-  printf "\n**********\nStarted server on : node${h}\n**********\n"
-elif [ $1 == "stop" ]
-then
-  printf "**********\nStopping the node : node${h}\n**********\n\n"
-  cockroach quit --insecure --host=$(hostname -i):27000
-  printf "\n**********\nStopped the node : node${h}\n**********\n"
-elif [ $1 == "init" ]
-then
-  printf "**********\nInitializing the cluster : node${h}\n**********\n\n"
-  cockroach init --insecure --host=$(hostname -i):27000
-  printf "\n**********\nStopped the node : node${h}\n**********\n"
-elif [ $1 == "sql" ]
-then
-  printf "**********\nStarting the SQL Client : node${h}\n***********\n\n"
-  cockroach sql --insecure --host=$(hostname -i):27000
-  printf "\n**********\nStopped the SQL Client : node${h}\n**********\n\n"
+else
+  echo "Use the command \"cdbserv help\" to learn more about the acceptable parameters"
 fi
