@@ -70,6 +70,10 @@ func (o *orderDaoImpl) GetCustomerLatestOrder(oWId int, oDId int, oCId int, ch c
 
 	result := make(map[string]interface{})
 	if err := query.MapScan(result); err != nil {
+		if err == gocql.ErrNotFound {
+			ch <- nil
+			return
+		}
 		log.Fatalf("ERROR GetCustomerLatestOrder error in query execution. oWId=%v, oDId=%v, oCId=%v, err=%v\n", oWId, oDId, oCId, err)
 	}
 

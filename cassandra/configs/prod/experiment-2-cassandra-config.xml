@@ -6,7 +6,6 @@
         <Host>192.168.48.182</Host>
         <Host>192.168.48.183</Host>
     </Hosts>
-    <Keyspace>cassandra</Keyspace>
     <WriteConsistency>ALL</WriteConsistency>
     <ReadConsistency>ONE</ReadConsistency>
 </CassandraConfig>

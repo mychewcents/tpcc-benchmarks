@@ -11,7 +11,7 @@ type DatabaseStateResponse struct {
 	SumCDeliveryCnt int64
 	MaxOId          gocql.UUID
 	SumOOlCnt       int64
-	SumOlAmount     float64
+	SumOlAmount     float32
 	SumOlQuantity   int64
 	SumSQuantity    int64
 	SumSYTD         int64

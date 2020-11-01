@@ -1,0 +1,10 @@
+
+**/*/app*
+cockroachdb/cmd/init/init*
+
+cockroachdb/temp
+
+**/*/cdbserv
+
+.DS_Store
+.idea/

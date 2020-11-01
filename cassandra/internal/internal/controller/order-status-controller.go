@@ -42,6 +42,9 @@ func makeOrderStatusRequest(cmd []string) *model.OrderStatusRequest {
 }
 
 func printOrderStatusResponse(r *model.OrderStatusResponse) {
+	if r == nil {
+		return
+	}
 	fmt.Println("*********************** Order Status Transaction Output ***********************")
 	fmt.Printf("1. Customer's name: %v %v %v, Customer Balance: %.2f.\n", r.CName.FirstName, r.CName.MiddleName, r.CName.LastName, r.CBalance)
 	fmt.Printf("2. For the customer's last order OId:%v OEntryD:%v OCarrierId:%v\n", r.OId, r.OEntryD, r.OCarrierId)

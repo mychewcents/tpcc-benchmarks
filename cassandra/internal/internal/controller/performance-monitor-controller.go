@@ -1,4 +1,4 @@
-package performance
+package controller
 
 import (
 	"fmt"
@@ -8,24 +8,24 @@ import (
 	"sort"
 )
 
-type PerformanceMonitor interface {
+type PerformanceMonitorController interface {
 	StoreLatency(latency int)
 	StorePerformanceMetrics(path string, experimentNo int, clientNo int)
 }
 
-type performanceMonitorImpl struct {
+type performanceMonitorControllerImpl struct {
 	latencies []int
 }
 
-func NewPerformanceMonitor() PerformanceMonitor {
-	return &performanceMonitorImpl{latencies: make([]int, 0)}
+func NewPerformanceMonitorController() PerformanceMonitorController {
+	return &performanceMonitorControllerImpl{latencies: make([]int, 0)}
 }
 
-func (p *performanceMonitorImpl) StoreLatency(latency int) {
+func (p *performanceMonitorControllerImpl) StoreLatency(latency int) {
 	p.latencies = append(p.latencies, latency)
 }
 
-func (p *performanceMonitorImpl) StorePerformanceMetrics(path string, experimentNo int, clientNo int) {
+func (p *performanceMonitorControllerImpl) StorePerformanceMetrics(path string, experimentNo int, clientNo int) {
 	sort.Ints(p.latencies)
 
 	noOfTransactions := len(p.latencies)
@@ -36,9 +36,9 @@ func (p *performanceMonitorImpl) StorePerformanceMetrics(path string, experiment
 	}
 	totalLatencyInSeconds := totalLatency / 1000
 
-	throughPut := noOfTransactions / totalLatencyInSeconds
+	throughPut := float64(noOfTransactions) / float64(totalLatencyInSeconds)
 
-	avgLatency := totalLatency / noOfTransactions
+	avgLatency := float64(totalLatency) / float64(noOfTransactions)
 
 	var medianTransactionLatency float64
 	if len(p.latencies)%2 == 0 {
@@ -50,13 +50,13 @@ func (p *performanceMonitorImpl) StorePerformanceMetrics(path string, experiment
 	percentile95TransactionLatency := p.latencies[int(math.Ceil(95.0/100.0*float64(len(p.latencies))))-1]
 	percentile99TransactionLatency := p.latencies[int(math.Ceil(99.0/100.0*float64(len(p.latencies))))-1]
 
-	metrics := fmt.Sprintf("%v,%v,%v,%v,%v,%v,%v,%v,%v", experimentNo, clientNo, noOfTransactions, totalLatencyInSeconds,
+	metrics := fmt.Sprintf("%d,%d,%d,%d,%.2f,%.2f,%.2f,%d,%d", experimentNo, clientNo, noOfTransactions, totalLatencyInSeconds,
 		throughPut, avgLatency, medianTransactionLatency, percentile95TransactionLatency, percentile99TransactionLatency)
 
 	fileName := fmt.Sprintf("%v/experiment_%v_client_%v.csv", path, experimentNo, clientNo)
 	file, err := os.Create(fileName)
 	if err != nil {
-		log.Printf("ERROR saving metrics, err=%v", err)
+		log.Printf("ERROR saving results, err=%v", err)
 	}
 	defer file.Close()
 

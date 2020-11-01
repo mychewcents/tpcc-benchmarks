@@ -42,8 +42,8 @@ func (n *newOrderServiceImpl) ProcessNewOrderTransaction(request *model.NewOrder
 	customerTab, stockTabMap := n.getCustomerAndStockInfo(request)
 
 	oId := gocql.TimeUUID()
-	orderTabList, totalAmount := makeOrderLineList(request, oId, stockTabMap)
-	orderTab := makeOrderTab(request, oId, customerTab, totalAmount)
+	orderTabList, olCount, totalAmount := makeOrderLineList(request, oId, stockTabMap)
+	orderTab := makeOrderTab(request, oId, customerTab, totalAmount, olCount)
 
 	n.updateInParallel(request, stockTabMap, orderTabList, orderTab)
 
@@ -99,7 +99,7 @@ func (n *newOrderServiceImpl) updateInParallel(request *model.NewOrderRequest, s
 	<-ch
 }
 
-func makeOrderTab(request *model.NewOrderRequest, oId gocql.UUID, ct *table.CustomerTab, totalAmount float64) *table.OrderTab {
+func makeOrderTab(request *model.NewOrderRequest, oId gocql.UUID, ct *table.CustomerTab, totalAmount float64, olCount int) *table.OrderTab {
 	isAllLocal := true
 	for _, ol := range request.NewOrderLineList {
 		if ol.OlSupplyWId != request.WId {
@@ -115,17 +115,18 @@ func makeOrderTab(request *model.NewOrderRequest, oId gocql.UUID, ct *table.Cust
 		OCId:           request.CId,
 		OCName:         ct.CName,
 		OCarrierId:     -1,
-		OOlCount:       len(request.NewOrderLineList),
+		OOlCount:       olCount,
 		OOlTotalAmount: totalAmount,
 		OAllLocal:      isAllLocal,
 		OEntryD:        time.Now(),
 	}
 }
 
-func makeOrderLineList(request *model.NewOrderRequest, oId gocql.UUID, stMap map[int]map[int]*table.StockTab) ([]*table.OrderLineTab, float64) {
+func makeOrderLineList(request *model.NewOrderRequest, oId gocql.UUID, stMap map[int]map[int]*table.StockTab) ([]*table.OrderLineTab, int, float64) {
 	otMap := make(map[int]*table.OrderLineTab)
 	otList := make([]*table.OrderLineTab, 0)
 	totalAmount := 0.0
+	olCount := 0
 
 	for i, ol := range request.NewOrderLineList {
 		st := stMap[ol.OlSupplyWId][ol.OlIId]
@@ -138,9 +139,13 @@ func makeOrderLineList(request *model.NewOrderRequest, oId gocql.UUID, stMap map
 			ot.OlQuantity += ol.OlQuantity
 			ot.OlAmount += itemAmount
 
+			if ot.OlWToQuantity[ol.OlSupplyWId] == 0 {
+				olCount++
+			}
 			ot.OlWToQuantity[ol.OlSupplyWId] += ol.OlQuantity
 			ot.OlWToDistInfo[ol.OlSupplyWId] = st.GetSDist(request.DId)
 		} else {
+			olCount++
 			ot = &table.OrderLineTab{
 				OlWId:         request.WId,
 				OlDId:         request.DId,
@@ -158,7 +163,7 @@ func makeOrderLineList(request *model.NewOrderRequest, oId gocql.UUID, stMap map
 		}
 	}
 
-	return otList, totalAmount
+	return otList, olCount, totalAmount
 }
 
 func (n *newOrderServiceImpl) setStockTabNewMap(request *model.NewOrderRequest, stMap map[int]map[int]*table.StockTab, chComplete chan bool) {
