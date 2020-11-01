@@ -103,8 +103,8 @@ func loadRawDataset(db *sql.DB, file string) error {
 
 func createOrdersTables(warehouses, districts int) error {
 	baseSQLStatement := `
+		DROP TABLE IF EXISTS defaultdb.ORDER_LINE_WID_DID;
 		DROP TABLE IF EXISTS defaultdb.ORDERS_WID_DID;
-		
 		CREATE TABLE IF NOT EXISTS defaultdb.ORDERS_WID_DID (
 			O_W_ID int,
 			O_D_ID int,
