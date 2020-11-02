@@ -13,8 +13,10 @@ func SetupLogOutput(logType string, path string, fileArgs ...int) error {
 	var fileName string
 	if logType == "init" {
 		fileName = fmt.Sprintf("%s/init_%d.log", path, time.Now().Unix())
-	} else if logType == "run" {
+	} else if logType == "exp" {
 		fileName = fmt.Sprintf("%s/exp_%d_client_%d_%s.log", path, fileArgs[0], fileArgs[1], time.Now())
+	} else if logType == "dbstate" {
+		fileName = fmt.Sprintf("%s/dbstate_%d_%s.log", path, fileArgs[0], time.Now())
 	} else {
 		return errors.New("no matching log type passed")
 	}
