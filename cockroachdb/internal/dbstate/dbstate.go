@@ -131,7 +131,7 @@ func getOrderState(db *sql.DB) (int, int, float64, error) {
 			finalSQLStatement := strings.ReplaceAll(sqlStatement, "WID", strconv.Itoa(w))
 			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(d))
 
-			row := db.QueryRow(sqlStatement)
+			row := db.QueryRow(finalSQLStatement)
 			if err := row.Scan(&tempMaxOrderID, &tempTotalOrderLineCount, &tempTotalOrderAmount); err != nil {
 				return 0, 0, 0.0, err
 			}
@@ -157,7 +157,7 @@ func getOrderLineState(db *sql.DB) (int, error) {
 			finalSQLStatement := strings.ReplaceAll(sqlStatement, "WID", strconv.Itoa(w))
 			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(d))
 
-			row := db.QueryRow(sqlStatement)
+			row := db.QueryRow(finalSQLStatement)
 			if err := row.Scan(&tempTotalQuantity); err != nil {
 				return 0, err
 			}
