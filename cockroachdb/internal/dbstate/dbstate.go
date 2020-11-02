@@ -148,7 +148,7 @@ func getOrderState(db *sql.DB) (int, int, float64, error) {
 }
 
 func getOrderLineState(db *sql.DB) (int, error) {
-	var tempTotalQuantity, totalQuantity int
+	var tempTotalQuantity, totalQuantity float64
 
 	sqlStatement := `SELECT sum(OL_QUANTITY) FROM Order_Line_WID_DID`
 
