@@ -63,7 +63,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) bool {
 		}
 	}
 
-	printOutputState(warehouseID, districtID, customerID, relatedCustomerIdentifiers)
+	// printOutputState(warehouseID, districtID, customerID, relatedCustomerIdentifiers)
 	return true
 }
 

@@ -54,21 +54,21 @@ func execute(db *sql.DB, customerWHID int, customerDistrictID int, customerID in
 		return false
 	}
 
-	outputStr := "Customer identifier: (%d, %d, %d)\nName: (%s, %s, %s)\nAddress: (%s, %s, %s, %s, %s)\nPhone: %s\nMember Since:%s\nCredit and Limit: (%s, %s)\nDiscount: %s\nBalance: %s"
-	outputStr += "\nWarehouse address: (%s, %s, %s, %s, %s)\nDistrict address: (%s, %s, %s, %s, %s)\nPayment: %f"
-	output := fmt.Sprintf(outputStr,
-		customerWHID, customerDistrictID, customerID,
-		firstName, middleName, lastName,
-		cStreet1, cStreet2, cCity, cState, cZip,
-		cPhone,
-		cSince,
-		cCredit, cCreditLimit,
-		cDiscount,
-		cBalance,
-		wStreet1, wStreet2, wCity, wState, wZip,
-		dStreet1, dStreet2, dCity, dState, dZip,
-		payment,
-	)
-	fmt.Println(output)
+	// outputStr := "Customer identifier: (%d, %d, %d)\nName: (%s, %s, %s)\nAddress: (%s, %s, %s, %s, %s)\nPhone: %s\nMember Since:%s\nCredit and Limit: (%s, %s)\nDiscount: %s\nBalance: %s"
+	// outputStr += "\nWarehouse address: (%s, %s, %s, %s, %s)\nDistrict address: (%s, %s, %s, %s, %s)\nPayment: %f"
+	// output := fmt.Sprintf(outputStr,
+	// 	customerWHID, customerDistrictID, customerID,
+	// 	firstName, middleName, lastName,
+	// 	cStreet1, cStreet2, cCity, cState, cZip,
+	// 	cPhone,
+	// 	cSince,
+	// 	cCredit, cCreditLimit,
+	// 	cDiscount,
+	// 	cBalance,
+	// 	wStreet1, wStreet2, wCity, wState, wZip,
+	// 	dStreet1, dStreet2, dCity, dState, dZip,
+	// 	payment,
+	// )
+	// fmt.Println(output)
 	return true
 }

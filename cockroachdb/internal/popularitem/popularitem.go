@@ -136,7 +136,7 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) bool {
 		}
 	}
 
-	fmt.Println("Done")
+	// fmt.Println("Done")
 	// printOutputState(warehouseID, districtID, startOrderID, lastOrderID, lastNOrder, ordersMap, itemOccurrancePercentageMap)
 	return true
 }

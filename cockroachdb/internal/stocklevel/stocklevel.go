@@ -48,7 +48,7 @@ func execute(db *sql.DB, warehouseID, districtID, threshold, lastNOrders int) bo
 		return false
 	}
 
-	printOutputState(totalItems, lastOrderID-lastNOrders, lastOrderID)
+	// printOutputState(totalItems, lastOrderID-lastNOrders, lastOrderID)
 	return true
 }
 

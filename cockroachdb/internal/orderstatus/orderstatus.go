@@ -67,26 +67,25 @@ func execute(db *sql.DB, warehouseID int, districtID int, customerID int) bool {
 		return false
 	}
 
-	output := "Customer name: %s %s %s \nBalance: %f\nOrder: %d\nEntry date: %s\nCarrier: %s\n"
+	// output := "Customer name: %s %s %s \nBalance: %f\nOrder: %d\nEntry date: %s\nCarrier: %s\n"
 
-	var toPrintDeliveryDate string
-	if !deliveryDate.Valid {
-		toPrintDeliveryDate = "undelivered"
-	} else {
-		toPrintDeliveryDate = deliveryDate.String
-	}
+	// var toPrintDeliveryDate string
+	// if !deliveryDate.Valid {
+	// 	toPrintDeliveryDate = "undelivered"
+	// } else {
+	// 	toPrintDeliveryDate = deliveryDate.String
+	// }
 
-	for _, orderLine := range orderLines {
+	// for _, orderLine := range orderLines {
 
-		output += fmt.Sprintf("Item number: %d\nSupply Warehouse: %d\nQuantity: %d\nTotal price: %f\nDelivery date: %s\n",
-			orderLine.itemID, orderLine.supplyWHNumber, orderLine.quantity, orderLine.itemAmount, toPrintDeliveryDate)
-	}
+	// 	output += fmt.Sprintf("Item number: %d\nSupply Warehouse: %d\nQuantity: %d\nTotal price: %f\nDelivery date: %s\n",
+	// 		orderLine.itemID, orderLine.supplyWHNumber, orderLine.quantity, orderLine.itemAmount, toPrintDeliveryDate)
+	// }
 
-	if carrierID.Valid && carrierID.Int32 != 0 {
-		fmt.Println(fmt.Sprintf(output, first, middle, last, balance, lastOrderID, entryDate.String, strconv.Itoa(int(carrierID.Int32))))
-	} else {
-		fmt.Println(fmt.Sprintf(output, first, middle, last, balance, lastOrderID, entryDate.String, "null"))
-	}
+	// if carrierID.Valid && carrierID.Int32 != 0 {
+	// 	fmt.Println(fmt.Sprintf(output, first, middle, last, balance, lastOrderID, entryDate.String, strconv.Itoa(int(carrierID.Int32))))
+	// } else {
+	// 	fmt.Println(fmt.Sprintf(output, first, middle, last, balance, lastOrderID, entryDate.String, "null"))
+	// }
 	return true
 }
-
