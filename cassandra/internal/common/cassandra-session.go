@@ -22,7 +22,7 @@ func MakeCassandraSession(path string) *CassandraSession {
 	readCluster := gocql.NewCluster(cassandraConfig.Hosts...)
 	readCluster.Keyspace = "cassandra"
 	readCluster.Timeout = time.Minute * 2
-	readCluster.NumConns = 10
+	readCluster.NumConns = 2
 	if strings.ToUpper(cassandraConfig.ReadConsistency) == "ONE" {
 		readCluster.Consistency = gocql.LocalOne
 	} else {
@@ -37,7 +37,7 @@ func MakeCassandraSession(path string) *CassandraSession {
 	writeCluster := gocql.NewCluster(cassandraConfig.Hosts...)
 	writeCluster.Keyspace = "cassandra"
 	writeCluster.Timeout = time.Minute * 2
-	readCluster.NumConns = 10
+	readCluster.NumConns = 2
 	if strings.ToUpper(cassandraConfig.WriteConsistency) == "ALL" {
 		writeCluster.Consistency = gocql.All
 	} else {
