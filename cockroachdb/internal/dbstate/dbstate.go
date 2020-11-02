@@ -100,7 +100,7 @@ func getWarehouseState(db *sql.DB) (float64, error) {
 func getDistrictState(db *sql.DB) (int, error) {
 	var sumNextOrderIDs int
 
-	sqlStatement := `SELECT sum(O_NEXT_O_ID) FROM District`
+	sqlStatement := `SELECT sum(D_NEXT_O_ID) FROM District`
 	row := db.QueryRow(sqlStatement)
 	if err := row.Scan(&sumNextOrderIDs); err != nil {
 		return 0, err
