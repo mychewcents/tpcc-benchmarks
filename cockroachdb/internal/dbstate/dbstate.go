@@ -19,7 +19,7 @@ func RecordDBState(db *sql.DB, experiment int, path string) error {
 	var maxOrderID, totalOrderLineCount int
 	var totalOrderAmount float64
 	var totalOrderLineQuantity float64
-	var totalStockQuantity, totalYTD, totalOrderCount, totalRemoteCount int
+	var totalStockQuantity, totalYTD, totalOrderCount, totalRemoteCount  float64
 	var err error
 
 	if sumYTDWarehouse, err = getWarehouseState(db); err != nil {
@@ -46,7 +46,7 @@ func RecordDBState(db *sql.DB, experiment int, path string) error {
 	if totalOrderLineQuantity, err = getOrderLineState(db); err != nil {
 		return fmt.Errorf("Error occured, getOrderLineState, Err: %v", err)
 	}
-	log.Printf("Order Line State: %d ", totalOrderLineQuantity)
+	log.Printf("Order Line State: %f ", totalOrderLineQuantity)
 
 	if totalStockQuantity, totalYTD, totalOrderCount, totalRemoteCount, err = getStockState(db); err != nil {
 		return fmt.Errorf("Error occured, getOrderLineState, Err: %v", err)
@@ -168,8 +168,8 @@ func getOrderLineState(db *sql.DB) (float64, error) {
 	return totalQuantity, nil
 }
 
-func getStockState(db *sql.DB) (int, int, int, int, error) {
-	var totalQuantity, totalYTD, totalOrderCount, totalRemoteCount int
+func getStockState(db *sql.DB) (float64, float64, float64, float64, error) {
+	var totalQuantity, totalYTD, totalOrderCount, totalRemoteCount float64
 
 	sqlStatement := `SELECT sum(S_QUANTITY), sum(S_YTD), sum(S_ORDER_CNT), sum(S_REMOTE_CNT) FROM Stock`
 	row := db.QueryRow(sqlStatement)
