@@ -79,7 +79,9 @@ func printOutputState(warehouseID, districtID, customerID int, relatedCustomerId
 	}
 
 	finalCustomersString := relatedCustomerIdentifierString.String()
-	finalCustomersString = finalCustomersString[0 : len(finalCustomersString)-1]
+	if len(finalCustomersString) > 0 {
+		finalCustomersString = finalCustomersString[0 : len(finalCustomersString)-1]
+	}
 
 	relatedCustomerString.WriteString(fmt.Sprintf("Related Customers for the customer: %d, %d, %d \n", warehouseID, districtID, customerID))
 	relatedCustomerString.WriteString(fmt.Sprintf("%s", finalCustomersString))
