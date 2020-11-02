@@ -12,7 +12,7 @@ import (
 func SetupLogOutput(logType string, path string, fileArgs ...int) error {
 	var fileName string
 	if logType == "init" {
-		fileName = fmt.Sprintf("%s/init_%s.log", path, time.Now())
+		fileName = fmt.Sprintf("%s/init_%d.log", path, time.Now().Unix())
 	} else if logType == "run" {
 		fileName = fmt.Sprintf("%s/exp_%d_client_%d_%s.log", path, fileArgs[0], fileArgs[1], time.Now())
 	} else {
