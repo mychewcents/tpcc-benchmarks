@@ -2,6 +2,9 @@
 assets/data/*
 
 temp
+init
+app
 
 **/*/cdbserv
 **/*/*.csv
+logs/*
