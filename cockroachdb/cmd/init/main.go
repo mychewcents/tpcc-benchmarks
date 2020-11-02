@@ -66,5 +66,5 @@ func main() {
 	}
 
 	log.Println("Initialization Complete!")
-	fmt.Println("Initialization Complete!")
+	fmt.Println("\nInitialization Complete!")
 }
