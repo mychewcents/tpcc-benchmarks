@@ -27,7 +27,7 @@ func ExecuteSQL(db *sql.DB, sqlFilePath string) error {
 
 	for _, value := range strings.Split(finalQueryBuilder.String(), ";") {
 		if _, err = db.Exec(value); err != nil {
-			log.Fatalln(value)
+			log.Println(value)
 			log.Fatalf("Err: %v", err)
 			return errors.New("error occurred. Please check the logs")
 		}

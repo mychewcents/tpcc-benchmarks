@@ -12,7 +12,7 @@ import (
 
 // ExecuteSQLForPartitions executes the SQL for the required partitions
 func ExecuteSQLForPartitions(db *sql.DB, warehouses, districts int, sqlFilePath string) error {
-	log.Printf("Executing the SQL File: %s", sqlFilePath)
+	log.Printf("Executing the SQL File: %s\n", sqlFilePath)
 
 	sqlFile, err := os.Open(sqlFilePath)
 	if err != nil {
@@ -27,11 +27,11 @@ func ExecuteSQLForPartitions(db *sql.DB, warehouses, districts int, sqlFilePath 
 	errFound := false
 	for i := 1; i <= warehouses; i++ {
 		for j := 1; j <= districts; j++ {
-			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(i))
+			finalSQLStatement := baseSQLStatement
+			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "WID", strconv.Itoa(i))
 			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(j))
-
 			if _, err := db.Exec(finalSQLStatement); err != nil {
-				log.Fatalf("Query: %s", finalSQLStatement)
+				log.Println(finalSQLStatement)
 				log.Fatalf("Err: %v", err)
 				errFound = true
 			}
