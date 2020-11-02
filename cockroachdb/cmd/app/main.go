@@ -43,7 +43,6 @@ func init() {
 }
 
 func main() {
-	// fmt.Println(*experiment, *client)
 	var txArgs []string
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -61,8 +60,4 @@ func main() {
 		log.Fatalf("Error in performance recording. Err: %v", err)
 		fmt.Println(err)
 	}
-	// if err := dbstate.RecordDBState(db, *experiment, "results/dbstate"); err != nil {
-	// 	log.Fatalf("Error in recording the DB State. Err: %v", err)
-	// 	fmt.Println(err)
-	// }
 }
