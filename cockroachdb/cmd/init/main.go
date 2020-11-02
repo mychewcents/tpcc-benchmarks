@@ -9,9 +9,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/cdbconn"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/logging"
 )
 
 var db *sql.DB
@@ -27,20 +27,14 @@ func init() {
 		panic(err)
 	}
 
-	fileName := fmt.Sprintf("logs/logs_init_%s", time.Now())
-	file, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		fmt.Println(err)
-		log.Fatal(err)
-		return
+	if err := logging.SetupLogOutput("init", "logs"); err != nil {
+		panic(err)
 	}
-
-	log.SetOutput(file)
 }
 
 func main() {
 	log.Println("Starting the drop of partitioned Orders and Order Line table...")
-	if err := dropOrdersTable(10, 10); err != nil {
+	if err := dropDependentTables(10, 10); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -108,7 +102,7 @@ func loadRawDataset(db *sql.DB, file string) error {
 	return nil
 }
 
-func dropOrdersTable(warehouses, districts int) error {
+func dropDependentTables(warehouses, districts int) error {
 	baseSQLStatement := `
 		DROP TABLE IF EXISTS defaultdb.ORDER_LINE_WID_DID;
 		DROP TABLE IF EXISTS defaultdb.ORDERS_WID_DID;
@@ -127,6 +121,21 @@ func dropOrdersTable(warehouses, districts int) error {
 			}
 		}
 	}
+
+	baseSQLStatement = `
+		DROP TABLE IF EXISTS defaultdb.ORDER_ITEMS_CUSTOMERS_WID;
+	`
+
+	for i := 1; i <= warehouses; i++ {
+		finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(i))
+
+		log.Println(finalSQLStatement)
+		if _, err := db.Exec(finalSQLStatement); err != nil {
+			log.Fatalf("Err: %v", err)
+			errFound = true
+		}
+	}
+
 	if errFound {
 		return errors.New("error was found. Please check the logs")
 	}
