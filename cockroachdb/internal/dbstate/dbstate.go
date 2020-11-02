@@ -89,7 +89,7 @@ func RecordDBState(db *sql.DB, experiment int, path string) error {
 func getWarehouseState(db *sql.DB) (float64, error) {
 	var sumYTD float64
 
-	sqlStatement := `SELECT sum(W_YTD) FROM District`
+	sqlStatement := `SELECT sum(D_YTD) FROM District`
 	row := db.QueryRow(sqlStatement)
 	if err := row.Scan(&sumYTD); err != nil {
 		return 0.0, err
