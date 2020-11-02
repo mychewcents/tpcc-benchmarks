@@ -1,11 +1,2 @@
-
-**/*/app*
-cockroachdb/cmd/init/init*
-
-cockroachdb/temp
-
-**/*/cdbserv
-
-logs/*
 .DS_Store
 .idea/
