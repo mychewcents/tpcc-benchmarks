@@ -33,7 +33,7 @@ then
   echo "Happy Running!"
   echo
   echo
-elif [[ "$#" -eq 3 ]]
+elif [[ "$#" -eq 4 ]]
 then
   if [[ $1 == 'prod' ]] || [[ $1 == 'local' ]]
   then
@@ -67,6 +67,10 @@ then
 
     rm assets/project-files.zip
     rm -rf assets/project-files
+
+    extern_dir=$2/cdb-server/node-files/$4/extern 
+    mkdir -p $extern_dir/assets/raw
+    cp assets/data/raw/* $extern_dir/assets/raw
   else
     echo "Use the \"help\" command to learn more about the arguments"
   fi

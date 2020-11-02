@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 )
 
 type configuration struct {
@@ -16,20 +17,27 @@ type configuration struct {
 }
 
 type node struct {
-	Host string `json:"host"`
-	Port int    `json:"port"`
+	ID       int    `json:"id"`
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	HTTPAddr string `json:"http_addr"`
 }
 
 func main() {
 	var setupConfigFile string
+	var nodeID int
 
-	if len(os.Args) != 3 {
-		fmt.Println("No custom configuration file. Using the \"dev\" configuration file: configs/dev/setup.json file.")
+	if len(os.Args) != 4 {
+		fmt.Println("No custom configuration file. Using the default node id = 1 and \"dev\" configuration file: configs/dev/setup.json file")
 		setupConfigFile = "configs/dev/setup.json"
-	} else if os.Args[1] == "dev" || os.Args[1] == "prod" {
-		setupConfigFile = os.Args[2]
+		nodeID = 1
 	} else {
-		panic("use \"dev\" or \"prod\" as the first argument and pass the \"configuration file\" in the second arugment")
+		if os.Args[1] == "dev" || os.Args[1] == "prod" {
+			setupConfigFile = os.Args[2]
+			nodeID, _ = strconv.Atoi(os.Args[3])
+		} else {
+			panic("use \"dev\" or \"prod\" as the first argument and pass the \"configuration file\" in the second arugment")
+		}
 	}
 
 	configFile, err := os.Open(setupConfigFile)
@@ -49,7 +57,7 @@ func main() {
 
 	cmd := &exec.Cmd{
 		Path:   "scripts/init_setup.sh",
-		Args:   []string{"scripts/init_setup.sh", os.Args[1], config.WorkingDir, config.DownloadURL},
+		Args:   []string{"scripts/init_setup.sh", os.Args[1], config.WorkingDir, config.DownloadURL, fmt.Sprintf("node%d", nodeID)},
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 		Dir:    ".",
