@@ -11,7 +11,7 @@ then
   echo
   echo
   echo "First Argument - Type of the environment"
-  echo "   - dev    : To run a single client instance"
+  echo "   - local  : To run a single client instance"
   echo "   - prod   : To run parallel client instances"
   echo
   echo
@@ -21,7 +21,7 @@ then
   echo
   echo "Third Argument - Host to run on or the client instance to run with"
   echo "   - <number>    : - Acts as a host number when run with \"prod\""
-  echo "                   - Acts as a client number when run with \"dev\""
+  echo "                   - Acts as a client number when run with \"local\""
   echo
   echo
   echo "Happy Running!"
@@ -29,7 +29,7 @@ then
   echo
 elif [ "$#" -eq 3 ] 
 then
-  if [ $1 == "dev" ] || [ $1 == "prod" ]
+  if [ $1 == "local" ] || [ $1 == "prod" ]
   then
     env=$1
     exp=$2
@@ -39,9 +39,9 @@ then
       go build -o app cmd/app/main.go
       chmod a+x ./app
 
-      if [ $env == 'dev' ]
+      if [ $env == 'local' ]
       then
-        ./app -exp=$exp -client=$host_or_client < assets/data/transactions/$host_or_client.txt
+        ./app -exp=$exp -client=$host_or_client -config=configs/dev/local.json < assets/data/transactions/$host_or_client.txt
       elif [ $env == 'prod' ]
       then
         skip=5

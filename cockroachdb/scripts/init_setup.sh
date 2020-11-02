@@ -19,13 +19,13 @@ then
   echo "First Argument - Type of the environment"
   echo "   - prod   : To install the \"cdbserv\" and \"cdbclient\" exec "
   echo "              at the default location and download the project files"
-  echo "   - dev    : Only downloads the project files"
+  echo "   - local  : Only downloads the project files"
   echo
   echo
   echo "Happy Running!"
   echo
   echo
-elif [ $1 == 'prod' ] || [ $1 == 'dev' ]
+elif [ $1 == 'prod' ] || [ $1 == 'local' ]
 then
   if [ $1 == 'prod' ]
   then
@@ -39,8 +39,8 @@ then
     chmod a+x cdbserv
     mv cdbserv /temp/cs5424-team-m/cdb-server/
 
-    cp scripts/run.sh cdbclient
-    chmod a+x cdbclient
+    # cp scripts/run.sh cdbclient
+    # chmod a+x cdbclient
     # mv cdbclient /temp/cs5424-team-m/cdb-server/
   fi
 
