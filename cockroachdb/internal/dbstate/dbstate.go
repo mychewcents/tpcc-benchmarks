@@ -18,7 +18,7 @@ func RecordDBState(db *sql.DB, experiment int, path string) error {
 	var cPaymentCount, cDeliveryCount int
 	var maxOrderID, totalOrderLineCount int
 	var totalOrderAmount float64
-	var totalOrderLineQuantity int
+	var totalOrderLineQuantity float64
 	var totalStockQuantity, totalYTD, totalOrderCount, totalRemoteCount int
 	var err error
 
@@ -147,7 +147,7 @@ func getOrderState(db *sql.DB) (int, int, float64, error) {
 	return maxOrderID, totalOrderLineCount, totalOrderAmount, nil
 }
 
-func getOrderLineState(db *sql.DB) (int, error) {
+func getOrderLineState(db *sql.DB) (float64, error) {
 	var tempTotalQuantity, totalQuantity float64
 
 	sqlStatement := `SELECT sum(OL_QUANTITY) FROM Order_Line_WID_DID`
