@@ -12,7 +12,7 @@ import (
 
 // ExecuteSQLForPartitions executes the SQL for the required partitions
 func ExecuteSQLForPartitions(db *sql.DB, warehouses, districts int, sqlFilePath string) error {
-	log.Println("Starting the drop of partitioned tables...")
+	log.Printf("Executing the SQL File: %s", sqlFilePath)
 
 	sqlFile, err := os.Open(sqlFilePath)
 	if err != nil {
@@ -42,6 +42,6 @@ func ExecuteSQLForPartitions(db *sql.DB, warehouses, districts int, sqlFilePath 
 		return errors.New("error was found. Please check the logs")
 	}
 
-	log.Println("Finished the drop of partitioned tables...")
+	log.Printf("Completed the SQL File: %s", sqlFilePath)
 	return nil
 }

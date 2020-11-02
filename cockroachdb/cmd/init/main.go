@@ -30,7 +30,7 @@ func init() {
 }
 
 func main() {
-
+	fmt.Println("Executing the SQL: scripts/sql/drop-partitions.sql")
 	if err := tables.ExecuteSQLForPartitions(db, 10, 10, "scripts/sql/drop-partitions.sql"); err != nil {
 		fmt.Println(err)
 		return
@@ -44,6 +44,7 @@ func main() {
 	}
 
 	for _, value := range sqlScripts {
+		fmt.Printf("\nExecuting the SQL: %s", value)
 		if err := tables.ExecuteSQL(db, value); err != nil {
 			fmt.Println(err)
 			return
@@ -57,6 +58,7 @@ func main() {
 	}
 
 	for _, value := range sqlScripts {
+		fmt.Printf("\nExecuting the SQL: %s", value)
 		if err := tables.ExecuteSQLForPartitions(db, 10, 10, value); err != nil {
 			fmt.Println(err)
 			return
