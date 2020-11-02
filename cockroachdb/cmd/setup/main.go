@@ -2,12 +2,18 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
-	"strconv"
+)
+
+var (
+	configFilePath = flag.String("config", "", "Configuration file path for the server")
+	nodeID         = flag.Int("node", 0, "Node ID to be used to connect to")
+	env            = flag.String("env", "dev", "Provide an env: \"dev\" or \"prod\"")
 )
 
 type configuration struct {
@@ -24,23 +30,19 @@ type node struct {
 }
 
 func main() {
-	var setupConfigFile string
-	var nodeID int
+	flag.Parse()
 
-	if len(os.Args) != 4 {
-		fmt.Println("No custom configuration file. Using the default node id = 1 and \"dev\" configuration file: configs/dev/setup.json file")
-		setupConfigFile = "configs/dev/setup.json"
-		nodeID = 1
-	} else {
-		if os.Args[1] == "dev" || os.Args[1] == "prod" {
-			setupConfigFile = os.Args[2]
-			nodeID, _ = strconv.Atoi(os.Args[3])
-		} else {
-			panic("use \"dev\" or \"prod\" as the first argument and pass the \"configuration file\" in the second arugment")
-		}
+	if len(*configFilePath) == 0 {
+		panic("provide a custom configuration file via -config flag")
+	}
+	if *env != "prod" && *env != "dev" {
+		panic("provide the right environment via -env flag")
+	}
+	if *nodeID < 1 || *nodeID > 5 {
+		panic("provide the right node id via -node flag")
 	}
 
-	configFile, err := os.Open(setupConfigFile)
+	configFile, err := os.Open(*configFilePath)
 	if err != nil {
 		panic("file cannot be read")
 	}
@@ -57,7 +59,7 @@ func main() {
 
 	cmd := &exec.Cmd{
 		Path:   "scripts/init_setup.sh",
-		Args:   []string{"scripts/init_setup.sh", os.Args[1], config.WorkingDir, config.DownloadURL, fmt.Sprintf("node%d", nodeID)},
+		Args:   []string{"scripts/init_setup.sh", *env, config.WorkingDir, config.DownloadURL, fmt.Sprintf("node%d", nodeID)},
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 		Dir:    ".",
