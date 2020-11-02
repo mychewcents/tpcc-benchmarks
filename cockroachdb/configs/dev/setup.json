@@ -1,0 +1,26 @@
+{
+    "data_files_url": "http://www.comp.nus.edu.sg/~cs4224/project-files.zip",
+    "working_directory": "/temp/cs5424-team-m",
+    "nodes": [
+        {
+            "host": "localhost",
+            "port": 26257
+        },
+        {
+            "host": "localhost",
+            "port": 26258
+        },
+        {
+            "host": "localhost",
+            "port": 26259
+        },
+        {
+            "host": "localhost",
+            "port": 26260
+        },
+        {
+            "host": "localhost",
+            "port": 26261
+        }
+    ]
+}
