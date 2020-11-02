@@ -30,7 +30,7 @@ func init() {
 }
 
 func main() {
-	fmt.Println("Executing the SQL: scripts/sql/drop-partitions.sql")
+	fmt.Printf("Executing the SQL: scripts/sql/drop-partitions.sql")
 	if err := tables.ExecuteSQLForPartitions(db, 10, 10, "scripts/sql/drop-partitions.sql"); err != nil {
 		fmt.Println(err)
 		return

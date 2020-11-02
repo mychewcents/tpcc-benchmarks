@@ -5,9 +5,12 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/dbstate"
 
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/logging"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/performance"
@@ -57,6 +60,11 @@ func main() {
 		}
 	}
 	if err := performance.RecordPerformanceMetrics(*experiment, *client, latencies, "results/metrics"); err != nil {
+		log.Fatalf("Error in performance recording. Err: %v", err)
+		fmt.Println(err)
+	}
+	if err := dbstate.RecordDBState(db, *experiment, "results/dbstate"); err != nil {
+		log.Fatalf("Error in recording the DB State. Err: %v", err)
 		fmt.Println(err)
 	}
 }
