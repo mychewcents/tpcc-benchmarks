@@ -12,10 +12,11 @@ import (
 
 type txnOutput struct {
 	first, middle, last, warehouseName, districtName string
-	warehouseId, districtId                          int
+	warehouseID, districtID                          int
 	balance                                          float64
 }
 
+// ProcessTransaction gets the top balance customer
 func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner) bool {
 	return execute(db)
 }
@@ -23,7 +24,7 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner) bool {
 func execute(db *sql.DB) bool {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	customerQuery := "SELECT C_FIRST, C_MIDDLE, C_LAST, C_W_ID, C_D_ID, C_BALANCE FROM CUSTOMER ORDER BY C_BALANCE DESC LIMIT 10";
+	customerQuery := "SELECT C_FIRST, C_MIDDLE, C_LAST, C_W_ID, C_D_ID, C_BALANCE FROM CUSTOMER ORDER BY C_BALANCE DESC LIMIT 10"
 	districtQuery := "SELECT D_NAME FROM DISTRICT WHERE D_W_ID=%d AND D_ID=%d"
 	warehouseQuery := "SELECT W_NAME FROM WAREHOUSE WHERE W_ID=%d"
 
@@ -35,16 +36,16 @@ func execute(db *sql.DB) bool {
 		}
 		for rows.Next() {
 			var customer txnOutput
-			if err := rows.Scan(&customer.first, &customer.middle, &customer.last, &customer.warehouseId, &customer.districtId, &customer.balance); err != nil {
+			if err := rows.Scan(&customer.first, &customer.middle, &customer.last, &customer.warehouseID, &customer.districtID, &customer.balance); err != nil {
 				return err
 			}
 			customers = append(customers, customer)
 		}
-		for i, _ := range customers {
-			if err := db.QueryRow(fmt.Sprintf(districtQuery, customers[i].warehouseId, customers[i].districtId)).Scan(&customers[i].districtName); err != nil {
+		for i := range customers {
+			if err := db.QueryRow(fmt.Sprintf(districtQuery, customers[i].warehouseID, customers[i].districtID)).Scan(&customers[i].districtName); err != nil {
 				return err
 			}
-			if err := db.QueryRow(fmt.Sprintf(warehouseQuery, customers[i].warehouseId)).Scan(&customers[i].warehouseName); err != nil {
+			if err := db.QueryRow(fmt.Sprintf(warehouseQuery, customers[i].warehouseID)).Scan(&customers[i].warehouseName); err != nil {
 				return err
 			}
 		}
@@ -56,9 +57,9 @@ func execute(db *sql.DB) bool {
 		return false
 	}
 
-	for _, customer := range customers {
-		fmt.Println(fmt.Sprintf("Customer: %s %s %s, Balance: %f, Warehouse: %s, District: %s",
-			customer.first, customer.middle, customer.last, customer.balance, customer.warehouseName, customer.districtName))
-	}
+	// for _, customer := range customers {
+	// 	fmt.Println(fmt.Sprintf("Customer: %s %s %s, Balance: %f, Warehouse: %s, District: %s",
+	// 		customer.first, customer.middle, customer.last, customer.balance, customer.warehouseName, customer.districtName))
+	// }
 	return true
 }
