@@ -1,5 +1,5 @@
 {
-    "host": "192.168.49.180",
+    "host": "192.168.48.180",
     "port": 27000,
     "username": "root",
     "database": "defaultdb"
