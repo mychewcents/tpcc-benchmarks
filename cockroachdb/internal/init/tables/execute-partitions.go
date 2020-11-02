@@ -35,6 +35,7 @@ func ExecuteSQLForPartitions(db *sql.DB, warehouses, districts int, sqlFilePath 
 				log.Fatalf("Err: %v", err)
 				errFound = true
 			}
+			log.Printf("Executed partition: %d %d", i, j)
 		}
 	}
 
