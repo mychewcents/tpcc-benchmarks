@@ -24,7 +24,7 @@ func init() {
 	flag.Parse()
 
 	if *experiment == 0 {
-		panic("Provide Experiment and Client number to proceed")
+		panic("Provide Experiment number to proceed")
 	}
 	db, err = cdbconn.CreateConnection(*configPath)
 	if err != nil {
