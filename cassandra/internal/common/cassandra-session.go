@@ -37,8 +37,8 @@ func MakeCassandraSession(path string) *CassandraSession {
 	writeCluster.Keyspace = "cassandra"
 	writeCluster.Timeout = time.Minute * 2
 	readCluster.NumConns = 10
-	if strings.ToUpper(cassandraConfig.WriteConsistency) == "ONE" {
-		writeCluster.Consistency = gocql.One
+	if strings.ToUpper(cassandraConfig.WriteConsistency) == "ALL" {
+		writeCluster.Consistency = gocql.All
 	} else {
 		writeCluster.Consistency = gocql.Quorum
 	}
