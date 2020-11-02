@@ -38,8 +38,9 @@ then
         --listen-addr=$(hostname -i):27000 \
         --http-addr=0.0.0.0:40000 \
         --join=192.168.48.179:27000,192.168.48.180:27000,192.168.48.181:27000,192.168.48.182:27000,192.168.48.183:27000 \
-        --background
-
+	--cache=.25 \
+	--max-sql-memory=.25 \
+	--background
       printf "\n**********\nStarted server on : node${2}\n**********\n"
     else
       echo "Use the host number from 1 to 5 ONLY...."
