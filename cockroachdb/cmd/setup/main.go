@@ -11,7 +11,7 @@ import (
 
 type configuration struct {
 	DownloadURL string `json:"data_files_url"`
-	WorkingDir  string `jdon:"working_dir"`
+	WorkingDir  string `json:"working_dir"`
 	Nodes       []node `json:"nodes"`
 }
 
@@ -47,7 +47,13 @@ func main() {
 
 	configFile.Close()
 
-	cmd := exec.Command("./scripts/init_setup.sh", os.Args[1], config.WorkingDir, config.DownloadURL)
+	cmd := &exec.Cmd{
+		Path:   "scripts/init_setup.sh",
+		Args:   []string{"scripts/init_setup.sh", os.Args[1], config.WorkingDir, config.DownloadURL},
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+		Dir:    ".",
+	}
 
 	err = cmd.Start()
 	if err != nil {

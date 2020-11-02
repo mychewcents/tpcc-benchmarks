@@ -1,6 +1,6 @@
 {
     "data_files_url": "http://www.comp.nus.edu.sg/~cs4224/project-files.zip",
-    "working_directory": "/temp/cs5424-team-m",
+    "working_dir": "/temp/cs5424-team-m",
     "nodes": [
         {
             "host": "192.168.49.179",

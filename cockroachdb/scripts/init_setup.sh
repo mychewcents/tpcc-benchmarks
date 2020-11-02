@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 ############################################################
 # The init.sh script initializes the cdbserv and cdbclient
@@ -6,8 +6,7 @@
 # and transaction.
 ############################################################
 
-
-if [ $1 == 'help' ]
+if [[ $1 == "help" ]]
 then
   echo
   echo
@@ -34,16 +33,16 @@ then
   echo "Happy Running!"
   echo
   echo
-elif [ "$#" -eq 3 ]
+elif [[ "$#" -eq 3 ]]
 then
-  if [ $1 == 'prod' ] || [ $1 == 'local' ]
+  if [[ $1 == 'prod' ]] || [[ $1 == 'local' ]]
   then
-    if [ $1 == 'prod' ]
+    if [[ $1 == 'prod' ]]
     then
-      if [ ! -d "${2}/cdb-server" ]
+      if [[ ! -d "${2}/cdb-server" ]]
       then
         echo "Creating the server installation script directory"
-        mkdir -p ${2}/cdb-server
+        mkdir -p $2/cdb-server
       fi
 
       cp scripts/server.sh cdbserv
@@ -61,13 +60,13 @@ then
     mkdir assets/data/raw
     mkdir assets/data/transactions
 
-    # curl $3 -L -o assets/project-files.zip
-    # unzip assets/project-files.zip -d assets
-    # mv assets/project-files/data-files/* assets/data/raw
-    # mv assets/project-files/xact-files/* assets/data/transactions
+    curl $3 -L -o assets/project-files.zip
+    unzip assets/project-files.zip -d assets
+    mv assets/project-files/data-files/* assets/data/raw
+    mv assets/project-files/xact-files/* assets/data/transactions
 
-    # rm assets/project-files.zip
-    # rm -rf assets/project-files
+    rm assets/project-files.zip
+    rm -rf assets/project-files
   else
     echo "Use the \"help\" command to learn more about the arguments"
   fi
