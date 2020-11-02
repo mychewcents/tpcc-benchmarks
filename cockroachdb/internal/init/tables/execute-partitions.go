@@ -30,8 +30,8 @@ func ExecuteSQLForPartitions(db *sql.DB, warehouses, districts int, sqlFilePath 
 			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(i))
 			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(j))
 
-			log.Println(finalSQLStatement)
 			if _, err := db.Exec(finalSQLStatement); err != nil {
+				log.Fatalf("Query: %s", finalSQLStatement)
 				log.Fatalf("Err: %v", err)
 				errFound = true
 			}

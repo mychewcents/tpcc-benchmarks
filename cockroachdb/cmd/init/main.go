@@ -30,6 +30,12 @@ func init() {
 }
 
 func main() {
+
+	if err := tables.ExecuteSQLForPartitions(db, 10, 10, "scripts/sql/drop-partitions.sql"); err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	sqlScripts := []string{
 		"scripts/sql/drop-raw.sql",
 		"scripts/sql/create-raw.sql",
@@ -45,7 +51,6 @@ func main() {
 	}
 
 	sqlScripts = []string{
-		"scripts/sql/drop-partitions.sql",
 		"scripts/sql/create-partitions.sql",
 		"scripts/sql/load-partitions.sql",
 		"scripts/sql/update-partitions.sql",
