@@ -18,6 +18,7 @@ var (
 	experiment     = flag.Int("exp", 0, "Experiment Number")
 	configFilePath = flag.String("config", "", "Path of the DB Server configuration")
 	nodeID         = flag.Int("node", 0, "Node ID of the server")
+	env            = flag.String("env", "dev", "Provide an env: \"dev\" or \"prod\"")
 )
 
 func init() {
