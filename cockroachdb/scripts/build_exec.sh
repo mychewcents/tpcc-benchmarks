@@ -9,3 +9,7 @@ echo "./server -env=prod -node=1 -config=configs/prod/setup_5.json (start | stop
 
 go build -o clientCmd cmd/app/main.go
 go build -o dbstateCmd cmd/dbstate/main.go
+
+chmod a+x scripts/init_setup.sh
+chmod a+x scripts/server.sh
+chmod a+x scripts/run.sh

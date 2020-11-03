@@ -30,12 +30,12 @@ then
   echo
 elif [[ $1 == "start" ]]
 then
-  if [[ "$#" -eq 6 ]]
+  if [[ "$#" -eq 5 ]]
   then
-    cockroach start --insecure --store=$2/$3 \
-      --listen-addr=$4 \
-      --http-addr=$5 \
-      --join=$6 \
+    cockroach start --insecure --store=$2 \
+      --listen-addr=$3 \
+      --http-addr=$4 \
+      --join=$5 \
       --background
   else 
     echo "Incorrect number of arguments passed. Check \"help\" command."
@@ -44,7 +44,7 @@ elif [[ "$#" -eq 2 ]]
 then
   if [[ $1 == "stop" ]]
   then
-    cockroach quit --insecure --host=$2 --drain-wait 60s
+    cockroach quit --insecure --host=$2 --drain-wait 15s
   elif [[ $1 == "init" ]]
   then
     cockroach init --insecure --host=$2

@@ -11,12 +11,12 @@ import (
 // SetupLogOutput sets the log output file
 func SetupLogOutput(logType string, path string, fileArgs ...int) error {
 	var fileName string
-	if logType == "init" {
-		fileName = fmt.Sprintf("%s/init_%d.log", path, time.Now().Unix())
+	if logType == "server" || logType == "setup" {
+		fileName = fmt.Sprintf("%s/%s_%d.log", path, logType, time.Now().Unix())
 	} else if logType == "exp" {
-		fileName = fmt.Sprintf("%s/exp_%d_client_%d_%s.log", path, fileArgs[0], fileArgs[1], time.Now())
+		fileName = fmt.Sprintf("%s/exp_%d_client_%d_%d.log", path, fileArgs[0], fileArgs[1], time.Now().Unix())
 	} else if logType == "dbstate" {
-		fileName = fmt.Sprintf("%s/dbstate_%d_%s.log", path, fileArgs[0], time.Now())
+		fileName = fmt.Sprintf("%s/dbstate_%d_%d.log", path, fileArgs[0], time.Now().Unix())
 	} else {
 		return errors.New("no matching log type passed")
 	}

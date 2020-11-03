@@ -37,22 +37,11 @@ elif [[ "$#" -eq 4 ]]
 then
   if [[ $1 == 'prod' ]] || [[ $1 == 'local' ]]
   then
-    if [[ $1 == 'prod' ]]
-    then
-      if [[ ! -d "${2}/cdb-server" ]]
+    if [[ ! -d "${2}/cdb-server" ]]
       then
         echo "Creating the server installation script directory"
         mkdir -p $2/cdb-server
       fi
-
-      cp scripts/server.sh cdbserv
-      chmod a+x cdbserv
-      mv cdbserv ${2}/cdb-server/
-
-      # cp scripts/run.sh cdbclient
-      # chmod a+x cdbclient
-      # mv cdbclient /temp/cs5424-team-m/cdb-server/
-    fi
 
     rm -rf assets/data
 

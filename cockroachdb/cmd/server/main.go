@@ -1,34 +1,26 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/cdbconn"
+
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/init/logging"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/init/tables"
 )
 
 var (
-	nodeID         = flag.Int("node", 0, "Pass the node id between 1 and 5 to start")
-	env            = flag.String("env", "", "Pass the environment type to run: \"dev\" or \"prod\"")
-	configFilePath = flag.String("config", "", "Pass the configuration file that contains the host and peer addresses")
+	functionName   = ""
+	configFilePath = flag.String("config", "", "Configuration file path for the server")
+	nodeID         = flag.Int("node", 0, "Node ID to be used to connect to")
+	env            = flag.String("env", "", "Provide an env: \"dev\" or \"prod\"")
 )
-
-type configuration struct {
-	DownloadURL string `json:"data_files_url"`
-	WorkingDir  string `json:"working_dir"`
-	Nodes       []node `json:"nodes"`
-}
-
-type node struct {
-	ID       int    `json:"id"`
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	HTTPAddr string `json:"http_addr"`
-}
 
 func init() {
 	flag.Parse()
@@ -36,73 +28,53 @@ func init() {
 	if len(flag.Args()) != 1 {
 		panic("use the flags before the command ")
 	}
-	// if flag.Args()[0] != "start" {
-	// 	panic("pass a command: \"start\" to start the cluster")
-	// }
 
-	if *env == "prod" {
-		if *nodeID < 1 || *nodeID > 5 {
-			panic("pass a correct node id [1, 5] via the -node flag")
-		}
-		if len(*configFilePath) == 0 {
-			panic("pass a correct config file path via the -config flag")
-		}
-	} else {
-		*env = "dev"
-		*nodeID = 1
-		*configFilePath = "configs/dev/setup.json"
-		fmt.Println("Using \"dev\" settings with node id = 1")
+	if len(*configFilePath) == 0 {
+		panic("provide a custom configuration file via -config flag")
+	}
+	if *env != "prod" && *env != "dev" {
+		panic("provide the right environment via -env flag")
+	}
+	if *nodeID < 1 || *nodeID > 5 {
+		panic("provide the right node id via -node flag")
+	}
+	functionName = flag.Args()[0]
+
+	if err := logging.SetupLogOutput("server", "logs"); err != nil {
+		panic(err)
 	}
 }
 
 func main() {
-	function := flag.Args()[0]
-	configFile, err := os.Open(*configFilePath)
-	if err != nil {
-		panic("file cannot be read")
-	}
+	c := config.GetConfig(*configFilePath, *nodeID)
 
-	byteValue, _ := ioutil.ReadAll(configFile)
-
-	var config configuration
-
-	if err = json.Unmarshal(byteValue, &config); err != nil {
-		panic(err)
-	}
-
-	configFile.Close()
 	var cmd exec.Cmd
 
-	switch function {
+	switch functionName {
 	case "start":
-		cmd = start(config)
+		cmd = start(c)
 	case "stop":
-		cmd = execute(config, function)
+		cmd = execute(c)
 	case "sql":
-		cmd = execute(config, function)
+		cmd = execute(c)
 	case "init":
-		cmd = execute(config, function)
+		cmd = execute(c)
 	case "load":
-		load(config)
+		load(c)
 	}
 
-	err = cmd.Start()
-	if err != nil {
+	if err := cmd.Start(); err != nil {
 		log.Fatalf("Err: %v", err)
 	}
 	log.Printf("Waiting for command to finish...")
-	err = cmd.Wait()
+	err := cmd.Wait()
 	log.Printf("Command finished with error: %v", err)
 }
 
-func start(config configuration) exec.Cmd {
-	var hostNode node
-	joinNodes := make([]string, len(config.Nodes))
+func start(c config.Configuration) exec.Cmd {
+	joinNodes := make([]string, len(c.Nodes))
 
-	for key, value := range config.Nodes {
-		if value.ID == *nodeID {
-			hostNode = value
-		}
+	for key, value := range c.Nodes {
 		joinNodes[key] = fmt.Sprintf("%s:%d", value.Host, value.Port)
 	}
 
@@ -110,10 +82,9 @@ func start(config configuration) exec.Cmd {
 		Path: "scripts/server.sh",
 		Args: []string{"scripts/server.sh",
 			"start",
-			fmt.Sprintf("%s/cdb-server/node-files/node%d", config.WorkingDir, *nodeID),
-			fmt.Sprintf("node%d", *nodeID),
-			fmt.Sprintf("%s:%d", hostNode.Host, hostNode.Port),
-			hostNode.HTTPAddr,
+			fmt.Sprintf("%s/cdb-server/node-files/%s", c.WorkingDir, c.HostNode.Name),
+			fmt.Sprintf("%s:%d", c.HostNode.Host, c.HostNode.Port),
+			c.HostNode.HTTPAddr,
 			strings.Join(joinNodes, ","),
 		},
 		Stdout: os.Stdout,
@@ -124,21 +95,12 @@ func start(config configuration) exec.Cmd {
 	return *cmd
 }
 
-func execute(config configuration, funcName string) exec.Cmd {
-	var hostNode node
-
-	for _, value := range config.Nodes {
-		if value.ID == *nodeID {
-			hostNode = value
-			break
-		}
-	}
-
+func execute(c config.Configuration) exec.Cmd {
 	cmd := &exec.Cmd{
 		Path: "scripts/server.sh",
 		Args: []string{"scripts/server.sh",
-			funcName,
-			fmt.Sprintf("%s:%d", hostNode.Host, hostNode.Port),
+			functionName,
+			fmt.Sprintf("%s:%d", c.HostNode.Host, c.HostNode.Port),
 		},
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
@@ -148,14 +110,48 @@ func execute(config configuration, funcName string) exec.Cmd {
 	return *cmd
 }
 
-func load(config configuration) {
-	var hostNode node
+func load(c config.Configuration) {
 
-	for _, value := range config.Nodes {
-		if value.ID == *nodeID {
-			hostNode = value
-			break
+	db, err := cdbconn.CreateConnection(c.HostNode)
+	if err != nil {
+		panic("load function couldn't create a connection to the server")
+	}
+
+	fmt.Printf("Executing the SQL: scripts/sql/drop-partitions.sql")
+	if err := tables.ExecuteSQLForPartitions(db, 10, 10, "scripts/sql/drop-partitions.sql"); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	sqlScripts := []string{
+		"scripts/sql/drop-raw.sql",
+		"scripts/sql/create-raw.sql",
+		"scripts/sql/load-raw.sql",
+		"scripts/sql/update-raw.sql",
+	}
+
+	for _, value := range sqlScripts {
+		fmt.Printf("\nExecuting the SQL: %s", value)
+		if err := tables.ExecuteSQL(db, value); err != nil {
+			fmt.Println(err)
+			return
 		}
 	}
-	
+
+	sqlScripts = []string{
+		"scripts/sql/create-partitions.sql",
+		"scripts/sql/load-partitions.sql",
+		"scripts/sql/update-partitions.sql",
+	}
+
+	for _, value := range sqlScripts {
+		fmt.Printf("\nExecuting the SQL: %s", value)
+		if err := tables.ExecuteSQLForPartitions(db, 10, 10, value); err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
+
+	log.Println("Initialization Complete!")
+	fmt.Println("\nInitialization Complete!")
 }

@@ -2,11 +2,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
 
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/logging"
 )
 
 var (
@@ -27,6 +29,10 @@ func init() {
 	if *nodeID < 1 || *nodeID > 5 {
 		panic("provide the right node id via -node flag")
 	}
+
+	if err := logging.SetupLogOutput("setup", "logs"); err != nil {
+		panic(err)
+	}
 }
 
 func main() {
@@ -42,10 +48,15 @@ func main() {
 
 	if err := cmd.Start(); err != nil {
 		log.Fatalf("Err: %v", err)
+		fmt.Println("error found - check logs")
+		return
 	}
 	log.Printf("Waiting for command to finish...")
 	if err := cmd.Wait(); err != nil {
 		log.Fatalf("Err: %v", err)
+		fmt.Println("error found - check logs")
+		return
 	}
 	log.Printf("Command finished")
+	fmt.Printf("Command Finished")
 }

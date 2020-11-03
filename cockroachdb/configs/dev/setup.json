@@ -6,19 +6,25 @@
             "id": 1,
             "host": "localhost",
             "port": 26257,
-            "http_addr": "0.0.0.0:40001"
+            "http_addr": "0.0.0.0:40001",
+            "username": "root",
+            "database": "defaultdb"
         },
         {
             "id": 2,
             "host": "localhost",
             "port": 26258,
-            "http_addr": "0.0.0.0:40002"
+            "http_addr": "0.0.0.0:40002",
+            "username": "root",
+            "database": "defaultdb"
         },
         {
             "id": 3,
             "host": "localhost",
             "port": 26259,
-            "http_addr": "0.0.0.0:40003"
+            "http_addr": "0.0.0.0:40003",
+            "username": "root",
+            "database": "defaultdb"
         }
     ]
 }
