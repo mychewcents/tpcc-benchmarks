@@ -3,3 +3,8 @@ assets/data/*
 temp
 logs/*
 results/metrics/*
+
+# Executables
+./server
+./setup
+./client

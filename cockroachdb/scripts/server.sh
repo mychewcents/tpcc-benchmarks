@@ -44,7 +44,7 @@ elif [[ "$#" -eq 2 ]]
 then
   if [[ $1 == "stop" ]]
   then
-    cockroach quit --insecure --host=$2
+    cockroach quit --insecure --host=$2 --drain-wait 60s
   elif [[ $1 == "init" ]]
   then
     cockroach init --insecure --host=$2

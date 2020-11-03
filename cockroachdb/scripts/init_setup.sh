@@ -69,6 +69,7 @@ then
     rm -rf assets/project-files
 
     extern_dir=$2/cdb-server/node-files/$4/extern 
+    rm -rf $2/cdb-server/node-files/$4
     mkdir -p $extern_dir/assets/raw
     cp assets/data/raw/* $extern_dir/assets/raw
   else

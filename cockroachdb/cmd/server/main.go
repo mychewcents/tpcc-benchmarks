@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	nodeID     = flag.Int("node", 0, "Pass the node id between 1 and 5 to start")
-	env        = flag.String("env", "", "Pass the environment type to run: \"dev\" or \"prod\"")
-	configFile = flag.String("config", "", "Pass the configuration file that contains the host and peer addresses")
+	nodeID         = flag.Int("node", 0, "Pass the node id between 1 and 5 to start")
+	env            = flag.String("env", "", "Pass the environment type to run: \"dev\" or \"prod\"")
+	configFilePath = flag.String("config", "", "Pass the configuration file that contains the host and peer addresses")
 )
 
 type configuration struct {
@@ -44,20 +44,20 @@ func init() {
 		if *nodeID < 1 || *nodeID > 5 {
 			panic("pass a correct node id [1, 5] via the -node flag")
 		}
-		if len(*configFile) == 0 {
+		if len(*configFilePath) == 0 {
 			panic("pass a correct config file path via the -config flag")
 		}
 	} else {
 		*env = "dev"
 		*nodeID = 1
-		*configFile = "configs/dev/setup.json"
+		*configFilePath = "configs/dev/setup.json"
 		fmt.Println("Using \"dev\" settings with node id = 1")
 	}
 }
 
 func main() {
 	function := flag.Args()[0]
-	configFile, err := os.Open(*configFile)
+	configFile, err := os.Open(*configFilePath)
 	if err != nil {
 		panic("file cannot be read")
 	}
@@ -82,6 +82,8 @@ func main() {
 		cmd = execute(config, function)
 	case "init":
 		cmd = execute(config, function)
+	case "load":
+		load(config)
 	}
 
 	err = cmd.Start()
@@ -128,6 +130,7 @@ func execute(config configuration, funcName string) exec.Cmd {
 	for _, value := range config.Nodes {
 		if value.ID == *nodeID {
 			hostNode = value
+			break
 		}
 	}
 
@@ -143,4 +146,16 @@ func execute(config configuration, funcName string) exec.Cmd {
 	}
 
 	return *cmd
+}
+
+func load(config configuration) {
+	var hostNode node
+
+	for _, value := range config.Nodes {
+		if value.ID == *nodeID {
+			hostNode = value
+			break
+		}
+	}
+	
 }
