@@ -4,14 +4,14 @@ import (
 	"bufio"
 	"database/sql"
 
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/delivery"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/neworder"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/orderstatus"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/payment"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/popularitem"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/relatedcustomer"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/stocklevel"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/topbalance"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/delivery"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/neworder"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/orderstatus"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/payment"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/popularitem"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/relatedcustomer"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/stocklevel"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/topbalance"
 )
 
 // ProcessRequest Calls the required DB function
