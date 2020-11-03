@@ -83,7 +83,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 
 	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)
 	orderLineTable := fmt.Sprintf("ORDER_LINE_%d_%d", warehouseID, districtID)
-	orderItemCustomerPairTable := fmt.Sprintf("ORDER_ITEMS_CUSTOMERS_%d", warehouseID)
+	orderItemCustomerPairTable := fmt.Sprintf("ORDER_ITEMS_CUSTOMERS_%d_%d", warehouseID, districtID)
 
 	sqlStatement := fmt.Sprintf("UPDATE District SET D_NEXT_O_ID = D_NEXT_O_ID + 1 WHERE D_W_ID = %d AND D_ID = %d RETURNING D_NEXT_O_ID, D_TAX, D_W_TAX", warehouseID, districtID)
 
