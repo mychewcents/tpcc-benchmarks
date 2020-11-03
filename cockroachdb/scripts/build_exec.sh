@@ -4,8 +4,9 @@
 go build -o setupCmd cmd/setup/main.go
 echo "Example: ./setupCmd -env=prod -node=1 -config=configs/prod/setup_5.json"
 
-go build -o serverCmd cmd/server/main.go
-echo "Example: ./serverCmd -env=prod -node=1 -config=configs/prod/setup_5.json (start | stop | init | run-exp | load)"
+go build -o serverCmd cmd/server/*
+echo "Example: ./serverCmd -env=prod -node=1 -config=configs/prod/setup_5.json (start | stop | init | load)"
+echo "Example: ./serverCmd -env=prod -node=1 -exp=5 -config=configs/prod/setup_5.json run-exp"
 
 go build -o clientCmd cmd/app/main.go
 go build -o dbstateCmd cmd/dbstate/main.go
