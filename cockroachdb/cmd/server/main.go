@@ -18,7 +18,6 @@ var (
 	nodeID         = flag.Int("node", 0, "Node ID to be used to connect to")
 	env            = flag.String("env", "", "Provide an env: \"dev\" or \"prod\"")
 	experiment     = flag.Int("exp", 0, "Experiment Number")
-	client         = flag.Int("client", 0, "Client Number")
 )
 
 func init() {
@@ -40,7 +39,7 @@ func init() {
 	functionName = flag.Args()[0]
 
 	if functionName == "run-exp" {
-		if *experiment == 0 || *client == 0 {
+		if *experiment == 0 {
 			panic("provide Experiment and Client number to proceed")
 		}
 	}
@@ -66,6 +65,9 @@ func main() {
 		return
 	case "run-exp":
 		cmd = run(c)
+	case "export":
+		export(c)
+		return
 	}
 
 	if err := cmd.Start(); err != nil {
