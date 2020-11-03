@@ -1,13 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
-	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
 )
 
 var (
@@ -16,20 +15,7 @@ var (
 	env            = flag.String("env", "dev", "Provide an env: \"dev\" or \"prod\"")
 )
 
-type configuration struct {
-	DownloadURL string `json:"data_files_url"`
-	WorkingDir  string `json:"working_dir"`
-	Nodes       []node `json:"nodes"`
-}
-
-type node struct {
-	ID       int    `json:"id"`
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	HTTPAddr string `json:"http_addr"`
-}
-
-func main() {
+func init() {
 	flag.Parse()
 
 	if len(*configFilePath) == 0 {
@@ -41,35 +27,25 @@ func main() {
 	if *nodeID < 1 || *nodeID > 5 {
 		panic("provide the right node id via -node flag")
 	}
+}
 
-	configFile, err := os.Open(*configFilePath)
-	if err != nil {
-		panic("file cannot be read")
-	}
-
-	byteValue, _ := ioutil.ReadAll(configFile)
-
-	var config configuration
-
-	if err = json.Unmarshal(byteValue, &config); err != nil {
-		panic(err)
-	}
-
-	configFile.Close()
+func main() {
+	c := config.GetConfig(*configFilePath, *nodeID)
 
 	cmd := &exec.Cmd{
 		Path:   "scripts/init_setup.sh",
-		Args:   []string{"scripts/init_setup.sh", *env, config.WorkingDir, config.DownloadURL, fmt.Sprintf("node%d", nodeID)},
+		Args:   []string{"scripts/init_setup.sh", *env, c.WorkingDir, c.DownloadURL, c.HostNode.Name},
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 		Dir:    ".",
 	}
 
-	err = cmd.Start()
-	if err != nil {
+	if err := cmd.Start(); err != nil {
 		log.Fatalf("Err: %v", err)
 	}
 	log.Printf("Waiting for command to finish...")
-	err = cmd.Wait()
-	log.Printf("Command finished with error: %v", err)
+	if err := cmd.Wait(); err != nil {
+		log.Fatalf("Err: %v", err)
+	}
+	log.Printf("Command finished")
 }
