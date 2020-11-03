@@ -11,8 +11,8 @@ import (
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/cdbconn"
 
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/init/logging"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/init/tables"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/logging"
 )
 
 var (
@@ -20,6 +20,8 @@ var (
 	configFilePath = flag.String("config", "", "Configuration file path for the server")
 	nodeID         = flag.Int("node", 0, "Node ID to be used to connect to")
 	env            = flag.String("env", "", "Provide an env: \"dev\" or \"prod\"")
+	experiment     = flag.Int("exp", 0, "Experiment Number")
+	client         = flag.Int("client", 0, "Client Number")
 )
 
 func init() {
@@ -40,6 +42,11 @@ func init() {
 	}
 	functionName = flag.Args()[0]
 
+	if functionName == "run-exp" {
+		if *experiment == 0 || *client == 0 {
+			panic("provide Experiment and Client number to proceed")
+		}
+	}
 	if err := logging.SetupLogOutput("server", "logs"); err != nil {
 		panic(err)
 	}
@@ -55,12 +62,12 @@ func main() {
 		cmd = start(c)
 	case "stop":
 		cmd = execute(c)
-	case "sql":
-		cmd = execute(c)
 	case "init":
 		cmd = execute(c)
 	case "load":
 		load(c)
+	case "run-exp":
+		cmd = run(c)
 	}
 
 	if err := cmd.Start(); err != nil {
@@ -154,4 +161,20 @@ func load(c config.Configuration) {
 
 	log.Println("Initialization Complete!")
 	fmt.Println("\nInitialization Complete!")
+}
+
+func run(c config.Configuration) exec.Cmd {
+	cmd := &exec.Cmd{
+		Path: "scripts/run.sh",
+		Args: []string{"scripts/run.sh",
+			*env,
+			fmt.Sprintf("%d", *experiment),
+			fmt.Sprintf("%d", *nodeID),
+		},
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+		Dir:    ".",
+	}
+
+	return *cmd
 }

@@ -29,19 +29,16 @@ then
   echo
 elif [ "$#" -eq 3 ] 
 then
-  if [ $1 == "local" ] || [ $1 == "prod" ]
+  if [ $1 == "dev" ] || [ $1 == "prod" ]
   then
     env=$1
     exp=$2
     host_or_client=$3
     if [ $exp -gt 4 ] && [ $exp -lt 9 ] 
     then
-      go build -o app cmd/app/main.go
-      chmod a+x ./app
-
-      if [ $env == 'local' ]
+      if [ $env == 'dev' ]
       then
-        ./app -exp=$exp -client=$host_or_client -config=configs/dev/local.json < assets/data/transactions/$host_or_client.txt
+        ./clientCmd -exp=$exp -client=$host_or_client -config=configs/dev/setup.json -node=1 < assets/data/transactions/$host_or_client.txt
       elif [ $env == 'prod' ]
       then
         skip=5
@@ -62,7 +59,7 @@ then
 
         for (( i=host_or_client; i<=total; i=i+skip ))
         do
-          ./app -exp=$exp -client=$i -config=configs/prod/node_$host_or_client.json < assets/data/transactions/$i.txt &
+          ./clientCmd -exp=$exp -client=$i -config=configs/prod/setup_$skip.json -node=$3 < assets/data/transactions/$i.txt &
         done
       fi
     fi
