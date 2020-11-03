@@ -19,15 +19,15 @@ func export(c config.Configuration) {
 	sqls := []sqlStatement{
 		{
 			baseStatement: "SELECT * FROM ORDERS_WID_DID",
-			filePath:      "orders",
+			filePath:      "order",
 		},
 		{
 			baseStatement: "SELECT * FROM ORDER_LINE_WID_DID",
-			filePath:      "order_line",
+			filePath:      "orderline",
 		},
 		{
 			baseStatement: "SELECT * FROM ORDER_ITEMS_CUSTOMERS_WID_DID",
-			filePath:      "item_pairs",
+			filePath:      "itempairs",
 		},
 	}
 
