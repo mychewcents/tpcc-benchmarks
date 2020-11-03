@@ -36,6 +36,8 @@ then
       --listen-addr=$3 \
       --http-addr=$4 \
       --join=$5 \
+      --cache=.25 \
+	    --max-sql-memory=.25 \
       --background
   else 
     echo "Incorrect number of arguments passed. Check \"help\" command."
