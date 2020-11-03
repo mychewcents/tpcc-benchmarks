@@ -43,20 +43,6 @@ then
         mkdir -p $2/cdb-server
       fi
 
-    rm -rf assets/data
-
-    mkdir assets/data
-    mkdir assets/data/raw
-    mkdir assets/data/transactions
-
-    curl $3 -L -o assets/project-files.zip
-    unzip assets/project-files.zip -d assets
-    mv assets/project-files/data-files/* assets/data/raw
-    mv assets/project-files/xact-files/* assets/data/transactions
-
-    rm assets/project-files.zip
-    rm -rf assets/project-files
-
     extern_dir=$2/cdb-server/node-files/$4/extern 
     rm -rf $2/cdb-server/node-files/$4
     mkdir -p $extern_dir/assets/raw
