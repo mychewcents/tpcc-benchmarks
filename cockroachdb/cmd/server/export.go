@@ -57,5 +57,4 @@ func export(c config.Configuration) {
 			fmt.Printf("Completed: w = %d\n", w)
 		}
 	}
-
 }
