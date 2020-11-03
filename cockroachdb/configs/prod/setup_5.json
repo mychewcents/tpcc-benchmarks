@@ -1,0 +1,46 @@
+{
+    "data_files_url": "http://www.comp.nus.edu.sg/~cs4224/project-files.zip",
+    "working_dir": "/temp/cs5424-team-m",
+    "nodes": [
+        {
+            "id": 1,
+            "host": "192.168.49.179",
+            "port": 27000,
+            "http_addr": "0.0.0.0:40000",
+            "username": "root",
+            "database": "defaultdb"
+        },
+        {
+            "id": 2,
+            "host": "192.168.49.180",
+            "port": 27000,
+            "http_addr": "0.0.0.0:40000",
+            "username": "root",
+            "database": "defaultdb"
+        },
+        {
+            "id": 3,
+            "host": "192.168.49.181",
+            "port": 27000,
+            "http_addr": "0.0.0.0:40000",
+            "username": "root",
+            "database": "defaultdb"
+        },
+        {
+            "id": 4,
+            "host": "192.168.49.182",
+            "port": 27000,
+            "http_addr": "0.0.0.0:40000",
+            "username": "root",
+            "database": "defaultdb"
+        },
+        {
+            "id": 5,
+            "host": "192.168.49.183",
+            "port": 27000,
+            "http_addr": "0.0.0.0:40000",
+            "username": "root",
+            "database": "defaultdb"
+        }
+    ]
+}

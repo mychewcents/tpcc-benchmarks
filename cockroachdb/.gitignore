@@ -3,3 +3,9 @@ assets/data/*
 temp
 logs/*
 results/metrics/*
+
+# Executables
+serverCmd
+clientCmd
+setupCmd
+dbstateCmd

@@ -10,31 +10,33 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/logging"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/performance"
-
 	caller "github.com/mychewcents/ddbms-project/cockroachdb/internal"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/cdbconn"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/cdbconn"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/logging"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/statistics/performance"
 )
 
 var db *sql.DB
 
 var (
-	experiment = flag.Int("exp", 0, "Experiment Number")
-	client     = flag.Int("client", 0, "Client Number")
-	configPath = flag.String("config", "configs/dev/local.json", "Path of the DB Server configuration")
+	experiment     = flag.Int("exp", 0, "Experiment Number")
+	client         = flag.Int("client", 0, "Client Number")
+	configFilePath = flag.String("config", "", "Path of the DB Server configuration")
+	nodeID         = flag.Int("node", 0, "Node ID to run on")
 )
 
 func init() {
-	var err error
 	flag.Parse()
 
 	if *experiment == 0 || *client == 0 {
-		panic("Provide Experiment and Client number to proceed")
+		panic("provide Experiment and Client number to proceed")
 	}
-	db, err = cdbconn.CreateConnection(*configPath)
-	if err != nil {
-		panic(err)
+	if len(*configFilePath) == 0 {
+		panic("config file path cannot be empty. use -config option")
+	}
+	if *nodeID < 1 || *nodeID > 5 {
+		panic("node id should be between 1 and 5")
 	}
 
 	if err := logging.SetupLogOutput("exp", "logs", *experiment, *client); err != nil {
@@ -44,6 +46,12 @@ func init() {
 
 func main() {
 	var txArgs []string
+
+	c := config.GetConfig(*configFilePath, *nodeID)
+	db, err := cdbconn.CreateConnection(c.HostNode)
+	if err != nil {
+		panic(err)
+	}
 
 	scanner := bufio.NewScanner(os.Stdin)
 	var latencies []float64

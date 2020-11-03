@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 ############################################################
 # The init.sh script initializes the cdbserv and cdbclient
@@ -6,7 +6,7 @@
 # and transaction.
 ############################################################
 
-if [ $1 == 'help' ]
+if [[ $1 == "help" ]]
 then
   echo
   echo
@@ -22,41 +22,48 @@ then
   echo "   - local  : Only downloads the project files"
   echo
   echo
+  echo "Second Argument - Location of the working directory"
+  echo "   - <path>   : Path to the working directory for the nodes and executables"
+  echo
+  echo
+  echo "Third Argument - URL for the project file downloads"
+  echo "   - <URL>    : To download the files for the project"
+  echo
+  echo
   echo "Happy Running!"
   echo
   echo
-elif [ $1 == 'prod' ] || [ $1 == 'local' ]
+elif [[ "$#" -eq 4 ]]
 then
-  if [ $1 == 'prod' ]
+  if [[ $1 == 'prod' ]] || [[ $1 == 'local' ]]
   then
-    if [ ! -d "/temp/cs5424-team-m/cdb-server" ]
-    then
-      echo "Creating the server installation script directory"
-      mkdir /temp/cs5424-team-m/cdb-server
-    fi
+    if [[ ! -d "${2}/cdb-server" ]]
+      then
+        echo "Creating the server installation script directory"
+        mkdir -p $2/cdb-server
+      fi
 
-    cp scripts/server.sh cdbserv
-    chmod a+x cdbserv
-    mv cdbserv /temp/cs5424-team-m/cdb-server/
+    rm -rf assets/data
 
-    # cp scripts/run.sh cdbclient
-    # chmod a+x cdbclient
-    # mv cdbclient /temp/cs5424-team-m/cdb-server/
+    mkdir assets/data
+    mkdir assets/data/raw
+    mkdir assets/data/transactions
+
+    curl $3 -L -o assets/project-files.zip
+    unzip assets/project-files.zip -d assets
+    mv assets/project-files/data-files/* assets/data/raw
+    mv assets/project-files/xact-files/* assets/data/transactions
+
+    rm assets/project-files.zip
+    rm -rf assets/project-files
+
+    extern_dir=$2/cdb-server/node-files/$4/extern 
+    rm -rf $2/cdb-server/node-files/$4
+    mkdir -p $extern_dir/assets/raw
+    cp assets/data/raw/* $extern_dir/assets/raw
+  else
+    echo "Use the \"help\" command to learn more about the arguments"
   fi
-
-  rm -rf assets/data
-
-  mkdir assets/data
-  mkdir assets/data/raw
-  mkdir assets/data/transactions
-
-  curl 'http://www.comp.nus.edu.sg/~cs4224/project-files.zip' -L -o assets/project-files.zip
-  unzip assets/project-files.zip -d assets
-  mv assets/project-files/data-files/* assets/data/raw
-  mv assets/project-files/xact-files/* assets/data/transactions
-
-  rm assets/project-files.zip
-  rm -rf assets/project-files
 else
-  echo "Use the \"help\" command to learn more about the arguments"
+    echo "Use the \"help\" command to learn more about the arguments"
 fi
