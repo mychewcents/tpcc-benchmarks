@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"database/sql"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -22,13 +23,41 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) bool {
 	relatedCustomerIdentifiers := make(map[int]map[int]map[int]bool)
 	orderItemCustomerPairTable := "ORDER_ITEMS_CUSTOMERS_WID_DID"
 
+	var orderLineItemPairString strings.Builder
+
+	sqlStatement := fmt.Sprintf("SELECT IC_I_1_ID, IC_I_2_ID FROM ORDER_ITEMS_CUSTOMERS_%d_%d WHERE IC_C_ID = %d", warehouseID, districtID, customerID)
+
+	rows, err := db.Query(sqlStatement)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no rows found for customer: %d %d %d", warehouseID, districtID, customerID)
+			return true
+		}
+		log.Fatalf("error in fetching the order line item pairs for the asked customer: %d %d %d \n Err: %v", warehouseID, districtID, customerID, err)
+		return false
+	}
+
+	var itemID1, itemID2 int
+	for rows.Next() {
+		err := rows.Scan(&itemID1, &itemID2)
+		if err != nil {
+			log.Fatalf("error in fetching the reading the order line item pair: %d %d %d \n Err: %v", warehouseID, districtID, customerID, err)
+		}
+		orderLineItemPairString.WriteString(fmt.Sprintf("(IC_I_1_ID = %d AND IC_I_2_ID = %d) OR ", itemID1, itemID2))
+	}
+
+	finalOrderLineItemPairWhereClause := orderLineItemPairString.String()
+
+	if len(finalOrderLineItemPairWhereClause) == 0 {
+		log.Fatalf("could not create the final WHERE clause script for related customer: %d %d %d", warehouseID, districtID, customerID)
+		return false
+	}
+
+	finalOrderLineItemPairWhereClause = finalOrderLineItemPairWhereClause[:len(finalOrderLineItemPairWhereClause)-4]
+
 	baseSQLStatement := fmt.Sprintf(`
-		SELECT p.IC_W_ID, p.IC_D_ID, p.IC_C_ID 
-		FROM %s p 
-		INNER JOIN 
-		(SELECT * FROM ORDER_ITEMS_CUSTOMERS_%d_%d WHERE IC_C_ID = %d) c 
-		ON p.IC_I_1_ID = c.IC_I_1_ID AND p.IC_I_2_ID = c.IC_I_2_ID
-	`, orderItemCustomerPairTable, warehouseID, districtID, customerID)
+		SELECT IC_W_ID, IC_D_ID, IC_C_ID FROM %s p WHERE %s
+	`, orderItemCustomerPairTable, finalOrderLineItemPairWhereClause)
 
 	var cCustomerID int
 
@@ -62,7 +91,6 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) bool {
 						}
 						relatedCustomerIdentifiers[w][d][cCustomerID] = true
 					}
-
 				}
 			}
 

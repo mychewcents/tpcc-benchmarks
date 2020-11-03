@@ -9,6 +9,7 @@ import (
 
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/cdbconn"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/init/tables"
 )
 
 func load(c config.Configuration) {
@@ -18,40 +19,40 @@ func load(c config.Configuration) {
 		panic("load function couldn't create a connection to the server")
 	}
 
-	// fmt.Printf("Executing the SQL: scripts/sql/drop-partitions.sql")
-	// if err := tables.ExecuteSQLForPartitions(db, 10, 10, "scripts/sql/drop-partitions.sql"); err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
+	fmt.Printf("Executing the SQL: scripts/sql/drop-partitions.sql")
+	if err := tables.ExecuteSQLForPartitions(db, 10, 10, "scripts/sql/drop-partitions.sql"); err != nil {
+		fmt.Println(err)
+		return
+	}
 
-	// sqlScripts := []string{
-	// 	"scripts/sql/drop-raw.sql",
-	// 	"scripts/sql/create-raw.sql",
-	// 	"scripts/sql/load-raw.sql",
-	// 	"scripts/sql/update-raw.sql",
-	// }
+	sqlScripts := []string{
+		"scripts/sql/drop-raw.sql",
+		"scripts/sql/create-raw.sql",
+		"scripts/sql/load-raw.sql",
+		"scripts/sql/update-raw.sql",
+	}
 
-	// for _, value := range sqlScripts {
-	// 	fmt.Printf("\nExecuting the SQL: %s", value)
-	// 	if err := tables.ExecuteSQL(db, value); err != nil {
-	// 		fmt.Println(err)
-	// 		return
-	// 	}
-	// }
+	for _, value := range sqlScripts {
+		fmt.Printf("\nExecuting the SQL: %s", value)
+		if err := tables.ExecuteSQL(db, value); err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
 
-	// sqlScripts = []string{
-	// 	"scripts/sql/create-partitions.sql",
-	// 	"scripts/sql/load-partitions.sql",
-	// 	"scripts/sql/update-partitions.sql",
-	// }
+	sqlScripts = []string{
+		"scripts/sql/create-partitions.sql",
+		"scripts/sql/load-partitions.sql",
+		"scripts/sql/update-partitions.sql",
+	}
 
-	// for _, value := range sqlScripts {
-	// 	fmt.Printf("\nExecuting the SQL: %s", value)
-	// 	if err := tables.ExecuteSQLForPartitions(db, 10, 10, value); err != nil {
-	// 		fmt.Println(err)
-	// 		return
-	// 	}
-	// }
+	for _, value := range sqlScripts {
+		fmt.Printf("\nExecuting the SQL: %s", value)
+		if err := tables.ExecuteSQLForPartitions(db, 10, 10, value); err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
 
 	if err := loadOrderItemsCustomerPair(db, 10); err != nil {
 		log.Fatalf("error in loadOrderItemsCustomerPair. Err: %v", err)
@@ -63,11 +64,11 @@ func load(c config.Configuration) {
 func loadOrderItemsCustomerPair(db *sql.DB, warehouses int) error {
 	log.Println("Executing the load of Items Customer Pair")
 	for w := 1; w <= warehouses; w++ {
-		orderItemCustomerPairTable := fmt.Sprintf("ORDER_ITEMS_CUSTOMERS_%d", w)
 		for d := 1; d <= 10; d++ {
-
+			orderItemCustomerPairTable := fmt.Sprintf("ORDER_ITEMS_CUSTOMERS_%d_%d", w, d)
 			orderLineTable := fmt.Sprintf("ORDER_LINE_%d_%d", w, d)
 			orderTable := fmt.Sprintf("ORDERS_%d_%d", w, d)
+
 			for c := 1; c <= 3000; c++ {
 				var orderID, orderLineItemsCount int
 
@@ -116,8 +117,9 @@ func loadOrderItemsCustomerPair(db *sql.DB, warehouses int) error {
 				if _, err := db.Exec(sqlStatement); err != nil {
 					return err
 				}
+				log.Printf("Executed partition: %d %d %d", w, d, c)
 			}
-			log.Printf("Executed partition: %d %d", w, d)
+
 		}
 	}
 
