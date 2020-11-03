@@ -5,6 +5,7 @@ logs/*
 results/metrics/*
 
 # Executables
-./server
-./setup
-./client
+serverCmd
+clientCmd
+setupCmd
+dbstateCmd
