@@ -25,8 +25,8 @@ func NewRelatedCustomerController(cassandraSession *common.CassandraSession) Rel
 
 func (r *relatedCustomerControllerImpl) HandleTransaction(cmd []string) {
 	request := makeRelatedCustomerRequest(cmd)
-	response, _ := r.s.ProcessRelatedCustomerTransaction(request)
-	printRelatedCustomerResponse(response)
+	r.s.ProcessRelatedCustomerTransaction(request)
+	//printRelatedCustomerResponse(response)
 }
 
 func makeRelatedCustomerRequest(cmd []string) *model.RelatedCustomerRequest {
