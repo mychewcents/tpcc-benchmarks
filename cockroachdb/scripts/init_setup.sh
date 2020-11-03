@@ -46,7 +46,9 @@ then
     extern_dir=$2/cdb-server/node-files/$4/extern 
     rm -rf $2/cdb-server/node-files/$4
     mkdir -p $extern_dir/assets/raw
+    mkdir -p $extern_dir/assets/processed
     cp assets/data/raw/* $extern_dir/assets/raw
+    cp -r assets/data/processed/* $extern_dir/assets/processed
   else
     echo "Use the \"help\" command to learn more about the arguments"
   fi
