@@ -19,18 +19,6 @@
             "host": "localhost",
             "port": 26259,
             "http_addr": "0.0.0.0:40003"
-        },
-        {
-            "id": 4,
-            "host": "localhost",
-            "port": 26260,
-            "http_addr": "0.0.0.0:40004"
-        },
-        {
-            "id": 5,
-            "host": "localhost",
-            "port": 26261,
-            "http_addr": "0.0.0.0:40005"
         }
     ]
 }
