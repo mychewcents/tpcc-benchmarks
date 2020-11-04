@@ -81,10 +81,10 @@ func exportPartitionsCSV(c config.Configuration) {
 			baseStatement: "SELECT * FROM ORDER_LINE_WID_DID",
 			filePath:      "orderline",
 		},
-		// {
-		// 	baseStatement: "SELECT * FROM ORDER_ITEMS_CUSTOMERS_WID_DID",
-		// 	filePath:      "itempairs",
-		// },
+		{
+			baseStatement: "SELECT * FROM ORDER_ITEMS_CUSTOMERS_WID_DID",
+			filePath:      "itempairs",
+		},
 	}
 
 	for _, value := range sqls {
