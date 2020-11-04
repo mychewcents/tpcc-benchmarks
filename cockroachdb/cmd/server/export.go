@@ -145,6 +145,6 @@ func exportPartitionsCSVParallel(c config.Configuration, w, d int, finalSQLState
 		ch <- false
 	}
 
-	log.Printf("Completed the partition for %s warehouse: %d", filePath, w)
+	log.Printf("Completed the partition for %s warehouse, district: %d %d", filePath, w, d)
 	ch <- true
 }
