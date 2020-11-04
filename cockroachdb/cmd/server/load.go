@@ -20,17 +20,17 @@ func load(c config.Configuration) {
 		panic("load function couldn't create a connection to the server")
 	}
 
-	fmt.Printf("Executing the SQL: scripts/sql/drop-partitions.sql")
-	if err := tables.ExecuteSQLForPartitions(db, 10, 10, "scripts/sql/drop-partitions.sql"); err != nil {
+	fmt.Printf("Executing the SQL: scripts/sql/raw/drop-partitions.sql")
+	if err := tables.ExecuteSQLForPartitions(db, 10, 10, "scripts/sql/raw/drop-partitions.sql"); err != nil {
 		fmt.Println(err)
 		return
 	}
 
 	sqlScripts := []string{
-		"scripts/sql/drop-raw.sql",
-		"scripts/sql/create-raw.sql",
-		"scripts/sql/load-raw.sql",
-		"scripts/sql/update-raw.sql",
+		"scripts/sql/raw/drop.sql",
+		"scripts/sql/raw/create.sql",
+		"scripts/sql/raw/load.sql",
+		"scripts/sql/raw/update.sql",
 	}
 
 	for _, value := range sqlScripts {
@@ -42,9 +42,9 @@ func load(c config.Configuration) {
 	}
 
 	sqlScripts = []string{
-		"scripts/sql/create-partitions.sql",
-		"scripts/sql/load-partitions.sql",
-		"scripts/sql/update-partitions.sql",
+		"scripts/sql/raw/create-partitions.sql",
+		"scripts/sql/raw/load-partitions.sql",
+		"scripts/sql/raw/update-partitions.sql",
 	}
 
 	for _, value := range sqlScripts {
@@ -58,6 +58,7 @@ func load(c config.Configuration) {
 	if err := loadOrderItemsCustomerPair(c); err != nil {
 		log.Fatalf("error in loadOrderItemsCustomerPair. Err: %v", err)
 	}
+
 	log.Println("Initialization Complete!")
 	fmt.Println("\nInitialization Complete!")
 }

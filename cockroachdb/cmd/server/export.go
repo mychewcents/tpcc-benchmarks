@@ -38,6 +38,14 @@ func exportCSV(c config.Configuration) {
 			baseStatement: "SELECT * FROM STOCK",
 			filePath:      "assets/data/processed/stock/stock.csv",
 		},
+		{
+			baseStatement: "SELECT * FROM ORDERS",
+			filePath:      "assets/data/processed/order/order.csv",
+		},
+		{
+			baseStatement: "SELECT * FROM ORDER_LINE",
+			filePath:      "assets/data/processed/orderline/orderline.csv",
+		},
 	}
 
 	for _, value := range sqls {
@@ -71,7 +79,6 @@ func exportCSV(c config.Configuration) {
 func exportPartitionsCSV(c config.Configuration) {
 	log.Printf("Starting the export of partitions...")
 
-	hostName := fmt.Sprintf("%s:%d", c.HostNode.Host, c.HostNode.Port)
 	sqls := []sqlStatement{
 		{
 			baseStatement: "SELECT * FROM ORDERS_WID_DID",
@@ -87,6 +94,8 @@ func exportPartitionsCSV(c config.Configuration) {
 		},
 	}
 
+	ch := make(chan bool, 300)
+
 	for _, value := range sqls {
 		log.Printf("Starting the export of: %s", value.filePath)
 		baseSQLStatement := value.baseStatement
@@ -96,30 +105,46 @@ func exportPartitionsCSV(c config.Configuration) {
 				finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", fmt.Sprintf("%d", d))
 				fileName := fmt.Sprintf("assets/data/processed/%s/%d_%d.csv", value.filePath, w, d)
 
-				cmd := &exec.Cmd{
-					Path: "scripts/export_data.sh",
-					Args: []string{"scripts/export_data.sh",
-						hostName,
-						finalSQLStatement,
-						fileName,
-					},
-					Stdout: os.Stdout,
-					Stderr: os.Stderr,
-					Dir:    ".",
-				}
-
-				if err := cmd.Start(); err != nil {
-					log.Fatalf("error occured in %s for %d %d. Err: %v", value.filePath, w, d, err)
-					return
-				}
-				if err := cmd.Wait(); err != nil {
-					log.Fatalf("error occured in %s for %d %d. Err: %v", value.filePath, w, d, err)
-					return
-				}
+				go exportPartitionsCSVParallel(c, w, d, finalSQLStatement, fileName, value.filePath, ch)
 			}
-			log.Printf("Completed the partition for warehouse: %d", w)
 		}
-		log.Printf("Completed the export of: %s", value.filePath)
 	}
-	log.Printf("Completed the export of partitions...")
+
+	totalCount := 0
+	executed := false
+	for i := 1; i <= 300; i++ {
+		executed = <-ch
+		if executed {
+			totalCount++
+		}
+	}
+
+	log.Printf("Completed the export of partitions. Total Count: %d ; Should be 300.", totalCount)
+}
+
+func exportPartitionsCSVParallel(c config.Configuration, w, d int, finalSQLStatement, fileName, filePath string, ch chan bool) {
+	hostName := fmt.Sprintf("%s:%d", c.HostNode.Host, c.HostNode.Port)
+	cmd := &exec.Cmd{
+		Path: "scripts/export_data.sh",
+		Args: []string{"scripts/export_data.sh",
+			hostName,
+			finalSQLStatement,
+			fileName,
+		},
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+		Dir:    ".",
+	}
+
+	if err := cmd.Start(); err != nil {
+		log.Fatalf("error occured in %s for %d %d. Err: %v", filePath, w, d, err)
+		ch <- false
+	}
+	if err := cmd.Wait(); err != nil {
+		log.Fatalf("error occured in %s for %d %d. Err: %v", filePath, w, d, err)
+		ch <- false
+	}
+
+	log.Printf("Completed the partition for %s warehouse: %d", filePath, w)
+	ch <- true
 }

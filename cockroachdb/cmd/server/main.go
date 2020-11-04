@@ -61,11 +61,16 @@ func main() {
 	case "init":
 		cmd = execute(c)
 	case "load":
-		load(c)
+		if err := rawtables.PerformETL(c); err != nil {
+			log.Fatalf("Err: %v", err)
+			return
+		}
 		return
 	case "load-csv":
-		loadCSV(c)
-		return
+		if err := processedtables.PerformETL(c); err != nil {
+			log.Fatalf("Err: %v", err)
+			return
+		}
 	case "run-exp":
 		cmd = run(c)
 	case "export":
