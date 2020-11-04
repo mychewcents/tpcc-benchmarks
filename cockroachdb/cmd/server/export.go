@@ -37,7 +37,7 @@ func export(c config.Configuration) {
 			for d := 1; d <= 10; d++ {
 				finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", fmt.Sprintf("%d", w))
 				finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", fmt.Sprintf("%d", d))
-				fileName := fmt.Sprintf("assets/processed/%s/%d_%d.csv", value.filePath, w, d)
+				fileName := fmt.Sprintf("assets/data/processed/%s/%d_%d.csv", value.filePath, w, d)
 
 				cmd := &exec.Cmd{
 					Path: "scripts/export_data.sh",
