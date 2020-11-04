@@ -30,8 +30,7 @@ func ExecuteSQLForPartitions(c config.Configuration, warehouses, districts int, 
 	errFound := false
 	for w := 1; w <= warehouses; w++ {
 		for d := 1; d <= districts; d++ {
-			finalSQLStatement := baseSQLStatement
-			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "WID", strconv.Itoa(w))
+			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(w))
 			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(d))
 
 			go executeParallel(c, w, d, finalSQLStatement, ch)

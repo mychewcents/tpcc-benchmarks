@@ -11,7 +11,6 @@ import (
 func UpdateParent(c config.Configuration) error {
 	log.Println("Updating parent tables...")
 
-	log.Println("\nExecuting the SQL: scripts/sql/raw/update.sql")
 	if err := tables.ExecuteSQL(c, "scripts/sql/raw/update.sql"); err != nil {
 		log.Fatalf("error occured while loading raw tables. Err: %v", err)
 		return err
@@ -25,7 +24,6 @@ func UpdateParent(c config.Configuration) error {
 func UpdatePartitions(c config.Configuration) error {
 	log.Println("Updating partitions of a table...")
 
-	log.Println("Executing the SQL: scripts/sql/raw/update-partitions.sql")
 	if err := tables.ExecuteSQLForPartitions(c, 10, 10, "scripts/sql/raw/update-partitions.sql"); err != nil {
 		log.Fatalf("error occured while loading partitions. Err: %v", err)
 		return err

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/cdbconn"
@@ -16,7 +17,6 @@ import (
 func LoadParent(c config.Configuration) error {
 	log.Println("Loading parent tables...")
 
-	log.Println("\nExecuting the SQL: scripts/sql/processed/load.sql")
 	if err := tables.ExecuteSQL(c, "scripts/sql/processed/load.sql"); err != nil {
 		log.Fatalf("error occured while loading processed tables. Err: %v", err)
 		return err
@@ -53,6 +53,8 @@ func LoadPartitions(c config.Configuration) error {
 			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "ORDERS_FILE_PATH", fmt.Sprintf("order/%d_%d", w, d))
 			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "ORDER_LINE_FILE_PATH", fmt.Sprintf("orderline/%d_%d", w, d))
 			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "ORDER_ITEMS_CUSTOMERS_FILE_PATH", fmt.Sprintf("itempairs/%d_%d", w, d))
+			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "WID", strconv.Itoa(w))
+			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(d))
 
 			_, err := db.Exec(finalSQLStatement)
 			if err != nil {
