@@ -56,7 +56,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) bool {
 	finalOrderLineItemPairWhereClause = finalOrderLineItemPairWhereClause[:len(finalOrderLineItemPairWhereClause)-4]
 
 	baseSQLStatement := fmt.Sprintf(`
-		SELECT IC_W_ID, IC_D_ID, IC_C_ID FROM %s p WHERE %s
+		SELECT IC_C_ID FROM %s p WHERE %s
 	`, orderItemCustomerPairTable, finalOrderLineItemPairWhereClause)
 
 	var cCustomerID int
