@@ -8,6 +8,7 @@ mkdir assets/data/transactions
 mkdir assets/data/processed
 mkdir assets/data/processed/warehouse
 mkdir assets/data/processed/district
+mkdir assets/data/processed/customer
 mkdir assets/data/processed/order
 mkdir assets/data/processed/orderline
 mkdir assets/data/processed/stock
