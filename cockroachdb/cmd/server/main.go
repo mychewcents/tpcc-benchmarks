@@ -69,7 +69,7 @@ func main() {
 	case "run-exp":
 		cmd = run(c)
 	case "export":
-		export(c)
+		exportCSV(c)
 		return
 	}
 

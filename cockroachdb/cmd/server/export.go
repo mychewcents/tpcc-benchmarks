@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -14,7 +15,62 @@ type sqlStatement struct {
 	filePath      string
 }
 
-func export(c config.Configuration) {
+func exportCSV(c config.Configuration) {
+	hostName := fmt.Sprintf("%s:%d", c.HostNode.Host, c.HostNode.Port)
+	sqls := []sqlStatement{
+		{
+			baseStatement: "SELECT * FROM WAREHOUSE",
+			filePath:      "assets/data/processed/warehouse/warehouse.csv",
+		},
+		{
+			baseStatement: "SELECT * FROM DISTRICT",
+			filePath:      "assets/data/processed/district/district.csv",
+		},
+		{
+			baseStatement: "SELECT * FROM CUSTOMER",
+			filePath:      "assets/data/processed/customer/customer.csv",
+		},
+		{
+			baseStatement: "SELECT * FROM ITEM",
+			filePath:      "assets/data/processed/item/item.csv",
+		},
+		{
+			baseStatement: "SELECT * FROM STOCK",
+			filePath:      "assets/data/processed/stock/stock.csv",
+		},
+	}
+
+	for _, value := range sqls {
+		cmd := &exec.Cmd{
+			Path: "scripts/export_data.sh",
+			Args: []string{"scripts/export_data.sh",
+				hostName,
+				value.baseStatement,
+				value.filePath,
+			},
+			Stdout: os.Stdout,
+			Stderr: os.Stderr,
+			Dir:    ".",
+		}
+
+		if err := cmd.Start(); err != nil {
+			log.Fatalf("error occured in %s. Err: %v", value.filePath, err)
+			return
+		}
+		if err := cmd.Wait(); err != nil {
+			log.Fatalf("error occured in %s. Err: %v", value.filePath, err)
+			return
+		}
+		log.Printf("Completed exporting: %s", value.filePath)
+	}
+	exportPartitionsCSV(c)
+
+	log.Printf("Completed exporting the database")
+}
+
+func exportPartitionsCSV(c config.Configuration) {
+	log.Printf("Starting the export of partitions...")
+
 	hostName := fmt.Sprintf("%s:%d", c.HostNode.Host, c.HostNode.Port)
 	sqls := []sqlStatement{
 		{
@@ -32,6 +88,7 @@ func export(c config.Configuration) {
 	}
 
 	for _, value := range sqls {
+		log.Printf("Starting the export of: %s", value.filePath)
 		baseSQLStatement := value.baseStatement
 		for w := 1; w <= 10; w++ {
 			for d := 1; d <= 10; d++ {
@@ -51,10 +108,18 @@ func export(c config.Configuration) {
 					Dir:    ".",
 				}
 
-				cmd.Start()
-				cmd.Wait()
+				if err := cmd.Start(); err != nil {
+					log.Fatalf("error occured in %s for %d %d. Err: %v", value.filePath, w, d, err)
+					return
+				}
+				if err := cmd.Wait(); err != nil {
+					log.Fatalf("error occured in %s for %d %d. Err: %v", value.filePath, w, d, err)
+					return
+				}
 			}
-			fmt.Printf("Completed: w = %d\n", w)
+			log.Printf("Completed the partition for warehouse: %d", w)
 		}
+		log.Printf("Completed the export of: %s", value.filePath)
 	}
+	log.Printf("Completed the export of partitions...")
 }

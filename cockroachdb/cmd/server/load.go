@@ -131,6 +131,37 @@ func loadOrderItemsCustomerPair(db *sql.DB, warehouses int) error {
 }
 
 func loadCSV(c config.Configuration) {
+	log.Printf("Starting the load of tables using CSV")
+	log.Printf("Starting the load of unpartitioned tables using CSV")
+	sqlScript := "scripts/sql/load-csv.sql"
+
+	sqlFile, err := os.Open(sqlScript)
+	if err != nil {
+		log.Fatalf("Err: %v", err)
+		return
+	}
+	defer sqlFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(sqlFile)
+	sqlStatement := string(byteValue)
+
+	db, err := cdbconn.CreateConnection(c.HostNode)
+	if err != nil {
+		panic("load function couldn't create a connection to the server")
+	}
+
+	if _, err := db.Exec(sqlStatement); err != nil {
+		log.Fatalf("couldn't load the raw tables. Err: %v", err)
+		return
+	}
+
+	log.Printf("Completing the load of unpartitioned tables using CSV")
+	loadPartitionsCSV(c)
+	log.Printf("Completed the load of table partitions using CSV")
+}
+
+func loadPartitionsCSV(c config.Configuration) {
+	log.Printf("Starting the table partitions using CSV")
 	sqlScript := "scripts/sql/load-partitions-csv.sql"
 
 	sqlFile, err := os.Open(sqlScript)
@@ -162,4 +193,5 @@ func loadCSV(c config.Configuration) {
 		}
 	}
 
+	log.Printf("Completed the load of table partitions using CSV")
 }
