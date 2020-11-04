@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
+	processedtables "github.com/mychewcents/ddbms-project/cockroachdb/internal/init/processed"
+	rawtables "github.com/mychewcents/ddbms-project/cockroachdb/internal/init/raw"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/logging"
 )
 
