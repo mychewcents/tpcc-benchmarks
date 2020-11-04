@@ -14,12 +14,6 @@ import (
 )
 
 func load(c config.Configuration) {
-
-	db, err := cdbconn.CreateConnection(c.HostNode)
-	if err != nil {
-		panic("load function couldn't create a connection to the server")
-	}
-
 	fmt.Printf("Executing the SQL: scripts/sql/raw/drop-partitions.sql")
 	if err := tables.ExecuteSQLForPartitions(c, 10, 10, "scripts/sql/raw/drop-partitions.sql"); err != nil {
 		fmt.Println(err)
