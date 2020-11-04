@@ -33,9 +33,9 @@ then
   echo "Happy Running!"
   echo
   echo
-elif [[ "$#" -eq 4 ]]
+elif [[ "$#" -eq 3 ]]
 then
-  if [[ $1 == 'prod' ]] || [[ $1 == 'local' ]]
+  if [[ $1 == 'prod' ]] || [[ $1 == 'dev' ]]
   then
     if [[ ! -d "${2}/cdb-server" ]]
       then
@@ -43,8 +43,8 @@ then
         mkdir -p $2/cdb-server
       fi
 
-    extern_dir=$2/cdb-server/node-files/$4/extern 
-    rm -rf $2/cdb-server/node-files/$4
+    extern_dir=$2/cdb-server/node-files/$3/extern 
+    rm -rf $2/cdb-server/node-files/$3
     mkdir -p $extern_dir/assets/raw
     mkdir -p $extern_dir/assets/processed
     cp assets/data/raw/* $extern_dir/assets/raw

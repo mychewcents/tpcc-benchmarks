@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
+	processedtables "github.com/mychewcents/ddbms-project/cockroachdb/internal/init/processed"
+	rawtables "github.com/mychewcents/ddbms-project/cockroachdb/internal/init/raw"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/logging"
 )
 
@@ -61,10 +63,16 @@ func main() {
 	case "init":
 		cmd = execute(c)
 	case "load":
-		load(c)
+		if err := rawtables.PerformETL(c); err != nil {
+			log.Fatalf("Err: %v", err)
+			return
+		}
 		return
 	case "load-csv":
-		loadCSV(c)
+		if err := processedtables.PerformETL(c); err != nil {
+			log.Fatalf("Err: %v", err)
+			return
+		}
 		return
 	case "run-exp":
 		cmd = run(c)

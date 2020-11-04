@@ -40,7 +40,7 @@ func main() {
 
 	cmd := &exec.Cmd{
 		Path:   "scripts/init_setup.sh",
-		Args:   []string{"scripts/init_setup.sh", *env, c.WorkingDir, c.DownloadURL, c.HostNode.Name},
+		Args:   []string{"scripts/init_setup.sh", *env, c.WorkingDir, c.HostNode.Name},
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 		Dir:    ".",
@@ -58,5 +58,5 @@ func main() {
 		return
 	}
 	log.Printf("Command finished")
-	fmt.Printf("Command Finished")
+	fmt.Println("Command Finished")
 }

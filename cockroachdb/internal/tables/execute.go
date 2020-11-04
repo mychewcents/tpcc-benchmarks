@@ -1,17 +1,24 @@
 package tables
 
 import (
-	"database/sql"
 	"errors"
 	"io/ioutil"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/cdbconn"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
 )
 
 // ExecuteSQL executes the SQL file passed in the path variable
-func ExecuteSQL(db *sql.DB, sqlFilePath string) error {
+func ExecuteSQL(c config.Configuration, sqlFilePath string) error {
 	log.Printf("Executing the SQL File: %s", sqlFilePath)
+
+	db, err := cdbconn.CreateConnection(c.HostNode)
+	if err != nil {
+		panic("load function couldn't create a connection to the server")
+	}
 
 	sqlFile, err := os.Open(sqlFilePath)
 	if err != nil {

@@ -1,10 +1,8 @@
-package main
+package rawtables
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
 	"sort"
 	"strings"
 
@@ -13,48 +11,34 @@ import (
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/tables"
 )
 
-func load(c config.Configuration) {
-	fmt.Printf("Executing the SQL: scripts/sql/raw/drop-partitions.sql")
-	if err := tables.ExecuteSQLForPartitions(c, 10, 10, "scripts/sql/raw/drop-partitions.sql"); err != nil {
-		fmt.Println(err)
-		return
+// LoadParent loads parent tables
+func LoadParent(c config.Configuration) error {
+	log.Println("Loading parent tables...")
+
+	if err := tables.ExecuteSQL(c, "scripts/sql/raw/load.sql"); err != nil {
+		log.Fatalf("error occured while loading raw tables. Err: %v", err)
+		return err
 	}
 
-	sqlScripts := []string{
-		"scripts/sql/raw/drop.sql",
-		"scripts/sql/raw/create.sql",
-		"scripts/sql/raw/load.sql",
-		"scripts/sql/raw/update.sql",
-	}
+	log.Println("Loaded all the parent tables...")
+	return nil
+}
 
-	for _, value := range sqlScripts {
-		fmt.Printf("\nExecuting the SQL: %s", value)
-		if err := tables.ExecuteSQL(c, value); err != nil {
-			fmt.Println(err)
-			return
-		}
-	}
+// LoadPartitions loads partitioned tables
+func LoadPartitions(c config.Configuration) error {
+	log.Println("Loading partitions of a table...")
 
-	sqlScripts = []string{
-		"scripts/sql/raw/create-partitions.sql",
-		"scripts/sql/raw/load-partitions.sql",
-		"scripts/sql/raw/update-partitions.sql",
-	}
-
-	for _, value := range sqlScripts {
-		fmt.Printf("\nExecuting the SQL: %s", value)
-		if err := tables.ExecuteSQLForPartitions(c, 10, 10, value); err != nil {
-			fmt.Println(err)
-			return
-		}
+	if err := tables.ExecuteSQLForPartitions(c, 10, 10, "scripts/sql/raw/load-partitions.sql"); err != nil {
+		log.Fatalf("error occured while loading partitions. Err: %v", err)
+		return err
 	}
 
 	if err := loadOrderItemsCustomerPair(c); err != nil {
 		log.Fatalf("error in loadOrderItemsCustomerPair. Err: %v", err)
 	}
 
-	log.Println("Initialization Complete!")
-	fmt.Println("\nInitialization Complete!")
+	log.Println("Loaded all the partitions of the tables...")
+	return nil
 }
 
 func loadOrderItemsCustomerPair(c config.Configuration) error {
@@ -138,70 +122,4 @@ func loadOrderItemsCustomerPairParallel(c config.Configuration, w, d int, orderT
 
 	log.Printf("Executed partition: %d %d", w, d)
 	ch <- true
-}
-
-func loadCSV(c config.Configuration) {
-	log.Printf("Starting the load of tables using CSV")
-	log.Printf("Starting the load of unpartitioned tables using CSV")
-	sqlScript := "scripts/sql/load-csv.sql"
-
-	sqlFile, err := os.Open(sqlScript)
-	if err != nil {
-		log.Fatalf("Err: %v", err)
-		return
-	}
-	defer sqlFile.Close()
-
-	byteValue, _ := ioutil.ReadAll(sqlFile)
-	sqlStatement := string(byteValue)
-
-	db, err := cdbconn.CreateConnection(c.HostNode)
-	if err != nil {
-		panic("load function couldn't create a connection to the server")
-	}
-
-	if _, err := db.Exec(sqlStatement); err != nil {
-		log.Fatalf("couldn't load the raw tables. Err: %v", err)
-		return
-	}
-
-	log.Printf("Completing the load of unpartitioned tables using CSV")
-	loadPartitionsCSV(c)
-	log.Printf("Completed the load of table partitions using CSV")
-}
-
-func loadPartitionsCSV(c config.Configuration) {
-	log.Printf("Starting the table partitions using CSV")
-	sqlScript := "scripts/sql/load-partitions-csv.sql"
-
-	sqlFile, err := os.Open(sqlScript)
-	if err != nil {
-		log.Fatalf("Err: %v", err)
-		return
-	}
-	defer sqlFile.Close()
-
-	byteValue, _ := ioutil.ReadAll(sqlFile)
-	baseSQLStatement := string(byteValue)
-
-	db, err := cdbconn.CreateConnection(c.HostNode)
-	if err != nil {
-		panic("load function couldn't create a connection to the server")
-	}
-
-	for w := 1; w <= 10; w++ {
-		for d := 1; d <= 10; d++ {
-			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "ORDERS_FILE_PATH", fmt.Sprintf("order/%d_%d", w, d))
-			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "ORDER_LINE_FILE_PATH", fmt.Sprintf("orderline/%d_%d", w, d))
-			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "ORDER_ITEMS_CUSTOMERS_FILE_PATH", fmt.Sprintf("itempairs/%d_%d", w, d))
-
-			_, err := db.Exec(finalSQLStatement)
-			if err != nil {
-				log.Fatalf("couldn't load the table: %d %d. Err: %v", w, d, err)
-			}
-			log.Printf("Completed Partition: %d %d", w, d)
-		}
-	}
-
-	log.Printf("Completed the load of table partitions using CSV")
 }
