@@ -25,8 +25,8 @@ func NewPaymentController(cassandraSession *common.CassandraSession) PaymentCont
 
 func (p *paymentControllerImpl) HandleTransaction(cmd []string) {
 	request := makePaymentRequest(cmd)
-	response, _ := p.s.ProcessPaymentTransaction(request)
-	printPaymentResponse(response)
+	p.s.ProcessPaymentTransaction(request)
+	//printPaymentResponse(response)
 }
 
 func makePaymentRequest(cmd []string) *model.PaymentRequest {

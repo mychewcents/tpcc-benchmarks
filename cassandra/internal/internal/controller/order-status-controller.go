@@ -25,8 +25,8 @@ func NewOrderStatusTransactionController(cassandraSession *common.CassandraSessi
 
 func (n *orderStatusControllerImpl) HandleTransaction(cmd []string) {
 	request := makeOrderStatusRequest(cmd)
-	response, _ := n.s.ProcessOrderStatusTransaction(request)
-	printOrderStatusResponse(response)
+	n.s.ProcessOrderStatusTransaction(request)
+	//printOrderStatusResponse(response)
 }
 
 func makeOrderStatusRequest(cmd []string) *model.OrderStatusRequest {

@@ -53,7 +53,7 @@ func RecordDBState(db *sql.DB, experiment int, path string) error {
 	}
 	log.Printf("Stock State: %d, %d, %d, %d ", totalStockQuantity, totalYTD, totalOrderCount, totalRemoteCount)
 
-	outputStr := fmt.Sprintf("%d,%f,%f,%d,%f,%f,%d,%d,%d,%d,%f,%d,%d,%d,%d,%d",
+	outputStr := fmt.Sprintf("%d,%f,%f,%d,%f,%f,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f",
 		experiment,
 		sumYTDWarehouse,
 		sumYTDDistrict,

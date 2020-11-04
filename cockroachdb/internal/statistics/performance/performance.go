@@ -38,7 +38,7 @@ func RecordPerformanceMetrics(experiment, client int, latencies []float64, path 
 	// outputStr.WriteString(fmt.Sprintf("p99 Latency(ms): %fms\n", p99))
 	// outputStr.WriteString(fmt.Sprintf("p95 Latency(ms): %fms", p95))
 
-	outputStr := fmt.Sprintf("%d,%d,%d,%f,%f,%f,%f,%f,%f", experiment, client, processedTxs, elapsedTime/1000, throughput, avgLatency, medianLatency, p99, p95)
+	outputStr := fmt.Sprintf("%d,%d,%d,%f,%f,%f,%f,%f,%f", experiment, client, processedTxs, elapsedTime/1000, throughput, avgLatency, medianLatency, p95, p99)
 
 	log.Println(outputStr)
 	csvFile, err := os.Create(fmt.Sprintf("%s/%d_%d.csv", path, experiment, client))

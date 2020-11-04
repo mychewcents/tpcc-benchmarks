@@ -22,12 +22,14 @@ func MakeCassandraSession(path string) *CassandraSession {
 	readCluster := gocql.NewCluster(cassandraConfig.Hosts...)
 	readCluster.Keyspace = "cassandra"
 	readCluster.Timeout = time.Minute * 2
-	readCluster.NumConns = 10
+	readCluster.NumConns = 2
+	readCluster.RetryPolicy = &gocql.SimpleRetryPolicy{NumRetries: 3}
 	if strings.ToUpper(cassandraConfig.ReadConsistency) == "ONE" {
-		readCluster.Consistency = gocql.One
+		readCluster.Consistency = gocql.LocalOne
 	} else {
-		readCluster.Consistency = gocql.Quorum
+		readCluster.Consistency = gocql.LocalQuorum
 	}
+	readCluster.SerialConsistency = gocql.LocalSerial
 	readSession, err := readCluster.CreateSession()
 	if err != nil {
 		panic("error creating cassandra session for read")
@@ -36,12 +38,14 @@ func MakeCassandraSession(path string) *CassandraSession {
 	writeCluster := gocql.NewCluster(cassandraConfig.Hosts...)
 	writeCluster.Keyspace = "cassandra"
 	writeCluster.Timeout = time.Minute * 2
-	readCluster.NumConns = 10
-	if strings.ToUpper(cassandraConfig.WriteConsistency) == "ONE" {
-		writeCluster.Consistency = gocql.One
+	writeCluster.NumConns = 2
+	writeCluster.RetryPolicy = &gocql.SimpleRetryPolicy{NumRetries: 3}
+	if strings.ToUpper(cassandraConfig.WriteConsistency) == "ALL" {
+		writeCluster.Consistency = gocql.All
 	} else {
-		writeCluster.Consistency = gocql.Quorum
+		writeCluster.Consistency = gocql.LocalQuorum
 	}
+	writeCluster.SerialConsistency = gocql.LocalSerial
 	writeSession, err := writeCluster.CreateSession()
 	if err != nil {
 		panic("error creating cassandra session for write")
