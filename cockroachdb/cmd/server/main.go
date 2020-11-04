@@ -63,6 +63,9 @@ func main() {
 	case "load":
 		load(c)
 		return
+	case "load-csv":
+		loadCSV(c)
+		return
 	case "run-exp":
 		cmd = run(c)
 	case "export":

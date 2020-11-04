@@ -3,7 +3,9 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
 	"sort"
 	"strings"
 
@@ -126,4 +128,38 @@ func loadOrderItemsCustomerPair(db *sql.DB, warehouses int) error {
 	log.Println("Completed the load of Items Customer Pair")
 
 	return nil
+}
+
+func loadCSV(c config.Configuration) {
+	sqlScript := "scripts/sql/load-partitions-csv.sql"
+
+	sqlFile, err := os.Open(sqlScript)
+	if err != nil {
+		log.Fatalf("Err: %v", err)
+		return
+	}
+	defer sqlFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(sqlFile)
+	baseSQLStatement := string(byteValue)
+
+	db, err := cdbconn.CreateConnection(c.HostNode)
+	if err != nil {
+		panic("load function couldn't create a connection to the server")
+	}
+
+	for w := 1; w <= 10; w++ {
+		for d := 1; d <= 10; d++ {
+			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "ORDERS_FILE_PATH", fmt.Sprintf("order/%d_%d", w, d))
+			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "ORDER_LINE_FILE_PATH", fmt.Sprintf("orderline/%d_%d", w, d))
+			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "ORDER_ITEMS_CUSTOMERS_FILE_PATH", fmt.Sprintf("itempairs/%d_%d", w, d))
+
+			_, err := db.Exec(finalSQLStatement)
+			if err != nil {
+				log.Fatalf("couldn't load the table: %d %d. Err: %v", w, d, err)
+			}
+			log.Printf("Completed Partition: %d %d", w, d)
+		}
+	}
+
 }
