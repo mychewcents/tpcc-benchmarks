@@ -21,7 +21,7 @@ func load(c config.Configuration) {
 	}
 
 	fmt.Printf("Executing the SQL: scripts/sql/raw/drop-partitions.sql")
-	if err := tables.ExecuteSQLForPartitions(db, 10, 10, "scripts/sql/raw/drop-partitions.sql"); err != nil {
+	if err := tables.ExecuteSQLForPartitions(c, 10, 10, "scripts/sql/raw/drop-partitions.sql"); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -35,7 +35,7 @@ func load(c config.Configuration) {
 
 	for _, value := range sqlScripts {
 		fmt.Printf("\nExecuting the SQL: %s", value)
-		if err := tables.ExecuteSQL(db, value); err != nil {
+		if err := tables.ExecuteSQL(c, value); err != nil {
 			fmt.Println(err)
 			return
 		}
@@ -49,7 +49,7 @@ func load(c config.Configuration) {
 
 	for _, value := range sqlScripts {
 		fmt.Printf("\nExecuting the SQL: %s", value)
-		if err := tables.ExecuteSQLForPartitions(db, 10, 10, value); err != nil {
+		if err := tables.ExecuteSQLForPartitions(c, 10, 10, value); err != nil {
 			fmt.Println(err)
 			return
 		}
