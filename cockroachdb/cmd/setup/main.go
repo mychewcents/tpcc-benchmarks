@@ -58,5 +58,5 @@ func main() {
 		return
 	}
 	log.Printf("Command finished")
-	fmt.Printf("Command Finished")
+	fmt.Println("Command Finished")
 }
