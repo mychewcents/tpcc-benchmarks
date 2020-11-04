@@ -10,7 +10,7 @@ import (
 
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/cdbconn"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/init/tables"
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/tables"
 )
 
 func load(c config.Configuration) {
