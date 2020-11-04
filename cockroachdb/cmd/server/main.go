@@ -73,6 +73,7 @@ func main() {
 			log.Fatalf("Err: %v", err)
 			return
 		}
+		return
 	case "run-exp":
 		cmd = run(c)
 	case "export":
