@@ -45,8 +45,8 @@ func init() {
 }
 
 func main() {
-	var txArgs []string
 	log.Printf("Starting the experiment: '%d' on node: '%d' ", *experiment, *nodeID)
+	var txArgs []string
 
 	c := config.GetConfig(*configFilePath, *nodeID)
 	db, err := cdbconn.CreateConnection(c.HostNode)
