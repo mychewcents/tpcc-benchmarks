@@ -27,11 +27,15 @@ type itemObject struct {
 
 // ProcessTransaction process the new order transaction
 func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, args []string) bool {
+
 	customerID, _ := strconv.Atoi(args[0])
 	warehouseID, _ := strconv.Atoi(args[1])
 	districtID, _ := strconv.Atoi(args[2])
 	numOfItems, _ := strconv.Atoi(args[3])
 
+	log.Printf("Starting the New Order Transaction for row: c=%d w=%d d=%d n=%d", customerID, warehouseID, districtID, numOfItems)
+
+	log.Printf("Pre-processing the input data...")
 	orderLineObjects := make([]*itemObject, numOfItems)
 	orderItems := make([]int, numOfItems)
 
@@ -76,10 +80,19 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, args []string) bool 
 	orderItems = orderItems[0:totalUniqueItems]
 	sort.Ints(orderItems)
 
-	return execute(db, warehouseID, districtID, customerID, totalUniqueItems, isLocal, totalUniqueItems, orderLineObjects, orderItems)
+	log.Printf("Completed pre-processing the input data...")
+
+	if err := execute(db, warehouseID, districtID, customerID, totalUniqueItems, isLocal, totalUniqueItems, orderLineObjects, orderItems); err != nil {
+		log.Fatalf("error occured while executing the new order transaction. Err: %v", err)
+		return false
+	}
+
+	log.Printf("Completed the New Order Transaction for row: c=%d w=%d d=%d n=%d", customerID, warehouseID, districtID, numOfItems)
+	return true
 }
 
-func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal, totalUniqueItems int, orderLineObjects []*itemObject, sortedOrderItems []int) bool {
+func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal, totalUniqueItems int, orderLineObjects []*itemObject, sortedOrderItems []int) error {
+	log.Printf("Executing the transaction with the input data...")
 
 	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)
 	orderLineTable := fmt.Sprintf("ORDER_LINE_%d_%d", warehouseID, districtID)
@@ -91,8 +104,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 	var districtTax, warehouseTax float64
 	row := db.QueryRow(sqlStatement)
 	if err := row.Scan(&newOrderID, &districtTax, &warehouseTax); err != nil {
-		log.Fatalf("%v", err)
-		return false
+		return fmt.Errorf("error occured in updating the district table for the next order id. Err: %v", err)
 	}
 
 	var cLastName, cCredit string
@@ -102,8 +114,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 	row = db.QueryRow(sqlStatement)
 
 	if err := row.Scan(&cLastName, &cCredit, &cDiscount); err != nil {
-		log.Fatalf("%v", err)
-		return false
+		return fmt.Errorf("error occured in getting the customer details. Err: %v", err)
 	}
 
 	var totalAmount float64
@@ -117,14 +128,19 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 		}
 	}
 
+	// var ch chan bool
 	err := crdb.ExecuteTx(context.Background(), db, nil, func(tx *sql.Tx) error {
 		var orderLineEntries []string
 
+		log.Printf("Starting the insert of the Item Pair for the customer: c=%d w=%d d=%d ", customerID, warehouseID, districtID)
+		insertItemPairsParallel(tx, orderItemCustomerPairTable, orderItemCustomerPair.String())
+
 		for key, value := range orderLineObjects {
+
 			sqlStatement = fmt.Sprintf("SELECT S_I_NAME, S_I_PRICE, S_QUANTITY, S_DIST_%02d FROM STOCK WHERE S_W_ID = %d AND S_I_ID = %d", districtID, value.supplier, value.id)
 			row = tx.QueryRow(sqlStatement)
 			if err := row.Scan(&value.name, &value.price, &value.startStock, &value.data); err != nil {
-				return err
+				return fmt.Errorf("error in getting the stock details for the item: w=%d id=%d \nErr: %v", value.supplier, value.id, err)
 			}
 
 			adjustedQty := value.startStock - value.quantity
@@ -142,7 +158,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 			)
 
 			if _, err := tx.Exec(sqlStatement); err != nil {
-				return err
+				return fmt.Errorf("error in updating the stock details for the item: w=%d id=%d \nErr: %v", value.supplier, value.id, err)
 			}
 
 			orderLineAmount := value.price * float64(value.quantity)
@@ -166,37 +182,44 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 
 		sqlStatement = fmt.Sprintf("INSERT INTO %s (O_ID, O_D_ID, O_W_ID, O_C_ID, O_OL_CNT, O_ALL_LOCAL, O_TOTAL_AMOUNT) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING O_ENTRY_D", orderTable)
 
+		totalAmount = totalAmount * (1.0 + districtTax + warehouseTax) * (1.0 - cDiscount)
+
 		row = tx.QueryRow(sqlStatement, newOrderID, districtID, warehouseID, customerID, totalUniqueItems, isLocal, totalAmount)
 		if err := row.Scan(&orderTimestamp); err != nil {
-			return err
+			return fmt.Errorf("error in inserting new order row: w=%d d=%d o=%d \n Err: %v", warehouseID, districtID, newOrderID, err)
 		}
 
 		sqlStatement = fmt.Sprintf("INSERT INTO %s (OL_O_ID, OL_D_ID, OL_W_ID, OL_NUMBER, OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DIST_INFO) VALUES %s",
 			orderLineTable, strings.Join(orderLineEntries, ", "))
 
 		if _, err := tx.Exec(sqlStatement); err != nil {
-			return err
-		}
-
-		sqlStatement = fmt.Sprintf("UPSERT INTO %s (IC_W_ID, IC_D_ID, IC_C_ID, IC_I_1_ID, IC_I_2_ID) VALUES %s", orderItemCustomerPairTable, orderItemCustomerPair.String())
-		sqlStatement = sqlStatement[0 : len(sqlStatement)-1]
-
-		if _, err := tx.Exec(sqlStatement); err != nil {
-			return err
+			return fmt.Errorf("error in inserting new order line rows: w=%d d=%d o=%d \n Err: %v", warehouseID, districtID, newOrderID, err)
 		}
 
 		return nil
 	})
 	if err != nil {
-		log.Fatalf("%v", err)
-		return false
+		return fmt.Errorf("error occured in updating the order/order lines/item pairs table. Err: %v", err)
 	}
-
-	totalAmount = totalAmount * (1.0 + districtTax + warehouseTax) * (1.0 - cDiscount)
 
 	// printOutputState(warehouseID, districtID, customerID, cLastName, cCredit, cDiscount,
 	// 	newOrderID, orderTimestamp, totalUniqueItems, totalAmount, orderLineObjects)
-	return true
+	log.Printf("Completed executing the transaction with the input data...")
+	return nil
+}
+
+func insertItemPairsParallel(tx *sql.Tx, orderItemCustomerPairTable string, orderItemCustomerPair string) {
+	log.Printf("Inserting the item pairs")
+	sqlStatement := fmt.Sprintf("UPSERT INTO %s (IC_W_ID, IC_D_ID, IC_C_ID, IC_I_1_ID, IC_I_2_ID) VALUES %s", orderItemCustomerPairTable, orderItemCustomerPair)
+	sqlStatement = sqlStatement[0 : len(sqlStatement)-1]
+
+	if _, err := tx.Exec(sqlStatement); err != nil {
+		// ch <- false
+		log.Fatalf("error occured in the item pairs for customers. Err: %v", err)
+	}
+
+	log.Printf("Completed inserting the item pairs")
+	// ch <- true
 }
 
 func printOutputState(warehouseID, districtID, customerID int, cLastName, cCredit string, cDiscount float64,
