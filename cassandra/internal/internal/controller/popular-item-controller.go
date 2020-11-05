@@ -25,8 +25,8 @@ func NewPopularItemController(cassandraSession *common.CassandraSession) Popular
 
 func (p *popularItemControllerImpl) HandleTransaction(cmd []string) {
 	request := makePopularItemRequest(cmd)
-	p.s.ProcessPopularItemService(request)
-	//printPopularItemResponse(response)
+	response, _ := p.s.ProcessPopularItemService(request)
+	printPopularItemResponse(response)
 }
 
 func makePopularItemRequest(cmd []string) *model.PopularItemRequest {

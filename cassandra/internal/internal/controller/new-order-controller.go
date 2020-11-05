@@ -29,8 +29,8 @@ func NewNewOrderTransactionController(cassandraSession *common.CassandraSession,
 
 func (n *newOrderControllerImpl) HandleTransaction(cmd []string) {
 	request := makeNewOrderRequest(cmd, n.r)
-	n.s.ProcessNewOrderTransaction(request)
-	//printNewOrderResponse(resp)
+	resp, _ := n.s.ProcessNewOrderTransaction(request)
+	printNewOrderResponse(resp)
 }
 
 func makeNewOrderRequest(cmd []string, r *bufio.Reader) *model.NewOrderRequest {

@@ -23,8 +23,8 @@ func NewTopBalanceController(cassandraSession *common.CassandraSession) TopBalan
 }
 
 func (t *topBalanceControllerImpl) HandleTransaction(cmd []string) {
-	t.s.ProcessTopBalanceTransaction()
-	//printTopBalanceResponse(response)
+	response, _ := t.s.ProcessTopBalanceTransaction()
+	printTopBalanceResponse(response)
 }
 
 func printTopBalanceResponse(r *model.TopBalanceResponse) {
