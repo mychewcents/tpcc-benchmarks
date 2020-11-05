@@ -25,8 +25,8 @@ func NewStockLevelController(cassandraSession *common.CassandraSession) StockLev
 
 func (s *stockLevelControllerImpl) HandleTransaction(cmd []string) {
 	request := makeStockLevelRequest(cmd)
-	s.s.ProcessStockLevelTransaction(request)
-	//printStockLevelResponse(response)
+	response, _ := s.s.ProcessStockLevelTransaction(request)
+	printStockLevelResponse(response)
 }
 
 func makeStockLevelRequest(cmd []string) *model.StockLevelRequest {
