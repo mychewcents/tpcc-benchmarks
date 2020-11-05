@@ -128,12 +128,12 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 		}
 	}
 
-	var ch chan bool
+	// var ch chan bool
 	err := crdb.ExecuteTx(context.Background(), db, nil, func(tx *sql.Tx) error {
 		var orderLineEntries []string
 
 		log.Printf("Starting the insert of the Item Pair for the customer: c=%d w=%d d=%d ", customerID, warehouseID, districtID)
-		go insertItemPairsParallel(tx, orderItemCustomerPairTable, orderItemCustomerPair.String(), ch)
+		insertItemPairsParallel(tx, orderItemCustomerPairTable, orderItemCustomerPair.String())
 
 		for key, value := range orderLineObjects {
 
@@ -196,16 +196,6 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 			return fmt.Errorf("error in inserting new order line rows: w=%d d=%d o=%d \n Err: %v", warehouseID, districtID, newOrderID, err)
 		}
 
-		if !<-ch {
-			return fmt.Errorf("error occurred when inserting multiple item customer pairs")
-		}
-		// sqlStatement = fmt.Sprintf("UPSERT INTO %s (IC_W_ID, IC_D_ID, IC_C_ID, IC_I_1_ID, IC_I_2_ID) VALUES %s", orderItemCustomerPairTable, orderItemCustomerPair.String())
-		// sqlStatement = sqlStatement[0 : len(sqlStatement)-1]
-
-		// if _, err := tx.Exec(sqlStatement); err != nil {
-		// 	return err
-		// }
-
 		return nil
 	})
 	if err != nil {
@@ -218,18 +208,18 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 	return nil
 }
 
-func insertItemPairsParallel(tx *sql.Tx, orderItemCustomerPairTable string, orderItemCustomerPair string, ch chan bool) {
+func insertItemPairsParallel(tx *sql.Tx, orderItemCustomerPairTable string, orderItemCustomerPair string) {
 	log.Printf("Inserting the item pairs")
 	sqlStatement := fmt.Sprintf("UPSERT INTO %s (IC_W_ID, IC_D_ID, IC_C_ID, IC_I_1_ID, IC_I_2_ID) VALUES %s", orderItemCustomerPairTable, orderItemCustomerPair)
 	sqlStatement = sqlStatement[0 : len(sqlStatement)-1]
 
 	if _, err := tx.Exec(sqlStatement); err != nil {
+		// ch <- false
 		log.Fatalf("error occured in the item pairs for customers. Err: %v", err)
-		ch <- false
 	}
 
 	log.Printf("Completed inserting the item pairs")
-	ch <- true
+	// ch <- true
 }
 
 func printOutputState(warehouseID, districtID, customerID int, cLastName, cCredit string, cDiscount float64,
