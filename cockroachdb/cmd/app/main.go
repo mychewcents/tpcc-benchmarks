@@ -45,6 +45,7 @@ func init() {
 }
 
 func main() {
+	log.Printf("Starting the experiment: '%d' on node: '%d' ", *experiment, *nodeID)
 	var txArgs []string
 
 	c := config.GetConfig(*configFilePath, *nodeID)
@@ -65,7 +66,10 @@ func main() {
 		}
 	}
 	if err := performance.RecordPerformanceMetrics(*experiment, *client, latencies, "results/metrics"); err != nil {
-		log.Fatalf("Error in performance recording. Err: %v", err)
-		fmt.Println(err)
+		log.Fatalf("error in performance recording. Err: %v", err)
+		fmt.Println("error occurred in performance recording. Please check the logs")
+		return
 	}
+
+	log.Printf("Successfully completed the experiment: '%d' on node: '%d' ", *experiment, *nodeID)
 }
