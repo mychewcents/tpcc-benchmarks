@@ -27,10 +27,19 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 	districtID, _ := strconv.Atoi(transactionArgs[1])
 	lastNOrders, _ := strconv.Atoi(transactionArgs[2])
 
-	return execute(db, warehouseID, districtID, lastNOrders)
+	log.Printf("Starting the Popular Item Transaction for: w=%d d=%d n=%d", warehouseID, districtID, lastNOrders)
+
+	if err := execute(db, warehouseID, districtID, lastNOrders); err != nil {
+		log.Fatalf("error occurred while executing the popular item transaction. Err: %v", err)
+		return false
+	}
+
+	log.Printf("Completed the Popular Item Transaction for: w=%d d=%d n=%d", warehouseID, districtID, lastNOrders)
+	return true
 }
 
-func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) bool {
+func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) error {
+	log.Printf("Executing the transaction with the input data...")
 	var lastOrderID, startOrderID int
 
 	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)
@@ -39,8 +48,7 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) bool {
 	row := db.QueryRow("SELECT d_next_o_id FROM district WHERE d_w_id=$1 AND d_id=$2", warehouseID, districtID)
 
 	if err := row.Scan(&lastOrderID); err != nil {
-		log.Fatalf("%v", err)
-		return false
+		return fmt.Errorf("error occured in getting the last order id. Err: %v", err)
 	}
 
 	startOrderID = lastOrderID - lastNOrders
@@ -56,8 +64,7 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) bool {
 
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
-		log.Fatalf("%v", err)
-		return false
+		return fmt.Errorf("error occured in getting the maximum order line quantity. Err: %v", err)
 	}
 	defer rows.Close()
 
@@ -71,16 +78,14 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) bool {
 		var cFirst, cMiddle, cLast, orderTimestamp string
 
 		if err = rows.Scan(&orderID, &maxQuantity); err != nil {
-			log.Fatalf("%v", err)
-			return false
+			return fmt.Errorf("error occured in reading the max order line quantity. Err: %v", err)
 		}
 
 		sqlStatement = fmt.Sprintf("SELECT O_C_ID, O_ENTRY_D FROM %s WHERE O_ID = %d", orderTable, orderID)
 
 		row = db.QueryRow(sqlStatement)
 		if err = row.Scan(&customerID, &orderTimestamp); err != nil {
-			log.Fatalf("%v", err)
-			return false
+			return fmt.Errorf("error occured in getting the details from orders table. Err: %v", err)
 		}
 
 		// Fetch the Customer Information
@@ -89,8 +94,7 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) bool {
 		row = db.QueryRow(sqlStatement)
 
 		if err = row.Scan(&cFirst, &cMiddle, &cLast); err != nil {
-			log.Fatalf("%v", err)
-			return false
+			return fmt.Errorf("error occured in getting the customer details. Err: %v", err)
 		}
 
 		// Fetch the Item Information
@@ -98,8 +102,7 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) bool {
 
 		items, err := db.Query(sqlStatement)
 		if err != nil {
-			log.Fatalf("%v", err)
-			return false
+			return fmt.Errorf("error occurred in getting the item details. Err: %v", err)
 		}
 		defer items.Close()
 
@@ -111,8 +114,7 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) bool {
 			var name string
 
 			if err = items.Scan(&id, &name); err != nil {
-				log.Fatalf("%v", err)
-				return false
+				return fmt.Errorf("error occurred in scanning the item details. Err: %v", err)
 			}
 
 			itemIDs, itemNames = append(itemIDs, id), append(itemNames, name)
@@ -136,9 +138,9 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) bool {
 		}
 	}
 
-	// fmt.Println("Done")
 	// printOutputState(warehouseID, districtID, startOrderID, lastOrderID, lastNOrder, ordersMap, itemOccurrancePercentageMap)
-	return true
+	log.Printf("Completed executing the transaction with the input data...")
+	return nil
 }
 
 func printOutputState(warehouseID, districtID, startOrderID, lastOrderID, lastNOrder int, ordersMap map[int]details, itemOccurrancePercentageMap map[int]itemPercentageName) {

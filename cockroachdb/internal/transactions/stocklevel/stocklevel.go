@@ -15,17 +15,24 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 	threshold, _ := strconv.Atoi(transactionArgs[2])
 	lastNOrders, _ := strconv.Atoi(transactionArgs[3])
 
-	return execute(db, warehouseID, districtID, threshold, lastNOrders)
+	log.Printf("Starting the Stock Level Transaction for: w=%d d=%d t=%d n=%d", warehouseID, districtID, threshold, lastNOrders)
+	if err := execute(db, warehouseID, districtID, threshold, lastNOrders); err != nil {
+		log.Fatalf("error occurred while executing stock level transaction. Err: %v", err)
+		return false
+	}
+
+	log.Printf("Completed the Stock Level Transaction for: w=%d d=%d t=%d n=%d", warehouseID, districtID, threshold, lastNOrders)
+	return true
 }
 
-func execute(db *sql.DB, warehouseID, districtID, threshold, lastNOrders int) bool {
+func execute(db *sql.DB, warehouseID, districtID, threshold, lastNOrders int) error {
+	log.Printf("Executing the transaction with the input data...")
 	var totalItems, lastOrderID int
 
 	row := db.QueryRow("SELECT d_next_o_id FROM district WHERE d_w_id=$1 AND d_id=$2", warehouseID, districtID)
 
 	if err := row.Scan(&lastOrderID); err != nil {
-		log.Fatalf("%v", err)
-		return false
+		return fmt.Errorf("error occurred in getting the next order id for the district. Err: %v", err)
 	}
 
 	startOrderID := lastOrderID - lastNOrders
@@ -42,14 +49,13 @@ func execute(db *sql.DB, warehouseID, districtID, threshold, lastNOrders int) bo
 	)
 
 	row = db.QueryRow(sqlStatement)
-
-	if err := row.Scan(&totalItems); err != nil {
-		log.Fatalf("%v", err)
-		return false
+	if err := row.Scan(&totalItems); err != nil && err != sql.ErrNoRows {
+		return fmt.Errorf("error occured in scanning the total items. Err: %v", err)
 	}
 
 	// printOutputState(totalItems, lastOrderID-lastNOrders, lastOrderID)
-	return true
+	log.Printf("Completed executing the transaction with the input data...")
+	return nil
 }
 
 func printOutputState(totalItems, startOrderID, endOrderID int) {

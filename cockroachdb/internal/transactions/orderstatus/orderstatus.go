@@ -22,11 +22,19 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 	districtID, _ := strconv.Atoi(transactionArgs[1])
 	customerID, _ := strconv.Atoi(transactionArgs[2])
 
-	return execute(db, warehouseID, districtID, customerID)
+	log.Printf("Starting the Order Status Transaction for: w=%d d=%d c=%d", warehouseID, districtID, customerID)
+
+	if err := execute(db, warehouseID, districtID, customerID); err != nil {
+		log.Fatalf("error occured while executing the order status transaction. Err: %v", err)
+		return false
+	}
+
+	log.Printf("Completed the Order Status Transaction for: w=%d d=%d c=%d", warehouseID, districtID, customerID)
+	return true
 }
 
-func execute(db *sql.DB, warehouseID int, districtID int, customerID int) bool {
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
+func execute(db *sql.DB, warehouseID int, districtID int, customerID int) error {
+	log.Printf("Executing the transaction with the input data...")
 
 	lastOrderQuery := fmt.Sprintf("SELECT O_ID, O_DELIVERY_D, O_ENTRY_D, O_CARRIER_ID FROM ORDERS_%d_%d WHERE O_C_ID=%d ORDER BY O_ID DESC LIMIT 1",
 		warehouseID, districtID, customerID)
@@ -36,8 +44,7 @@ func execute(db *sql.DB, warehouseID int, districtID int, customerID int) bool {
 	var first, middle, last string
 	var balance float64
 	if err := db.QueryRow(customerExistsQuery).Scan(&first, &middle, &last, &balance); err != nil {
-		log.Fatal(err)
-		return false
+		return fmt.Errorf("error occured in getting the customers. Err: %v", err)
 	}
 
 	var orderLines []orderItem
@@ -46,25 +53,26 @@ func execute(db *sql.DB, warehouseID int, districtID int, customerID int) bool {
 	var deliveryDate, entryDate sql.NullString
 	err := crdb.ExecuteTx(context.Background(), db, nil, func(tx *sql.Tx) error {
 		if err := tx.QueryRow(lastOrderQuery).Scan(&lastOrderID, &deliveryDate, &entryDate, &carrierID); err != nil {
-			return err
+			return fmt.Errorf("error occurred in getting the customers. Err: %v", err)
 		}
 		rows, err := db.Query(fmt.Sprintf(orderLinesQuery, warehouseID, districtID, lastOrderID))
 		if err != nil {
-			return err
+			return fmt.Errorf("error occurred in getting the order lines. Err: %v", err)
 		}
+		defer rows.Close()
+
 		for rows.Next() {
 			var orderLine orderItem
 			if err := rows.Scan(&orderLine.itemID, &orderLine.supplyWHNumber, &orderLine.quantity, &orderLine.itemAmount); err != nil {
-				return err
+				return fmt.Errorf("error occurred in scanning the order line return results. Err: %v", err)
 			}
 			orderLines = append(orderLines, orderLine)
 		}
-		defer rows.Close()
+
 		return nil
 	})
 	if err != nil {
-		log.Fatal(err)
-		return false
+		return fmt.Errorf("error occured while reading the tables. Err: %v", err)
 	}
 
 	// output := "Customer name: %s %s %s \nBalance: %f\nOrder: %d\nEntry date: %s\nCarrier: %s\n"
@@ -87,5 +95,7 @@ func execute(db *sql.DB, warehouseID int, districtID int, customerID int) bool {
 	// } else {
 	// 	fmt.Println(fmt.Sprintf(output, first, middle, last, balance, lastOrderID, entryDate.String, "null"))
 	// }
-	return true
+
+	log.Printf("Completed executing the transaction with the input data...")
+	return nil
 }

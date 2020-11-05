@@ -15,10 +15,19 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 	districtID, _ := strconv.Atoi(transactionArgs[1])
 	customerID, _ := strconv.Atoi(transactionArgs[2])
 
-	return execute(db, warehouseID, districtID, customerID)
+	log.Printf("Starting the Related Customer Transaction for: w=%d d=%d c=%d", warehouseID, districtID, customerID)
+
+	if err := execute(db, warehouseID, districtID, customerID); err != nil {
+		log.Fatalf("error occurred in executing the related customer transaction. Err: %v", err)
+		return false
+	}
+
+	log.Printf("Completed the Related Customer Transaction for: w=%d d=%d c=%d", warehouseID, districtID, customerID)
+	return true
 }
 
-func execute(db *sql.DB, warehouseID, districtID, customerID int) bool {
+func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
+	log.Printf("Executing the transaction with the input data...")
 
 	relatedCustomerIdentifiers := make(map[int]map[int]map[int]bool)
 	orderItemCustomerPairTable := "ORDER_ITEMS_CUSTOMERS_WID_DID"
@@ -30,18 +39,17 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) bool {
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Printf("no rows found for customer: %d %d %d", warehouseID, districtID, customerID)
-			return true
+			log.Printf("no rows found for customer")
+			return nil
 		}
-		log.Fatalf("error in fetching the order line item pairs for the asked customer: %d %d %d \n Err: %v", warehouseID, districtID, customerID, err)
-		return false
+		return fmt.Errorf("error in fetching the order line item pairs. Err: %v", err)
 	}
 
 	var itemID1, itemID2 int
 	for rows.Next() {
 		err := rows.Scan(&itemID1, &itemID2)
 		if err != nil {
-			log.Fatalf("error in fetching the reading the order line item pair: %d %d %d \n Err: %v", warehouseID, districtID, customerID, err)
+			return fmt.Errorf("error occurred in scanning the order line item pair. Err: %v", err)
 		}
 		orderLineItemPairString.WriteString(fmt.Sprintf("(IC_I_1_ID = %d AND IC_I_2_ID = %d) OR ", itemID1, itemID2))
 	}
@@ -49,15 +57,12 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) bool {
 	finalOrderLineItemPairWhereClause := orderLineItemPairString.String()
 
 	if len(finalOrderLineItemPairWhereClause) == 0 {
-		log.Fatalf("could not create the final WHERE clause script for related customer: %d %d %d", warehouseID, districtID, customerID)
-		return false
+		return fmt.Errorf("could not create the final WHERE clause script")
 	}
 
 	finalOrderLineItemPairWhereClause = finalOrderLineItemPairWhereClause[:len(finalOrderLineItemPairWhereClause)-4]
 
-	baseSQLStatement := fmt.Sprintf(`
-		SELECT IC_W_ID, IC_D_ID, IC_C_ID FROM %s p WHERE %s
-	`, orderItemCustomerPairTable, finalOrderLineItemPairWhereClause)
+	baseSQLStatement := fmt.Sprintf("SELECT IC_W_ID, IC_D_ID, IC_C_ID FROM %s p WHERE %s", orderItemCustomerPairTable, finalOrderLineItemPairWhereClause)
 
 	var cCustomerID int
 
@@ -72,14 +77,13 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) bool {
 					continue
 				}
 				if err != nil {
-					fmt.Println(err)
-					return false
+					return fmt.Errorf("error occurred in reading the related customers from table: w=%d d=%d. Err: %v", w, d, err)
 				}
 
 				for rows.Next() {
 					err := rows.Scan(&cCustomerID)
 					if err != nil {
-						fmt.Println(err)
+						return fmt.Errorf("error occurred in scanning the related customer id. Err: %v", err)
 					}
 					if !relatedCustomerIdentifiers[w][d][cCustomerID] {
 
@@ -93,12 +97,12 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) bool {
 					}
 				}
 			}
-
 		}
 	}
 
 	// printOutputState(warehouseID, districtID, customerID, relatedCustomerIdentifiers)
-	return true
+	log.Printf("Executing the transaction with the input data...")
+	return nil
 }
 
 func printOutputState(warehouseID, districtID, customerID int, relatedCustomerIdentifiers map[int]map[int]map[int]bool) {

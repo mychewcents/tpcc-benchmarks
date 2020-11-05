@@ -87,11 +87,12 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, args []string) bool 
 		return false
 	}
 
+	log.Printf("Completed the New Order Transaction for row: c=%d w=%d d=%d n=%d", customerID, warehouseID, districtID, numOfItems)
 	return true
 }
 
 func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal, totalUniqueItems int, orderLineObjects []*itemObject, sortedOrderItems []int) error {
-	log.Printf("executing the transaction with the input data...")
+	log.Printf("Executing the transaction with the input data...")
 
 	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)
 	orderLineTable := fmt.Sprintf("ORDER_LINE_%d_%d", warehouseID, districtID)
@@ -181,6 +182,8 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 
 		sqlStatement = fmt.Sprintf("INSERT INTO %s (O_ID, O_D_ID, O_W_ID, O_C_ID, O_OL_CNT, O_ALL_LOCAL, O_TOTAL_AMOUNT) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING O_ENTRY_D", orderTable)
 
+		totalAmount = totalAmount * (1.0 + districtTax + warehouseTax) * (1.0 - cDiscount)
+
 		row = tx.QueryRow(sqlStatement, newOrderID, districtID, warehouseID, customerID, totalUniqueItems, isLocal, totalAmount)
 		if err := row.Scan(&orderTimestamp); err != nil {
 			return fmt.Errorf("error in inserting new order row: w=%d d=%d o=%d \n Err: %v", warehouseID, districtID, newOrderID, err)
@@ -208,8 +211,6 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 	if err != nil {
 		return fmt.Errorf("error occured in updating the order/order lines/item pairs table. Err: %v", err)
 	}
-
-	totalAmount = totalAmount * (1.0 + districtTax + warehouseTax) * (1.0 - cDiscount)
 
 	// printOutputState(warehouseID, districtID, customerID, cLastName, cCredit, cDiscount,
 	// 	newOrderID, orderTimestamp, totalUniqueItems, totalAmount, orderLineObjects)
