@@ -29,7 +29,7 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 	log.Printf("Executing the transaction with the input data...")
 
-	relatedCustomerIdentifiers := make(map[int]map[int]map[int]bool)
+	relatedCustomerIdentifiers := make(map[int]map[int][]int)
 	orderItemCustomerPairTable := "ORDER_ITEMS_CUSTOMERS_WID_DID"
 
 	var orderLineItemPairString strings.Builder
@@ -62,7 +62,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 
 	baseSQLStatement := fmt.Sprintf("SELECT IC_C_ID FROM %s p WHERE %s", orderItemCustomerPairTable, finalOrderLineItemPairWhereClause)
 
-	var cCustomerID int
+	ch := make(chan []int, 90)
 
 	for w := 1; w <= 10; w++ {
 		if w != warehouseID {
@@ -70,31 +70,23 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 				finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(w))
 				finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(d))
 
-				rows, err := db.Query(finalSQLStatement)
-				if err == sql.ErrNoRows {
-					continue
-				}
-				if err != nil {
-					return fmt.Errorf("error occurred in reading the related customers from table: w=%d d=%d. Err: %v", w, d, err)
-				}
-
-				for rows.Next() {
-					err := rows.Scan(&cCustomerID)
-					if err != nil {
-						return fmt.Errorf("error occurred in scanning the related customer id. Err: %v", err)
-					}
-					if !relatedCustomerIdentifiers[w][d][cCustomerID] {
-
-						if relatedCustomerIdentifiers[w] == nil {
-							relatedCustomerIdentifiers[w] = make(map[int]map[int]bool)
-						}
-						if relatedCustomerIdentifiers[w][d] == nil {
-							relatedCustomerIdentifiers[w][d] = make(map[int]bool)
-						}
-						relatedCustomerIdentifiers[w][d][cCustomerID] = true
-					}
-				}
+				go getRelatedCustomersParallel(db, w, d, finalSQLStatement, ch)
 			}
+		}
+	}
+
+	for i := 0; i < 90; i++ {
+		relatedCustomersArray := <-ch
+		w := relatedCustomersArray[0]
+		d := relatedCustomersArray[1]
+
+		if relatedCustomerIdentifiers[w] == nil {
+			relatedCustomerIdentifiers[w] = make(map[int][]int)
+		}
+
+		if len(relatedCustomersArray) > 2 {
+			cIDs := relatedCustomersArray[2:]
+			relatedCustomerIdentifiers[w][d] = cIDs
 		}
 	}
 
@@ -103,7 +95,36 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 	return nil
 }
 
-func printOutputState(warehouseID, districtID, customerID int, relatedCustomerIdentifiers map[int]map[int]map[int]bool) {
+func getRelatedCustomersParallel(db *sql.DB, w, d int, finalSQLStatement string, ch chan []int) {
+	var relatedCustomers []int
+	relatedCustomers = append(relatedCustomers, w)
+	relatedCustomers = append(relatedCustomers, d)
+
+	rows, err := db.Query(finalSQLStatement)
+	if err == sql.ErrNoRows {
+		ch <- nil
+		return
+	}
+	if err != nil {
+		log.Fatalf("error occurred in reading the related customers from table: w=%d d=%d. Err: %v", w, d, err)
+		return
+	}
+
+	var cID int
+
+	for rows.Next() {
+		err := rows.Scan(&cID)
+		if err != nil {
+			log.Fatalf("error occurred in scanning the related customer id. Err: %v", err)
+			return
+		}
+		relatedCustomers = append(relatedCustomers, cID)
+	}
+
+	ch <- relatedCustomers
+}
+
+func printOutputState(warehouseID, districtID, customerID int, relatedCustomerIdentifiers map[int]map[int][]int) {
 	var relatedCustomerIdentifierString, relatedCustomerString strings.Builder
 
 	for wKey, wValue := range relatedCustomerIdentifiers {
