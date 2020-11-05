@@ -38,12 +38,9 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			log.Printf("no rows found for customer")
-			return nil
-		}
 		return fmt.Errorf("error in fetching the order line item pairs. Err: %v", err)
 	}
+	defer rows.Close()
 
 	var itemID1, itemID2 int
 	for rows.Next() {
@@ -57,7 +54,8 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 	finalOrderLineItemPairWhereClause := orderLineItemPairString.String()
 
 	if len(finalOrderLineItemPairWhereClause) == 0 {
-		return fmt.Errorf("could not create the final WHERE clause script")
+		log.Printf("could not create the final WHERE clause script. No item pairs found")
+		return nil
 	}
 
 	finalOrderLineItemPairWhereClause = finalOrderLineItemPairWhereClause[:len(finalOrderLineItemPairWhereClause)-4]

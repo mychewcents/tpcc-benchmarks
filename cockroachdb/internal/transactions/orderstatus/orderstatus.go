@@ -53,6 +53,10 @@ func execute(db *sql.DB, warehouseID int, districtID int, customerID int) error 
 	var deliveryDate, entryDate sql.NullString
 	err := crdb.ExecuteTx(context.Background(), db, nil, func(tx *sql.Tx) error {
 		if err := tx.QueryRow(lastOrderQuery).Scan(&lastOrderID, &deliveryDate, &entryDate, &carrierID); err != nil {
+			if err == sql.ErrNoRows {
+				log.Printf("no rows for the customer found")
+				return nil
+			}
 			return fmt.Errorf("error occurred in getting the customers. Err: %v", err)
 		}
 		rows, err := db.Query(fmt.Sprintf(orderLinesQuery, warehouseID, districtID, lastOrderID))
