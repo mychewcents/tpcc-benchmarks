@@ -203,7 +203,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 			return fmt.Errorf("error in updating the stock details \nErr: %v", err)
 		}
 
-		sqlStatement = fmt.Sprintf("INSERT INTO %s (O_ID, O_D_ID, O_W_ID, O_C_ID, O_OL_CNT, O_ALL_LOCAL, O_TOTAL_AMOUNT) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING O_ENTRY_D; INSERT INTO %s (OL_O_ID, OL_D_ID, OL_W_ID, OL_NUMBER, OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DIST_INFO) VALUES %s", orderTable, orderLineTable, strings.Join(orderLineEntries, ", "))
+		sqlStatement = fmt.Sprintf("INSERT INTO %s (O_ID, O_D_ID, O_W_ID, O_C_ID, O_OL_CNT, O_ALL_LOCAL, O_TOTAL_AMOUNT) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING O_ENTRY_D", orderTable)
 
 		totalAmount = totalAmount * (1.0 + districtTax + warehouseTax) * (1.0 - cDiscount)
 
@@ -212,12 +212,12 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 			return fmt.Errorf("error in inserting new order row: w=%d d=%d o=%d \n Err: %v", warehouseID, districtID, newOrderID, err)
 		}
 
-		// sqlStatement = fmt.Sprintf("INSERT INTO %s (OL_O_ID, OL_D_ID, OL_W_ID, OL_NUMBER, OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DIST_INFO) VALUES %s",
-		// 	orderLineTable, strings.Join(orderLineEntries, ", "))
+		sqlStatement = fmt.Sprintf("INSERT INTO %s (OL_O_ID, OL_D_ID, OL_W_ID, OL_NUMBER, OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DIST_INFO) VALUES %s",
+			orderLineTable, strings.Join(orderLineEntries, ", "))
 
-		// if _, err := tx.Exec(sqlStatement); err != nil {
-		// 	return fmt.Errorf("error in inserting new order line rows: w=%d d=%d o=%d \n Err: %v", warehouseID, districtID, newOrderID, err)
-		// }
+		if _, err := tx.Exec(sqlStatement); err != nil {
+			return fmt.Errorf("error in inserting new order line rows: w=%d d=%d o=%d \n Err: %v", warehouseID, districtID, newOrderID, err)
+		}
 
 		return nil
 	})
