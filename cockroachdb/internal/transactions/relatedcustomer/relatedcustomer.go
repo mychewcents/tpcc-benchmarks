@@ -48,7 +48,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 		if err != nil {
 			return fmt.Errorf("error occurred in scanning the order line item pair. Err: %v", err)
 		}
-		orderLineItemPairString.WriteString(fmt.Sprintf("(IC_I_1_ID = %d AND IC_I_2_ID = %d) OR ", itemID1, itemID2))
+		orderLineItemPairString.WriteString(fmt.Sprintf("(%d, %d),", itemID1, itemID2))
 	}
 
 	finalOrderLineItemPairWhereClause := orderLineItemPairString.String()
@@ -58,9 +58,9 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 		return nil
 	}
 
-	finalOrderLineItemPairWhereClause = finalOrderLineItemPairWhereClause[:len(finalOrderLineItemPairWhereClause)-4]
+	finalOrderLineItemPairWhereClause = finalOrderLineItemPairWhereClause[:len(finalOrderLineItemPairWhereClause)-1]
 
-	baseSQLStatement := fmt.Sprintf("SELECT IC_C_ID FROM %s p WHERE %s", orderItemCustomerPairTable, finalOrderLineItemPairWhereClause)
+	baseSQLStatement := fmt.Sprintf("SELECT IC_C_ID FROM %s p WHERE (IC_I_1_ID, IC_I_2_ID) IN %s", orderItemCustomerPairTable, finalOrderLineItemPairWhereClause)
 
 	ch := make(chan []int, 90)
 

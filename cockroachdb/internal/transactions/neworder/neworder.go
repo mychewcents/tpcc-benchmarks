@@ -14,15 +14,17 @@ import (
 )
 
 type itemObject struct {
-	id         int
-	quantity   int
-	supplier   int
-	remote     int
-	startStock int
-	finalStock int
-	name       string
-	price      float64
-	data       string
+	id           int
+	quantity     int
+	supplier     int
+	remote       int
+	startStock   int
+	finalStock   int
+	currYTD      int
+	currOrderCnt int
+	name         string
+	price        float64
+	data         string
 }
 
 // ProcessTransaction process the new order transaction
@@ -136,10 +138,9 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 		insertItemPairsParallel(tx, orderItemCustomerPairTable, orderItemCustomerPair.String())
 
 		for key, value := range orderLineObjects {
-
-			sqlStatement = fmt.Sprintf("SELECT S_I_NAME, S_I_PRICE, S_QUANTITY, S_DIST_%02d FROM STOCK WHERE S_W_ID = %d AND S_I_ID = %d", districtID, value.supplier, value.id)
+			sqlStatement = fmt.Sprintf("SELECT S_I_NAME, S_I_PRICE, S_QUANTITY, S_YTD, S_ORDER_CNT, S_DIST_%02d FROM STOCK WHERE S_W_ID = %d AND S_I_ID = %d", districtID, value.supplier, value.id)
 			row = tx.QueryRow(sqlStatement)
-			if err := row.Scan(&value.name, &value.price, &value.startStock, &value.data); err != nil {
+			if err := row.Scan(&value.name, &value.price, &value.startStock, &value.currYTD, &value.currOrderCnt, &value.data); err != nil {
 				return fmt.Errorf("error in getting the stock details for the item: w=%d id=%d \nErr: %v", value.supplier, value.id, err)
 			}
 
@@ -148,18 +149,6 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 				adjustedQty += 100
 			}
 			value.finalStock = adjustedQty
-
-			sqlStatement = fmt.Sprintf("UPDATE STOCK SET S_QUANTITY = %d, S_YTD = S_YTD + %d, S_ORDER_CNT = S_ORDER_CNT + 1, S_REMOTE_CNT = %d WHERE S_W_ID = %d AND S_I_ID = %d",
-				value.finalStock,
-				value.quantity,
-				value.remote,
-				value.supplier,
-				value.id,
-			)
-
-			if _, err := tx.Exec(sqlStatement); err != nil {
-				return fmt.Errorf("error in updating the stock details for the item: w=%d id=%d \nErr: %v", value.supplier, value.id, err)
-			}
 
 			orderLineAmount := value.price * float64(value.quantity)
 			totalAmount += orderLineAmount
@@ -180,7 +169,41 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 				))
 		}
 
-		sqlStatement = fmt.Sprintf("INSERT INTO %s (O_ID, O_D_ID, O_W_ID, O_C_ID, O_OL_CNT, O_ALL_LOCAL, O_TOTAL_AMOUNT) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING O_ENTRY_D", orderTable)
+		bulkUpdatesOrderLineItems := make([]string, totalUniqueItems)
+		bulkQuantityUpdates := make([]string, totalUniqueItems)
+		bulkYTDUpdates := make([]string, totalUniqueItems)
+		bulkOrderCountUpdates := make([]string, totalUniqueItems)
+		bulkRemoteCountUpdates := make([]string, totalUniqueItems)
+
+		idx := 0
+		for _, value := range orderLineObjects {
+			bulkUpdatesOrderLineItems[idx] = fmt.Sprintf("(%d, %d)", value.id, value.supplier)
+			bulkQuantityUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.id, value.supplier, value.finalStock)
+			bulkYTDUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.id, value.supplier, value.currYTD+value.quantity)
+			bulkOrderCountUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.id, value.supplier, value.currOrderCnt+1)
+			bulkRemoteCountUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.id, value.supplier, value.remote)
+			idx++
+		}
+
+		sqlStatement = fmt.Sprintf(`
+			UPDATE STOCK 
+				SET S_QUANTITY = CASE (S_I_ID, S_W_ID) %s END, 
+				S_YTD = CASE (S_I_ID, S_W_ID) %s END, 
+				S_ORDER_CNT = CASE (S_I_ID, S_W_ID) %s END, 
+				S_REMOTE_CNT = CASE (S_I_ID, S_W_ID) %s END 
+			WHERE (S_I_ID, S_W_ID) IN %s`,
+			strings.Join(bulkQuantityUpdates, " "),
+			strings.Join(bulkYTDUpdates, " "),
+			strings.Join(bulkOrderCountUpdates, " "),
+			strings.Join(bulkRemoteCountUpdates, " "),
+			strings.Join(bulkUpdatesOrderLineItems, ", "),
+		)
+
+		if _, err := tx.Exec(sqlStatement); err != nil {
+			return fmt.Errorf("error in updating the stock details \nErr: %v", err)
+		}
+
+		sqlStatement = fmt.Sprintf("INSERT INTO %s (O_ID, O_D_ID, O_W_ID, O_C_ID, O_OL_CNT, O_ALL_LOCAL, O_TOTAL_AMOUNT) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING O_ENTRY_D; INSERT INTO %s (OL_O_ID, OL_D_ID, OL_W_ID, OL_NUMBER, OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DIST_INFO) VALUES %s", orderTable, orderLineTable, strings.Join(orderLineEntries, ", "))
 
 		totalAmount = totalAmount * (1.0 + districtTax + warehouseTax) * (1.0 - cDiscount)
 
@@ -189,12 +212,12 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 			return fmt.Errorf("error in inserting new order row: w=%d d=%d o=%d \n Err: %v", warehouseID, districtID, newOrderID, err)
 		}
 
-		sqlStatement = fmt.Sprintf("INSERT INTO %s (OL_O_ID, OL_D_ID, OL_W_ID, OL_NUMBER, OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DIST_INFO) VALUES %s",
-			orderLineTable, strings.Join(orderLineEntries, ", "))
+		// sqlStatement = fmt.Sprintf("INSERT INTO %s (OL_O_ID, OL_D_ID, OL_W_ID, OL_NUMBER, OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT, OL_DIST_INFO) VALUES %s",
+		// 	orderLineTable, strings.Join(orderLineEntries, ", "))
 
-		if _, err := tx.Exec(sqlStatement); err != nil {
-			return fmt.Errorf("error in inserting new order line rows: w=%d d=%d o=%d \n Err: %v", warehouseID, districtID, newOrderID, err)
-		}
+		// if _, err := tx.Exec(sqlStatement); err != nil {
+		// 	return fmt.Errorf("error in inserting new order line rows: w=%d d=%d o=%d \n Err: %v", warehouseID, districtID, newOrderID, err)
+		// }
 
 		return nil
 	})
