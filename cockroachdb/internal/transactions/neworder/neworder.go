@@ -205,8 +205,6 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 
 		sqlStatement = fmt.Sprintf("INSERT INTO %s (O_ID, O_D_ID, O_W_ID, O_C_ID, O_OL_CNT, O_ALL_LOCAL, O_TOTAL_AMOUNT) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING O_ENTRY_D", orderTable)
 
-		totalAmount = totalAmount * (1.0 + districtTax + warehouseTax) * (1.0 - cDiscount)
-
 		row = tx.QueryRow(sqlStatement, newOrderID, districtID, warehouseID, customerID, totalUniqueItems, isLocal, totalAmount)
 		if err := row.Scan(&orderTimestamp); err != nil {
 			return fmt.Errorf("error in inserting new order row: w=%d d=%d o=%d \n Err: %v", warehouseID, districtID, newOrderID, err)
@@ -225,6 +223,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 		return fmt.Errorf("error occured in updating the order/order lines/item pairs table. Err: %v", err)
 	}
 
+	totalAmount = totalAmount * (1.0 + districtTax + warehouseTax) * (1.0 - cDiscount)
 	// printOutputState(warehouseID, districtID, customerID, cLastName, cCredit, cDiscount,
 	// 	newOrderID, orderTimestamp, totalUniqueItems, totalAmount, orderLineObjects)
 	// log.Printf("Completed executing the transaction with the input data...")
