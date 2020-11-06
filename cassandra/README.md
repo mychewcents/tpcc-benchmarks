@@ -37,12 +37,14 @@ You can monitor the status of the cluster by using the command `bin/nodetool sta
 
 ## 2. Project Initialization
 
-1. Download the cassandra code into the home directory and `cd` into the directory.
-2. Run `bash scripts/make-initial-data.sh`. 
+1. Install Python(3.7.3) and Go(go1.13.4)
+2. Download the cassandra code into the home directory and `cd` into the directory.
+3. Run `pip install -r requirements.txt`
+4. Run `bash scripts/make-initial-data.sh`. 
     - This command will download the data and transaction files for the project. The files will be downloaded to directory `assests/data`.
     - It will then create the processed data which corresponds to our new schema design from the data provided. This is done using a `python` script which can be found in `scripts/python/make-initial-data.py`.  We use the `pandas` library to process the CSV files. This processed data is stored under the directory  `assets/data/processed`.
     - We create this processed data only once.
-3. Run `bash scripts/initialize-cassandra.sh`
+5. Run `bash scripts/initialize-cassandra.sh`
     - This script will initialize the Cassandra schema and loads initial data.
     - It will initialize the schema using a `cql` script found under `scripts/cql/schema-initialization.cql`.
     - It will then populate the schema with the initial data using a `cql` script which copies the data from the processed CSV files into their respective tables using Cassandra's `COPY` command. This scriot can be found under `scripts/cql/data-initialization.cql`.
