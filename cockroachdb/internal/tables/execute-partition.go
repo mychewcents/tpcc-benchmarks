@@ -42,8 +42,10 @@ func ExecuteSQLForPartitions(c config.Configuration, warehouses, districts int, 
 			if _, err := db.Exec(finalSQLStatement); err != nil {
 				log.Println(finalSQLStatement)
 				log.Fatalf("Err: %v", err)
-
+				return err
 			}
+
+			log.Println("Completed the Partition: %d %d", w, d)
 		}
 	}
 
