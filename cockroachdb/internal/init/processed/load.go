@@ -49,20 +49,13 @@ func LoadPartitions(c config.Configuration) error {
 		panic("load function couldn't create a connection to the server")
 	}
 
-	ch := make(chan bool, 100)
+	ch := make(chan bool, 10)
 	for w := 1; w <= 10; w++ {
-		for d := 1; d <= 10; d++ {
-			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "ORDERS_FILE_PATH", fmt.Sprintf("order/%d_%d", w, d))
-			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "ORDER_LINE_FILE_PATH", fmt.Sprintf("orderline/%d_%d", w, d))
-			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "ORDER_ITEMS_CUSTOMERS_FILE_PATH", fmt.Sprintf("itempairs/%d_%d", w, d))
-			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "WID", strconv.Itoa(w))
-			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(d))
+		go loadPartitionsParallel(db, w, baseSQLStatement, ch)
 
-			go loadPartitionsParallel(db, w, d, finalSQLStatement, ch)
-		}
 	}
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		<-ch
 	}
 
@@ -70,12 +63,21 @@ func LoadPartitions(c config.Configuration) error {
 	return nil
 }
 
-func loadPartitionsParallel(db *sql.DB, w, d int, finalSQLStatement string, ch chan bool) {
-	_, err := db.Exec(finalSQLStatement)
-	if err != nil {
-		log.Fatalf("couldn't load the table: %d %d. Err: %v", w, d, err)
-		ch <- false
+func loadPartitionsParallel(db *sql.DB, w int, baseSQLStatement string, ch chan bool) {
+	for d := 1; d <= 10; d++ {
+		finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "ORDERS_FILE_PATH", fmt.Sprintf("order/%d_%d", w, d))
+		finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "ORDER_LINE_FILE_PATH", fmt.Sprintf("orderline/%d_%d", w, d))
+		finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "ORDER_ITEMS_CUSTOMERS_FILE_PATH", fmt.Sprintf("itempairs/%d_%d", w, d))
+		finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "WID", strconv.Itoa(w))
+		finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(d))
+
+		_, err := db.Exec(finalSQLStatement)
+		if err != nil {
+			log.Fatalf("couldn't load the table: %d %d. Err: %v", w, d, err)
+			ch <- false
+		}
 	}
-	log.Printf("Completed Partition: %d %d", w, d)
+
+	log.Printf("Completed Partition: %d", w)
 	ch <- true
 }
