@@ -60,7 +60,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 
 	finalOrderLineItemPairWhereClause = finalOrderLineItemPairWhereClause[:len(finalOrderLineItemPairWhereClause)-1]
 
-	baseSQLStatement := fmt.Sprintf("SELECT IC_C_ID FROM %s p WHERE (IC_I_1_ID, IC_I_2_ID) IN %s", orderItemCustomerPairTable, finalOrderLineItemPairWhereClause)
+	baseSQLStatement := fmt.Sprintf("SELECT IC_C_ID FROM %s p WHERE (IC_I_1_ID, IC_I_2_ID) IN (%s)", orderItemCustomerPairTable, finalOrderLineItemPairWhereClause)
 
 	ch := make(chan []int, 90)
 
