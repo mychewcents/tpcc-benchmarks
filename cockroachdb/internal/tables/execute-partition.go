@@ -29,8 +29,22 @@ func ExecuteSQLForPartitions(c config.Configuration, warehouses, districts int, 
 	ch := make(chan bool, 10)
 	errFound := false
 
+	db, err := cdbconn.CreateConnection(c.HostNode)
+	if err != nil {
+		panic("load function couldn't create a connection to the server")
+	}
+
 	for w := 1; w <= 10; w++ {
-		go executeParallel(c, w, baseSQLStatement, ch)
+		for d := 1; d <= 10; d++ {
+			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(w))
+			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(d))
+
+			if _, err := db.Exec(finalSQLStatement); err != nil {
+				log.Println(finalSQLStatement)
+				log.Fatalf("Err: %v", err)
+
+			}
+		}
 	}
 
 	for i := 0; i < 10; i++ {
