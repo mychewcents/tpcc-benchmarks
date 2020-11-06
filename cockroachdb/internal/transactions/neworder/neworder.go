@@ -177,21 +177,21 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 
 		idx := 0
 		for _, value := range orderLineObjects {
-			bulkUpdatesOrderLineItems[idx] = fmt.Sprintf("(%d, %d)", value.id, value.supplier)
-			bulkQuantityUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.id, value.supplier, value.finalStock)
-			bulkYTDUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.id, value.supplier, int(value.currYTD)+value.quantity)
-			bulkOrderCountUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.id, value.supplier, value.currOrderCnt+1)
-			bulkRemoteCountUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.id, value.supplier, value.remote)
+			bulkUpdatesOrderLineItems[idx] = fmt.Sprintf("(%d, %d)", value.supplier, value.id)
+			bulkQuantityUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.supplier, value.id, value.finalStock)
+			bulkYTDUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.supplier, value.id, int(value.currYTD)+value.quantity)
+			bulkOrderCountUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.supplier, value.id, value.currOrderCnt+1)
+			bulkRemoteCountUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.supplier, value.id, value.remote)
 			idx++
 		}
 
 		sqlStatement = fmt.Sprintf(`
 			UPDATE STOCK 
-				SET S_QUANTITY = CASE (S_I_ID, S_W_ID) %s END, 
-				S_YTD = CASE (S_I_ID, S_W_ID) %s END, 
-				S_ORDER_CNT = CASE (S_I_ID, S_W_ID) %s END, 
-				S_REMOTE_CNT = CASE (S_I_ID, S_W_ID) %s END 
-			WHERE (S_I_ID, S_W_ID) IN (%s)`,
+				SET S_QUANTITY = CASE (S_W_ID, S_I_ID) %s END, 
+				S_YTD = CASE (S_W_ID, S_I_ID) %s END, 
+				S_ORDER_CNT = CASE (S_W_ID, S_I_ID) %s END, 
+				S_REMOTE_CNT = CASE (S_W_ID, S_I_ID) %s END 
+			WHERE (S_W_ID, S_I_ID) IN (%s)`,
 			strings.Join(bulkQuantityUpdates, " "),
 			strings.Join(bulkYTDUpdates, " "),
 			strings.Join(bulkOrderCountUpdates, " "),
