@@ -56,6 +56,18 @@ func main() {
 
 	scanner := bufio.NewScanner(os.Stdin)
 	var latencies []float64
+
+	switch *nodeID {
+	case 2:
+		time.Sleep(50 * time.Millisecond)
+	case 3:
+		time.Sleep(70 * time.Millisecond)
+	case 4:
+		time.Sleep(90 * time.Millisecond)
+	case 5:
+		time.Sleep(110 * time.Millisecond)
+	}
+
 	for scanner.Scan() {
 		txArgs = strings.Split(scanner.Text(), ",")
 
