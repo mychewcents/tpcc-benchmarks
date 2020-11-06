@@ -191,7 +191,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 				S_YTD = CASE (S_I_ID, S_W_ID) %s END, 
 				S_ORDER_CNT = CASE (S_I_ID, S_W_ID) %s END, 
 				S_REMOTE_CNT = CASE (S_I_ID, S_W_ID) %s END 
-			WHERE (S_I_ID, S_W_ID) IN %s`,
+			WHERE (S_I_ID, S_W_ID) IN (%s)`,
 			strings.Join(bulkQuantityUpdates, " "),
 			strings.Join(bulkYTDUpdates, " "),
 			strings.Join(bulkOrderCountUpdates, " "),
