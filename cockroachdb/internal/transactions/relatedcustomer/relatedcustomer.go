@@ -60,7 +60,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 
 	finalOrderLineItemPairWhereClause = finalOrderLineItemPairWhereClause[:len(finalOrderLineItemPairWhereClause)-1]
 
-	baseSQLStatement := fmt.Sprintf("SELECT IC_C_ID FROM %s p WHERE (IC_I_1_ID, IC_I_2_ID) IN %s", orderItemCustomerPairTable, finalOrderLineItemPairWhereClause)
+	baseSQLStatement := fmt.Sprintf("SELECT IC_C_ID FROM %s p WHERE (IC_I_1_ID, IC_I_2_ID) IN (%s)", orderItemCustomerPairTable, finalOrderLineItemPairWhereClause)
 
 	ch := make(chan []int, 90)
 
@@ -79,7 +79,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 		relatedCustomersArray := <-ch
 		w := relatedCustomersArray[0]
 		d := relatedCustomersArray[1]
-
+		log.Println(w, d)
 		if relatedCustomerIdentifiers[w] == nil {
 			relatedCustomerIdentifiers[w] = make(map[int][]int)
 		}
@@ -91,7 +91,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 	}
 
 	// printOutputState(warehouseID, districtID, customerID, relatedCustomerIdentifiers)
-	log.Printf("Executing the transaction with the input data...")
+	log.Printf("Completed executing the transaction with the input data...")
 	return nil
 }
 
