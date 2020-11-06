@@ -45,7 +45,7 @@ func ExecuteSQLForPartitions(c config.Configuration, warehouses, districts int, 
 				return err
 			}
 
-			log.Println("Completed the Partition: %d %d", w, d)
+			log.Printf("Completed the Partition: %d %d", w, d)
 		}
 	}
 
