@@ -20,7 +20,7 @@ type itemObject struct {
 	remote       int
 	startStock   int
 	finalStock   int
-	currYTD      int
+	currYTD      float64
 	currOrderCnt int
 	name         string
 	price        float64
@@ -179,7 +179,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 		for _, value := range orderLineObjects {
 			bulkUpdatesOrderLineItems[idx] = fmt.Sprintf("(%d, %d)", value.id, value.supplier)
 			bulkQuantityUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.id, value.supplier, value.finalStock)
-			bulkYTDUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.id, value.supplier, value.currYTD+value.quantity)
+			bulkYTDUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.id, value.supplier, int(value.currYTD)+value.quantity)
 			bulkOrderCountUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.id, value.supplier, value.currOrderCnt+1)
 			bulkRemoteCountUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.id, value.supplier, value.remote)
 			idx++

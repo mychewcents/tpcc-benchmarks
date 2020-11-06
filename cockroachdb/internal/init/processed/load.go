@@ -1,6 +1,7 @@
 package processedtables
 
 import (
+	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -48,6 +49,7 @@ func LoadPartitions(c config.Configuration) error {
 		panic("load function couldn't create a connection to the server")
 	}
 
+	ch := make(chan bool, 100)
 	for w := 1; w <= 10; w++ {
 		for d := 1; d <= 10; d++ {
 			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "ORDERS_FILE_PATH", fmt.Sprintf("order/%d_%d", w, d))
@@ -56,14 +58,24 @@ func LoadPartitions(c config.Configuration) error {
 			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "WID", strconv.Itoa(w))
 			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(d))
 
-			_, err := db.Exec(finalSQLStatement)
-			if err != nil {
-				log.Fatalf("couldn't load the table: %d %d. Err: %v", w, d, err)
-			}
-			log.Printf("Completed Partition: %d %d", w, d)
+			go loadPartitionsParallel(db, w, d, finalSQLStatement, ch)
 		}
+	}
+
+	for i := 0; i < 100; i++ {
+		<-ch
 	}
 
 	log.Println("Loaded all the partitions of the tables...")
 	return nil
+}
+
+func loadPartitionsParallel(db *sql.DB, w, d int, finalSQLStatement string, ch chan bool) {
+	_, err := db.Exec(finalSQLStatement)
+	if err != nil {
+		log.Fatalf("couldn't load the table: %d %d. Err: %v", w, d, err)
+		ch <- false
+	}
+	log.Printf("Completed Partition: %d %d", w, d)
+	ch <- true
 }
