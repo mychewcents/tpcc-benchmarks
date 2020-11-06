@@ -1,7 +1,6 @@
 package tables
 
 import (
-	"database/sql"
 	"errors"
 	"io/ioutil"
 	"log"
@@ -29,13 +28,9 @@ func ExecuteSQLForPartitions(c config.Configuration, warehouses, districts int, 
 
 	ch := make(chan bool, 10)
 	errFound := false
-	db, err := cdbconn.CreateConnection(c.HostNode)
-	if err != nil {
-		panic("load function couldn't create a connection to the server")
-	}
 
 	for w := 1; w <= 10; w++ {
-		go executeParallel(db, w, baseSQLStatement, ch)
+		go executeParallel(c, w, baseSQLStatement, ch)
 	}
 
 	for i := 0; i < 10; i++ {
@@ -50,7 +45,12 @@ func ExecuteSQLForPartitions(c config.Configuration, warehouses, districts int, 
 	return nil
 }
 
-func executeParallel(db *sql.DB, w int, baseSQLStatement string, ch chan bool) {
+func executeParallel(c config.Configuration, w int, baseSQLStatement string, ch chan bool) {
+	db, err := cdbconn.CreateConnection(c.HostNode)
+	if err != nil {
+		panic("load function couldn't create a connection to the server")
+	}
+
 	for d := 1; d <= 10; d++ {
 		finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(w))
 		finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(d))

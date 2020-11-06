@@ -1,7 +1,6 @@
 package processedtables
 
 import (
-	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -44,14 +43,9 @@ func LoadPartitions(c config.Configuration) error {
 	byteValue, _ := ioutil.ReadAll(sqlFile)
 	baseSQLStatement := string(byteValue)
 
-	db, err := cdbconn.CreateConnection(c.HostNode)
-	if err != nil {
-		panic("load function couldn't create a connection to the server")
-	}
-
 	ch := make(chan bool, 10)
 	for w := 1; w <= 10; w++ {
-		go loadPartitionsParallel(db, w, baseSQLStatement, ch)
+		go loadPartitionsParallel(c, w, baseSQLStatement, ch)
 
 	}
 
@@ -63,7 +57,12 @@ func LoadPartitions(c config.Configuration) error {
 	return nil
 }
 
-func loadPartitionsParallel(db *sql.DB, w int, baseSQLStatement string, ch chan bool) {
+func loadPartitionsParallel(c config.Configuration, w int, baseSQLStatement string, ch chan bool) {
+	db, err := cdbconn.CreateConnection(c.HostNode)
+	if err != nil {
+		panic("load function couldn't create a connection to the server")
+	}
+
 	for d := 1; d <= 10; d++ {
 		finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "ORDERS_FILE_PATH", fmt.Sprintf("order/%d_%d", w, d))
 		finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "ORDER_LINE_FILE_PATH", fmt.Sprintf("orderline/%d_%d", w, d))
