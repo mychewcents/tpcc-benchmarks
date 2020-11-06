@@ -17,7 +17,7 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 
 	log.Printf("Starting the Stock Level Transaction for: w=%d d=%d t=%d n=%d", warehouseID, districtID, threshold, lastNOrders)
 	if err := execute(db, warehouseID, districtID, threshold, lastNOrders); err != nil {
-		log.Fatalf("error occurred while executing stock level transaction. Err: %v", err)
+		log.Printf("error occurred while executing stock level transaction. Err: %v", err)
 		return false
 	}
 

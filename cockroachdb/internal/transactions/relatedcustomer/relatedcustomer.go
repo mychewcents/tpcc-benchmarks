@@ -18,7 +18,7 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 	log.Printf("Starting the Related Customer Transaction for: w=%d d=%d c=%d", warehouseID, districtID, customerID)
 
 	if err := execute(db, warehouseID, districtID, customerID); err != nil {
-		log.Fatalf("error occurred in executing the related customer transaction. Err: %v", err)
+		log.Println("error occurred in executing the related customer transaction. Err: %v", err)
 		return false
 	}
 
@@ -106,7 +106,7 @@ func getRelatedCustomersParallel(db *sql.DB, w, d int, finalSQLStatement string,
 		return
 	}
 	if err != nil {
-		log.Fatalf("error occurred in reading the related customers from table: w=%d d=%d. Err: %v", w, d, err)
+		log.Printf("error occurred in reading the related customers from table: w=%d d=%d. Err: %v", w, d, err)
 		return
 	}
 
@@ -115,7 +115,7 @@ func getRelatedCustomersParallel(db *sql.DB, w, d int, finalSQLStatement string,
 	for rows.Next() {
 		err := rows.Scan(&cID)
 		if err != nil {
-			log.Fatalf("error occurred in scanning the related customer id. Err: %v", err)
+			log.Printf("error occurred in scanning the related customer id. Err: %v", err)
 			return
 		}
 		relatedCustomers = append(relatedCustomers, cID)

@@ -25,7 +25,7 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 	log.Printf("Starting the Order Status Transaction for: w=%d d=%d c=%d", warehouseID, districtID, customerID)
 
 	if err := execute(db, warehouseID, districtID, customerID); err != nil {
-		log.Fatalf("error occured while executing the order status transaction. Err: %v", err)
+		log.Println("error occured while executing the order status transaction. Err: %v", err)
 		return false
 	}
 

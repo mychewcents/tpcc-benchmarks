@@ -85,7 +85,7 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, args []string) bool 
 	log.Printf("Completed pre-processing the input data...")
 
 	if err := execute(db, warehouseID, districtID, customerID, totalUniqueItems, isLocal, totalUniqueItems, orderLineObjects, orderItems); err != nil {
-		log.Fatalf("error occured while executing the new order transaction. Err: %v", err)
+		log.Println("error occured while executing the new order transaction. Err: %v", err)
 		return false
 	}
 
@@ -237,7 +237,7 @@ func insertItemPairsParallel(tx *sql.Tx, orderItemCustomerPairTable string, orde
 
 	if _, err := tx.Exec(sqlStatement); err != nil {
 		// ch <- false
-		log.Fatalf("error occured in the item pairs for customers. Err: %v", err)
+		log.Println("error occured in the item pairs for customers. Err: %v", err)
 	}
 
 	// log.Printf("Completed inserting the item pairs")

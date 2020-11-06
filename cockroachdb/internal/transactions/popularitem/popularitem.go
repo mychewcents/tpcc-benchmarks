@@ -30,7 +30,7 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 	log.Printf("Starting the Popular Item Transaction for: w=%d d=%d n=%d", warehouseID, districtID, lastNOrders)
 
 	if err := execute(db, warehouseID, districtID, lastNOrders); err != nil {
-		log.Fatalf("error occurred while executing the popular item transaction. Err: %v", err)
+		log.Println("error occurred while executing the popular item transaction. Err: %v", err)
 		return false
 	}
 

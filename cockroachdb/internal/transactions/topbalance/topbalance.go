@@ -21,7 +21,7 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner) bool {
 	log.Printf("Starting the Top Balance Transaction")
 
 	if err := execute(db); err != nil {
-		log.Fatalf("error occurred while executing the top balance transaction. Err: %v", err)
+		log.Printf("error occurred while executing the top balance transaction. Err: %v", err)
 		return false
 	}
 

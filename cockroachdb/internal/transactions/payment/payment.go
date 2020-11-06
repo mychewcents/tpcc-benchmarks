@@ -21,7 +21,7 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 	log.Printf("Starting the Payment Transaction for: w=%d d=%d c=%d p=%f", warehouseID, districtID, customerID, paymentAmt)
 
 	if err := execute(db, warehouseID, districtID, customerID, paymentAmt); err != nil {
-		log.Fatalf("error occurred in executing the payment transaction. Err: %v", err)
+		log.Println("error occurred in executing the payment transaction. Err: %v", err)
 		return false
 	}
 

@@ -80,7 +80,7 @@ func main() {
 	}
 
 	if err := performance.RecordPerformanceMetrics(*experiment, *client, latencies, "results/metrics"); err != nil {
-		log.Fatalf("error in performance recording. Err: %v", err)
+		log.Printf("error in performance recording. Err: %v", err)
 		fmt.Println("error occurred in performance recording. Please check the logs")
 		return
 	}
