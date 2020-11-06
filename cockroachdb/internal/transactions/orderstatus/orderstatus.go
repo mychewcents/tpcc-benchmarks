@@ -29,12 +29,12 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 		return false
 	}
 
-	log.Printf("Completed the Order Status Transaction for: w=%d d=%d c=%d", warehouseID, districtID, customerID)
+	// log.Printf("Completed the Order Status Transaction for: w=%d d=%d c=%d", warehouseID, districtID, customerID)
 	return true
 }
 
 func execute(db *sql.DB, warehouseID int, districtID int, customerID int) error {
-	log.Printf("Executing the transaction with the input data...")
+	// log.Printf("Executing the transaction with the input data...")
 
 	lastOrderQuery := fmt.Sprintf("SELECT O_ID, O_DELIVERY_D, O_ENTRY_D, O_CARRIER_ID FROM ORDERS_%d_%d WHERE O_C_ID=%d ORDER BY O_ID DESC LIMIT 1",
 		warehouseID, districtID, customerID)
@@ -100,6 +100,6 @@ func execute(db *sql.DB, warehouseID int, districtID int, customerID int) error 
 	// 	fmt.Println(fmt.Sprintf(output, first, middle, last, balance, lastOrderID, entryDate.String, "null"))
 	// }
 
-	log.Printf("Completed executing the transaction with the input data...")
+	// log.Printf("Completed executing the transaction with the input data...")
 	return nil
 }

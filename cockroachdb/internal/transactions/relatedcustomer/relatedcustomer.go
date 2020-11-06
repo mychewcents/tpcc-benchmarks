@@ -22,12 +22,12 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 		return false
 	}
 
-	log.Printf("Completed the Related Customer Transaction for: w=%d d=%d c=%d", warehouseID, districtID, customerID)
+	// log.Printf("Completed the Related Customer Transaction for: w=%d d=%d c=%d", warehouseID, districtID, customerID)
 	return true
 }
 
 func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
-	log.Printf("Executing the transaction with the input data...")
+	// log.Printf("Executing the transaction with the input data...")
 
 	relatedCustomerIdentifiers := make(map[int]map[int][]int)
 	orderItemCustomerPairTable := "ORDER_ITEMS_CUSTOMERS_WID_DID"
@@ -48,7 +48,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 		if err != nil {
 			return fmt.Errorf("error occurred in scanning the order line item pair. Err: %v", err)
 		}
-		orderLineItemPairString.WriteString(fmt.Sprintf("(IC_I_1_ID = %d AND IC_I_2_ID = %d) OR ", itemID1, itemID2))
+		orderLineItemPairString.WriteString(fmt.Sprintf("(%d, %d),", itemID1, itemID2))
 	}
 
 	finalOrderLineItemPairWhereClause := orderLineItemPairString.String()
@@ -58,9 +58,9 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 		return nil
 	}
 
-	finalOrderLineItemPairWhereClause = finalOrderLineItemPairWhereClause[:len(finalOrderLineItemPairWhereClause)-4]
+	finalOrderLineItemPairWhereClause = finalOrderLineItemPairWhereClause[:len(finalOrderLineItemPairWhereClause)-1]
 
-	baseSQLStatement := fmt.Sprintf("SELECT IC_C_ID FROM %s p WHERE %s", orderItemCustomerPairTable, finalOrderLineItemPairWhereClause)
+	baseSQLStatement := fmt.Sprintf("SELECT IC_C_ID FROM %s p WHERE (IC_I_1_ID, IC_I_2_ID) IN (%s)", orderItemCustomerPairTable, finalOrderLineItemPairWhereClause)
 
 	ch := make(chan []int, 90)
 
@@ -79,7 +79,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 		relatedCustomersArray := <-ch
 		w := relatedCustomersArray[0]
 		d := relatedCustomersArray[1]
-
+		log.Println(w, d)
 		if relatedCustomerIdentifiers[w] == nil {
 			relatedCustomerIdentifiers[w] = make(map[int][]int)
 		}
@@ -91,7 +91,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 	}
 
 	// printOutputState(warehouseID, districtID, customerID, relatedCustomerIdentifiers)
-	log.Printf("Executing the transaction with the input data...")
+	// log.Printf("Completed executing the transaction with the input data...")
 	return nil
 }
 

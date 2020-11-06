@@ -27,12 +27,12 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 		return false
 	}
 
-	log.Printf("Completed the Delivery Transaction for: w=%d c=%d", warehouseID, carrierID)
+	// log.Printf("Completed the Delivery Transaction for: w=%d c=%d", warehouseID, carrierID)
 	return true
 }
 
 func execute(db *sql.DB, warehouseID int, carrierID int) error {
-	log.Printf("Executing the transaction with the input data...")
+	// log.Printf("Executing the transaction with the input data...")
 
 	orderQuery := "SELECT O_ID FROM ORDERS_%d_%d WHERE O_CARRIER_ID=0 ORDER BY O_ID LIMIT 1"
 	updateOrderQuery := "UPDATE ORDERS_%d_%d SET (O_CARRIER_ID, O_DELIVERY_D) = (%d, now()) WHERE O_W_ID=%d AND O_D_ID=%d AND O_ID=%d RETURNING O_C_ID, O_TOTAL_AMOUNT"
@@ -40,12 +40,14 @@ func execute(db *sql.DB, warehouseID int, carrierID int) error {
 
 	var orders []districtOrder
 
+	// var orderIDs [10]int32
 	for district := 1; district <= 10; district++ {
 		var orderID sql.NullInt32
 		if err := db.QueryRow(fmt.Sprintf(orderQuery, warehouseID, district)).Scan(&orderID); err != nil && err != sql.ErrNoRows {
 			return fmt.Errorf("error occured while fetching the orders. Err: %v", err)
 		}
 		if orderID.Valid {
+			// orderIDs[district-1] = orderID.Int32
 			orders = append(orders, districtOrder{district, int(orderID.Int32)})
 		}
 	}
@@ -74,6 +76,6 @@ func execute(db *sql.DB, warehouseID int, carrierID int) error {
 		return fmt.Errorf("error occurred while updating the order/customer table. Err: %v", err)
 	}
 
-	log.Printf("Completed executing the transaction with the input data...")
+	// log.Printf("Completed executing the transaction with the input data...")
 	return nil
 }

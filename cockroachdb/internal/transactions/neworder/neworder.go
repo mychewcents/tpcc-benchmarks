@@ -14,15 +14,17 @@ import (
 )
 
 type itemObject struct {
-	id         int
-	quantity   int
-	supplier   int
-	remote     int
-	startStock int
-	finalStock int
-	name       string
-	price      float64
-	data       string
+	id           int
+	quantity     int
+	supplier     int
+	remote       int
+	startStock   int
+	finalStock   int
+	currYTD      float64
+	currOrderCnt int
+	name         string
+	price        float64
+	data         string
 }
 
 // ProcessTransaction process the new order transaction
@@ -92,7 +94,7 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, args []string) bool 
 }
 
 func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal, totalUniqueItems int, orderLineObjects []*itemObject, sortedOrderItems []int) error {
-	log.Printf("Executing the transaction with the input data...")
+	// log.Printf("Executing the transaction with the input data...")
 
 	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)
 	orderLineTable := fmt.Sprintf("ORDER_LINE_%d_%d", warehouseID, districtID)
@@ -132,14 +134,13 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 	err := crdb.ExecuteTx(context.Background(), db, nil, func(tx *sql.Tx) error {
 		var orderLineEntries []string
 
-		log.Printf("Starting the insert of the Item Pair for the customer: c=%d w=%d d=%d ", customerID, warehouseID, districtID)
+		// log.Printf("Starting the insert of the Item Pair for the customer: c=%d w=%d d=%d ", customerID, warehouseID, districtID)
 		insertItemPairsParallel(tx, orderItemCustomerPairTable, orderItemCustomerPair.String())
 
 		for key, value := range orderLineObjects {
-
-			sqlStatement = fmt.Sprintf("SELECT S_I_NAME, S_I_PRICE, S_QUANTITY, S_DIST_%02d FROM STOCK WHERE S_W_ID = %d AND S_I_ID = %d", districtID, value.supplier, value.id)
+			sqlStatement = fmt.Sprintf("SELECT S_I_NAME, S_I_PRICE, S_QUANTITY, S_YTD, S_ORDER_CNT, S_DIST_%02d FROM STOCK WHERE S_W_ID = %d AND S_I_ID = %d", districtID, value.supplier, value.id)
 			row = tx.QueryRow(sqlStatement)
-			if err := row.Scan(&value.name, &value.price, &value.startStock, &value.data); err != nil {
+			if err := row.Scan(&value.name, &value.price, &value.startStock, &value.currYTD, &value.currOrderCnt, &value.data); err != nil {
 				return fmt.Errorf("error in getting the stock details for the item: w=%d id=%d \nErr: %v", value.supplier, value.id, err)
 			}
 
@@ -148,18 +149,6 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 				adjustedQty += 100
 			}
 			value.finalStock = adjustedQty
-
-			sqlStatement = fmt.Sprintf("UPDATE STOCK SET S_QUANTITY = %d, S_YTD = S_YTD + %d, S_ORDER_CNT = S_ORDER_CNT + 1, S_REMOTE_CNT = %d WHERE S_W_ID = %d AND S_I_ID = %d",
-				value.finalStock,
-				value.quantity,
-				value.remote,
-				value.supplier,
-				value.id,
-			)
-
-			if _, err := tx.Exec(sqlStatement); err != nil {
-				return fmt.Errorf("error in updating the stock details for the item: w=%d id=%d \nErr: %v", value.supplier, value.id, err)
-			}
 
 			orderLineAmount := value.price * float64(value.quantity)
 			totalAmount += orderLineAmount
@@ -178,6 +167,40 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 					orderLineAmount,
 					value.data,
 				))
+		}
+
+		bulkUpdatesOrderLineItems := make([]string, totalUniqueItems)
+		bulkQuantityUpdates := make([]string, totalUniqueItems)
+		bulkYTDUpdates := make([]string, totalUniqueItems)
+		bulkOrderCountUpdates := make([]string, totalUniqueItems)
+		bulkRemoteCountUpdates := make([]string, totalUniqueItems)
+
+		idx := 0
+		for _, value := range orderLineObjects {
+			bulkUpdatesOrderLineItems[idx] = fmt.Sprintf("(%d, %d)", value.supplier, value.id)
+			bulkQuantityUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.supplier, value.id, value.finalStock)
+			bulkYTDUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.supplier, value.id, int(value.currYTD)+value.quantity)
+			bulkOrderCountUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.supplier, value.id, value.currOrderCnt+1)
+			bulkRemoteCountUpdates[idx] = fmt.Sprintf("WHEN (%d, %d) THEN %d", value.supplier, value.id, value.remote)
+			idx++
+		}
+
+		sqlStatement = fmt.Sprintf(`
+			UPDATE STOCK 
+				SET S_QUANTITY = CASE (S_W_ID, S_I_ID) %s END, 
+				S_YTD = CASE (S_W_ID, S_I_ID) %s END, 
+				S_ORDER_CNT = CASE (S_W_ID, S_I_ID) %s END, 
+				S_REMOTE_CNT = CASE (S_W_ID, S_I_ID) %s END 
+			WHERE (S_W_ID, S_I_ID) IN (%s)`,
+			strings.Join(bulkQuantityUpdates, " "),
+			strings.Join(bulkYTDUpdates, " "),
+			strings.Join(bulkOrderCountUpdates, " "),
+			strings.Join(bulkRemoteCountUpdates, " "),
+			strings.Join(bulkUpdatesOrderLineItems, ", "),
+		)
+
+		if _, err := tx.Exec(sqlStatement); err != nil {
+			return fmt.Errorf("error in updating the stock details \nErr: %v", err)
 		}
 
 		sqlStatement = fmt.Sprintf("INSERT INTO %s (O_ID, O_D_ID, O_W_ID, O_C_ID, O_OL_CNT, O_ALL_LOCAL, O_TOTAL_AMOUNT) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING O_ENTRY_D", orderTable)
@@ -204,12 +227,12 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 
 	// printOutputState(warehouseID, districtID, customerID, cLastName, cCredit, cDiscount,
 	// 	newOrderID, orderTimestamp, totalUniqueItems, totalAmount, orderLineObjects)
-	log.Printf("Completed executing the transaction with the input data...")
+	// log.Printf("Completed executing the transaction with the input data...")
 	return nil
 }
 
 func insertItemPairsParallel(tx *sql.Tx, orderItemCustomerPairTable string, orderItemCustomerPair string) {
-	log.Printf("Inserting the item pairs")
+	// log.Printf("Inserting the item pairs")
 	sqlStatement := fmt.Sprintf("UPSERT INTO %s (IC_W_ID, IC_D_ID, IC_C_ID, IC_I_1_ID, IC_I_2_ID) VALUES %s", orderItemCustomerPairTable, orderItemCustomerPair)
 	sqlStatement = sqlStatement[0 : len(sqlStatement)-1]
 
@@ -218,7 +241,7 @@ func insertItemPairsParallel(tx *sql.Tx, orderItemCustomerPairTable string, orde
 		log.Fatalf("error occured in the item pairs for customers. Err: %v", err)
 	}
 
-	log.Printf("Completed inserting the item pairs")
+	// log.Printf("Completed inserting the item pairs")
 	// ch <- true
 }
 

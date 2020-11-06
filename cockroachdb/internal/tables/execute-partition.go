@@ -26,18 +26,28 @@ func ExecuteSQLForPartitions(c config.Configuration, warehouses, districts int, 
 	byteValue, _ := ioutil.ReadAll(sqlFile)
 	baseSQLStatement := string(byteValue)
 
-	ch := make(chan bool, 100)
+	ch := make(chan bool, 10)
 	errFound := false
-	for w := 1; w <= warehouses; w++ {
-		for d := 1; d <= districts; d++ {
+
+	db, err := cdbconn.CreateConnection(c.HostNode)
+	if err != nil {
+		panic("load function couldn't create a connection to the server")
+	}
+
+	for w := 1; w <= 10; w++ {
+		for d := 1; d <= 10; d++ {
 			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(w))
 			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(d))
 
-			go executeParallel(c, w, d, finalSQLStatement, ch)
+			if _, err := db.Exec(finalSQLStatement); err != nil {
+				log.Println(finalSQLStatement)
+				log.Fatalf("Err: %v", err)
+
+			}
 		}
 	}
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		<-ch
 	}
 
@@ -49,17 +59,23 @@ func ExecuteSQLForPartitions(c config.Configuration, warehouses, districts int, 
 	return nil
 }
 
-func executeParallel(c config.Configuration, w, d int, finalSQLStatement string, ch chan bool) {
+func executeParallel(c config.Configuration, w int, baseSQLStatement string, ch chan bool) {
 	db, err := cdbconn.CreateConnection(c.HostNode)
 	if err != nil {
 		panic("load function couldn't create a connection to the server")
 	}
 
-	if _, err := db.Exec(finalSQLStatement); err != nil {
-		log.Println(finalSQLStatement)
-		log.Fatalf("Err: %v", err)
-		ch <- false
+	for d := 1; d <= 10; d++ {
+		finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(w))
+		finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(d))
+
+		if _, err := db.Exec(finalSQLStatement); err != nil {
+			log.Println(finalSQLStatement)
+			log.Fatalf("Err: %v", err)
+			ch <- false
+		}
 	}
-	log.Printf("Executed partition: %d %d", w, d)
+
+	log.Printf("Executed partition: w=%d", w)
 	ch <- true
 }

@@ -21,12 +21,12 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 		return false
 	}
 
-	log.Printf("Completed the Stock Level Transaction for: w=%d d=%d t=%d n=%d", warehouseID, districtID, threshold, lastNOrders)
+	// log.Printf("Completed the Stock Level Transaction for: w=%d d=%d t=%d n=%d", warehouseID, districtID, threshold, lastNOrders)
 	return true
 }
 
 func execute(db *sql.DB, warehouseID, districtID, threshold, lastNOrders int) error {
-	log.Printf("Executing the transaction with the input data...")
+	// log.Printf("Executing the transaction with the input data...")
 	var totalItems, lastOrderID int
 
 	row := db.QueryRow("SELECT d_next_o_id FROM district WHERE d_w_id=$1 AND d_id=$2", warehouseID, districtID)
@@ -54,7 +54,7 @@ func execute(db *sql.DB, warehouseID, districtID, threshold, lastNOrders int) er
 	}
 
 	// printOutputState(totalItems, lastOrderID-lastNOrders, lastOrderID)
-	log.Printf("Completed executing the transaction with the input data...")
+	// log.Printf("Completed executing the transaction with the input data...")
 	return nil
 }
 

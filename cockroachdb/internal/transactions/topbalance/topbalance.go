@@ -25,12 +25,12 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner) bool {
 		return false
 	}
 
-	log.Printf("Completed the Top Balance Transaction")
+	// log.Printf("Completed the Top Balance Transaction")
 	return true
 }
 
 func execute(db *sql.DB) error {
-	log.Printf("Executing the transaction with the input data...")
+	// log.Printf("Executing the transaction with the input data...")
 
 	customerQuery := "SELECT C_FIRST, C_MIDDLE, C_LAST, C_W_ID, C_D_ID, C_BALANCE FROM CUSTOMER ORDER BY C_BALANCE DESC LIMIT 10"
 	districtQuery := "SELECT D_NAME FROM DISTRICT WHERE D_W_ID=%d AND D_ID=%d"
@@ -71,6 +71,6 @@ func execute(db *sql.DB) error {
 	// 		customer.first, customer.middle, customer.last, customer.balance, customer.warehouseName, customer.districtName))
 	// }
 
-	log.Printf("Executing the transaction with the input data...")
+	// log.Printf("Executing the transaction with the input data...")
 	return nil
 }

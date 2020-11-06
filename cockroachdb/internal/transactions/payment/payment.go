@@ -25,12 +25,12 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 		return false
 	}
 
-	log.Printf("Completed the Payment Transaction for: w=%d d=%d c=%d p=%f", warehouseID, districtID, customerID, paymentAmt)
+	// log.Printf("Completed the Payment Transaction for: w=%d d=%d c=%d p=%f", warehouseID, districtID, customerID, paymentAmt)
 	return true
 }
 
 func execute(db *sql.DB, customerWHID int, customerDistrictID int, customerID int, payment float64) error {
-	log.Printf("Executing the transaction with the input data...")
+	// log.Printf("Executing the transaction with the input data...")
 
 	updateDistrict := fmt.Sprintf("UPDATE DISTRICT SET D_YTD = D_YTD + %f WHERE D_W_ID = %d AND D_ID = %d RETURNING D_STREET_1, D_STREET_2, D_CITY, D_STATE, D_ZIP",
 		payment, customerWHID, customerDistrictID)
@@ -83,6 +83,6 @@ func execute(db *sql.DB, customerWHID int, customerDistrictID int, customerID in
 	// )
 	// fmt.Println(output)
 
-	log.Printf("Completed executing the transaction with the input data...")
+	// log.Printf("Completed executing the transaction with the input data...")
 	return nil
 }
