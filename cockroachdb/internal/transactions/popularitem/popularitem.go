@@ -34,12 +34,12 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 		return false
 	}
 
-	log.Printf("Completed the Popular Item Transaction for: w=%d d=%d n=%d", warehouseID, districtID, lastNOrders)
+	// log.Printf("Completed the Popular Item Transaction for: w=%d d=%d n=%d", warehouseID, districtID, lastNOrders)
 	return true
 }
 
 func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) error {
-	log.Printf("Executing the transaction with the input data...")
+	// log.Printf("Executing the transaction with the input data...")
 	var lastOrderID, startOrderID int
 
 	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)
@@ -139,7 +139,7 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) error {
 	}
 
 	// printOutputState(warehouseID, districtID, startOrderID, lastOrderID, lastNOrder, ordersMap, itemOccurrancePercentageMap)
-	log.Printf("Completed executing the transaction with the input data...")
+	// log.Printf("Completed executing the transaction with the input data...")
 	return nil
 }
 

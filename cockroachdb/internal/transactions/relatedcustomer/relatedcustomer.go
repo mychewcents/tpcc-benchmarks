@@ -22,12 +22,12 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 		return false
 	}
 
-	log.Printf("Completed the Related Customer Transaction for: w=%d d=%d c=%d", warehouseID, districtID, customerID)
+	// log.Printf("Completed the Related Customer Transaction for: w=%d d=%d c=%d", warehouseID, districtID, customerID)
 	return true
 }
 
 func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
-	log.Printf("Executing the transaction with the input data...")
+	// log.Printf("Executing the transaction with the input data...")
 
 	relatedCustomerIdentifiers := make(map[int]map[int][]int)
 	orderItemCustomerPairTable := "ORDER_ITEMS_CUSTOMERS_WID_DID"
@@ -91,7 +91,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID int) error {
 	}
 
 	// printOutputState(warehouseID, districtID, customerID, relatedCustomerIdentifiers)
-	log.Printf("Completed executing the transaction with the input data...")
+	// log.Printf("Completed executing the transaction with the input data...")
 	return nil
 }
 

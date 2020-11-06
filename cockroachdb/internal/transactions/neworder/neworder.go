@@ -94,7 +94,7 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, args []string) bool 
 }
 
 func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal, totalUniqueItems int, orderLineObjects []*itemObject, sortedOrderItems []int) error {
-	log.Printf("Executing the transaction with the input data...")
+	// log.Printf("Executing the transaction with the input data...")
 
 	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)
 	orderLineTable := fmt.Sprintf("ORDER_LINE_%d_%d", warehouseID, districtID)
@@ -134,7 +134,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 	err := crdb.ExecuteTx(context.Background(), db, nil, func(tx *sql.Tx) error {
 		var orderLineEntries []string
 
-		log.Printf("Starting the insert of the Item Pair for the customer: c=%d w=%d d=%d ", customerID, warehouseID, districtID)
+		// log.Printf("Starting the insert of the Item Pair for the customer: c=%d w=%d d=%d ", customerID, warehouseID, districtID)
 		insertItemPairsParallel(tx, orderItemCustomerPairTable, orderItemCustomerPair.String())
 
 		for key, value := range orderLineObjects {
@@ -227,12 +227,12 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 
 	// printOutputState(warehouseID, districtID, customerID, cLastName, cCredit, cDiscount,
 	// 	newOrderID, orderTimestamp, totalUniqueItems, totalAmount, orderLineObjects)
-	log.Printf("Completed executing the transaction with the input data...")
+	// log.Printf("Completed executing the transaction with the input data...")
 	return nil
 }
 
 func insertItemPairsParallel(tx *sql.Tx, orderItemCustomerPairTable string, orderItemCustomerPair string) {
-	log.Printf("Inserting the item pairs")
+	// log.Printf("Inserting the item pairs")
 	sqlStatement := fmt.Sprintf("UPSERT INTO %s (IC_W_ID, IC_D_ID, IC_C_ID, IC_I_1_ID, IC_I_2_ID) VALUES %s", orderItemCustomerPairTable, orderItemCustomerPair)
 	sqlStatement = sqlStatement[0 : len(sqlStatement)-1]
 
@@ -241,7 +241,7 @@ func insertItemPairsParallel(tx *sql.Tx, orderItemCustomerPairTable string, orde
 		log.Fatalf("error occured in the item pairs for customers. Err: %v", err)
 	}
 
-	log.Printf("Completed inserting the item pairs")
+	// log.Printf("Completed inserting the item pairs")
 	// ch <- true
 }
 
