@@ -64,7 +64,7 @@ func main() {
 		if status == true {
 			latencies = append(latencies, float64(time.Since(start))/float64(time.Millisecond))
 		}
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(150 * time.Millisecond)
 	}
 
 	if err := performance.RecordPerformanceMetrics(*experiment, *client, latencies, "results/metrics"); err != nil {
