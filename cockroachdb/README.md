@@ -98,6 +98,8 @@ Before every experiment, we just need to run the above `./setupCmd` again to cle
    $ ./serverCmd -env=prod -config=configs/prod/setup_5.json -node=1 export
    ```
 
+   NOTE: The export for the non-partitioned tables are on the basis of their names. However, for the partitioned tables, the exports follow the format of `<warehouse id>_<district id>.csv`.
+
    Once exported, for any following initializations, one can use the `load-csv` command as follows:
 
    ```bash
