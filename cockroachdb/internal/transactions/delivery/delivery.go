@@ -23,7 +23,7 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, transactionArgs []st
 	log.Printf("Starting the Delivery Transaction for: w=%d c=%d", warehouseID, carrierID)
 
 	if err := execute(db, warehouseID, carrierID); err != nil {
-		log.Println("error occured while executing the delivery transaction. Err: %v", err)
+		log.Printf("error occured while executing the delivery transaction. Err: %v", err)
 		return false
 	}
 
