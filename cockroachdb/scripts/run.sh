@@ -27,7 +27,7 @@ then
   echo "Happy Running!"
   echo
   echo
-elif [ "$#" -eq 3 ] 
+elif [ "$#" -eq 4 ] 
 then
   if [ $1 == "dev" ] || [ $1 == "prod" ]
   then
