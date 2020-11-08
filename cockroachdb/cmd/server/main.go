@@ -135,6 +135,7 @@ func run(c config.Configuration) exec.Cmd {
 			*env,
 			fmt.Sprintf("%d", *experiment),
 			fmt.Sprintf("%d", *nodeID),
+			*configFilePath,
 		},
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,

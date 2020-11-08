@@ -33,14 +33,16 @@ then
   then
     env=$1
     exp=$2
-    host_or_client=$3
+    config_file_path=$4
     if [ $exp -gt 4 ] && [ $exp -lt 9 ] 
     then
       if [ $env == 'dev' ]
       then
-        ./clientCmd -exp=$exp -client=$host_or_client -config=configs/dev/setup.json -node=1 < assets/data/transactions/$host_or_client.txt
+        client=$3
+        ./clientCmd -exp=$exp -client=$client -config=$config_file_path -node=1 < assets/data/transactions/$client.txt
       elif [ $env == 'prod' ]
       then
+        node=$3
         skip=5
         total=20
 
@@ -59,7 +61,7 @@ then
 
         for (( i=host_or_client; i<=total; i=i+skip ))
         do
-          ./clientCmd -exp=$exp -client=$i -config=configs/prod/setup_$skip.json -node=$3 < assets/data/transactions/$i.txt &
+          ./clientCmd -exp=$exp -client=$i -config=$config_file_path -node=$node < assets/data/transactions/$i.txt &
         done
       fi
     fi
