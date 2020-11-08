@@ -57,17 +57,6 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	var latencies []float64
 
-	switch *nodeID {
-	case 2:
-		time.Sleep(50 * time.Millisecond)
-	case 3:
-		time.Sleep(70 * time.Millisecond)
-	case 4:
-		time.Sleep(90 * time.Millisecond)
-	case 5:
-		time.Sleep(110 * time.Millisecond)
-	}
-
 	for scanner.Scan() {
 		txArgs = strings.Split(scanner.Text(), ",")
 
@@ -76,7 +65,6 @@ func main() {
 		if status == true {
 			latencies = append(latencies, float64(time.Since(start))/float64(time.Millisecond))
 		}
-		time.Sleep(150 * time.Millisecond)
 	}
 
 	if err := performance.RecordPerformanceMetrics(*experiment, *client, latencies, "results/metrics"); err != nil {
