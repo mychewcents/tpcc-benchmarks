@@ -26,7 +26,7 @@ func ExecuteSQLForPartitions(c config.Configuration, warehouses, districts int, 
 	byteValue, _ := ioutil.ReadAll(sqlFile)
 	baseSQLStatement := string(byteValue)
 
-	ch := make(chan bool, 10)
+	// ch := make(chan bool, 10)
 	errFound := false
 
 	db, err := cdbconn.CreateConnection(c.HostNode)
