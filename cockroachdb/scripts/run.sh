@@ -59,7 +59,7 @@ then
           ;;
         esac
 
-        for (( i=host; i<=total; i=i+skip ))
+        for (( i=node; i<=total; i=i+skip ))
         do
           ./clientCmd -exp=$exp -client=$i -config=$config_file_path -node=$node < assets/data/transactions/$i.txt &
         done
