@@ -9,7 +9,6 @@ import (
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/orderstatus"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/payment"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/popularitem"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/relatedcustomer"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/stocklevel"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/topbalance"
 )
@@ -32,7 +31,7 @@ func ProcessRequest(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string
 	case "T":
 		return topbalance.ProcessTransaction(db, nil)
 	case "R":
-		return relatedcustomer.ProcessTransaction(db, nil, transactionArgs[1:])
+		// return relatedcustomer.ProcessTransaction(db, nil, transactionArgs[1:])
 	}
 	return false
 }
