@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -80,12 +79,12 @@ func ProcessTransaction(db *sql.DB, scanner *bufio.Scanner, args []string) bool 
 
 	orderLineObjects = orderLineObjects[0:totalUniqueItems]
 	orderItems = orderItems[0:totalUniqueItems]
-	sort.Ints(orderItems)
+	// sort.Ints(orderItems)
 
 	log.Printf("Completed pre-processing the input data...")
 
 	if err := execute(db, warehouseID, districtID, customerID, totalUniqueItems, isLocal, totalUniqueItems, orderLineObjects, orderItems); err != nil {
-		log.Println("error occured while executing the new order transaction. Err: %v", err)
+		log.Printf("error occured while executing the new order transaction. Err: %v", err)
 		return false
 	}
 
@@ -98,7 +97,7 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 
 	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)
 	orderLineTable := fmt.Sprintf("ORDER_LINE_%d_%d", warehouseID, districtID)
-	orderItemCustomerPairTable := fmt.Sprintf("ORDER_ITEMS_CUSTOMERS_%d_%d", warehouseID, districtID)
+	// orderItemCustomerPairTable := fmt.Sprintf("ORDER_ITEMS_CUSTOMERS_%d_%d", warehouseID, districtID)
 
 	sqlStatement := fmt.Sprintf("UPDATE District SET D_NEXT_O_ID = D_NEXT_O_ID + 1 WHERE D_W_ID = %d AND D_ID = %d RETURNING D_NEXT_O_ID, D_TAX, D_W_TAX", warehouseID, districtID)
 
@@ -122,20 +121,20 @@ func execute(db *sql.DB, warehouseID, districtID, customerID, numItems, isLocal,
 	var totalAmount float64
 	var orderTimestamp string
 
-	var orderItemCustomerPair strings.Builder
+	// var orderItemCustomerPair strings.Builder
 
-	for i := 0; i < len(sortedOrderItems)-1; i++ {
-		for j := i + 1; j < len(sortedOrderItems); j++ {
-			orderItemCustomerPair.WriteString(fmt.Sprintf("(%d, %d, %d, %d, %d),", warehouseID, districtID, customerID, sortedOrderItems[i], sortedOrderItems[j]))
-		}
-	}
+	// for i := 0; i < len(sortedOrderItems)-1; i++ {
+	// 	for j := i + 1; j < len(sortedOrderItems); j++ {
+	// 		orderItemCustomerPair.WriteString(fmt.Sprintf("(%d, %d, %d, %d, %d),", warehouseID, districtID, customerID, sortedOrderItems[i], sortedOrderItems[j]))
+	// 	}
+	// }
 
 	// var ch chan bool
 	err := crdb.ExecuteTx(context.Background(), db, nil, func(tx *sql.Tx) error {
 		var orderLineEntries []string
 
 		// log.Printf("Starting the insert of the Item Pair for the customer: c=%d w=%d d=%d ", customerID, warehouseID, districtID)
-		insertItemPairsParallel(tx, orderItemCustomerPairTable, orderItemCustomerPair.String())
+		// insertItemPairsParallel(tx, orderItemCustomerPairTable, orderItemCustomerPair.String())
 
 		for key, value := range orderLineObjects {
 			sqlStatement = fmt.Sprintf("SELECT S_I_NAME, S_I_PRICE, S_QUANTITY, S_YTD, S_ORDER_CNT, S_DIST_%02d FROM STOCK WHERE S_W_ID = %d AND S_I_ID = %d", districtID, value.supplier, value.id)
@@ -237,7 +236,7 @@ func insertItemPairsParallel(tx *sql.Tx, orderItemCustomerPairTable string, orde
 
 	if _, err := tx.Exec(sqlStatement); err != nil {
 		// ch <- false
-		log.Println("error occured in the item pairs for customers. Err: %v", err)
+		log.Printf("error occured in the item pairs for customers. Err: %v", err)
 	}
 
 	// log.Printf("Completed inserting the item pairs")
