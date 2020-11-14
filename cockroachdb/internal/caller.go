@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"database/sql"
 
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/router"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/delivery"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/neworder"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/orderstatus"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/payment"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/popularitem"
@@ -15,9 +15,12 @@ import (
 
 // ProcessRequest Calls the required DB function
 func ProcessRequest(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) bool {
+
+	txRouter := router.GetNewRouter(db)
+
 	switch transactionArgs[0] {
 	case "N":
-		return neworder.ProcessTransaction(db, scanner, transactionArgs[1:])
+		return txRouter.ProcessTransaction(scanner, transactionArgs)
 	case "P":
 		return payment.ProcessTransaction(db, nil, transactionArgs[1:])
 	case "D":

@@ -3,13 +3,14 @@ package controller
 import (
 	"bufio"
 	"database/sql"
+	"log"
 	"strconv"
 	"strings"
 
+	"github.com/mychewcents/ddbms-project/cockroachdb/internal/internal/handler"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/internal/internal/models"
 	"github.com/mychewcents/ddbms-project/cockroachdb/internal/internal/internal/services"
 )
-
 
 // NewOrderControllerImpl provides the interface to call the service
 type NewOrderControllerImpl struct {
@@ -17,9 +18,9 @@ type NewOrderControllerImpl struct {
 }
 
 // GetNewNewOrderController get the new controller to execute the New Order Transaction
-func GetNewNewOrderController(db *sql.DB) NewTransactionController {
+func GetNewNewOrderController(db *sql.DB) handler.NewTransactionController {
 	return &NewOrderControllerImpl{
-		s: &services.GetNewOrderService(db)
+		s: services.GetNewOrderService(db),
 	}
 }
 
