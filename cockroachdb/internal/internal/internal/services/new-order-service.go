@@ -19,15 +19,25 @@ type NewOrderService interface {
 
 // NewOrderServiceImpl stores the new order input and output models
 type NewOrderServiceImpl struct {
-	d  dao.NewOrderDao
-	db *sql.DB
+	d   dao.DistrictDao
+	c   dao.CustomerDao
+	s   dao.StockDao
+	o   dao.OrderDao
+	ol  dao.OrderLineDao
+	cip dao.CustomerItemsPairDao
+	db  *sql.DB
 }
 
 // GetNewOrderService returns the object for a new order transaction
 func GetNewOrderService(db *sql.DB) NewOrderService {
 	return &NewOrderServiceImpl{
-		db: db,
-		d:  dao.GetNewNewOrderDao(db),
+		db:  db,
+		d:   dao.CreateDistrictDao(db),
+		c:   dao.CreateCustomerDao(db),
+		s:   dao.CreateStockDao(db),
+		o:   dao.CreateOrderDao(db),
+		ol:  dao.CreateOrderLineDao(db),
+		cip: dao.CreateCustomerItemsPairDao(db),
 	}
 }
 
@@ -47,50 +57,45 @@ func (nos *NewOrderServiceImpl) ProcessNewOrderTransaction(req *models.NewOrder)
 func (nos *NewOrderServiceImpl) execute(req *models.NewOrder) (*models.NewOrderOutput, error) {
 	// log.Printf("Executing the transaction with the input data...")
 
-	newOrderID, districtTax, warehouseTax, err := nos.d.GetNewOrderIDAndTaxRates(req)
+	newOrderID, districtTax, warehouseTax, err := nos.d.GetNewOrderIDAndTaxRates(req.WarehouseID, req.DistrictID)
 	if err != nil {
 		return nil, err
 	}
 	result := &models.NewOrderOutput{
-		Customer: &models.NewOrderCustomerInfo{
-			WarehouseID: req.WarehouseID,
-			DistrictID:  req.DistrictID,
-			CustomerID:  req.CustomerID,
-		},
 		DistrictTax:  districtTax,
 		WarehouseTax: warehouseTax,
 		OrderID:      newOrderID,
 	}
 
-	cLastName, cCredit, cDiscount, err := nos.d.GetCustomerInformation(req)
+	customer, err := nos.c.GetCustomerDetails(req.WarehouseID, req.DistrictID, req.CustomerID)
 	if err != nil {
 		return nil, err
 	}
-	result.Customer.LastName = cLastName
-	result.Customer.Credit = cCredit
-	result.Customer.Discount = cDiscount
+	result.Customer = customer
 
-	if err := nos.d.InsertOrderPairItems(req); err != nil {
+	if err := nos.cip.Insert(req.WarehouseID, req.DistrictID, req.CustomerID, req.UniqueItems, req.NewOrderLineItems); err != nil {
 		return nil, err
 	}
 
 	if err := crdb.ExecuteTx(context.Background(), nos.db, nil, func(tx *sql.Tx) error {
-		if err := nos.d.GetItemDetails(tx, req); err != nil {
+
+		totalAmount, err := nos.s.GetStockDetails(tx, req.DistrictID, req.NewOrderLineItems)
+		if err != nil {
 			return err
 		}
 
-		orderUpdateStatement, orderLineUpdateStatement, stockUpdateStatement := nos.d.PrepareStatements(newOrderID, req)
+		result.TotalOrderAmount = totalAmount
 
-		if _, err := tx.Exec(stockUpdateStatement); err != nil {
+		if err := nos.s.UpdateStockDetails(tx, req.NewOrderLineItems); err != nil {
 			return fmt.Errorf("error in updating stock table: w=%d d=%d o=%d \n Err: %v", req.WarehouseID, req.DistrictID, newOrderID, err)
 		}
 
-		row := tx.QueryRow(orderUpdateStatement)
-		if err := row.Scan(&result.OrderTimestamp); err != nil {
+		result.OrderTimestamp, err = nos.o.Insert(tx, req.WarehouseID, req.DistrictID, req.CustomerID, newOrderID, req.UniqueItems, req.IsOrderLocal, req.TotalAmount)
+		if err != nil {
 			return fmt.Errorf("error in inserting new order row: w=%d d=%d o=%d \n Err: %v", req.WarehouseID, req.DistrictID, newOrderID, err)
 		}
 
-		if _, err := tx.Exec(orderLineUpdateStatement); err != nil {
+		if err := nos.ol.Insert(tx, req.WarehouseID, req.DistrictID, newOrderID, req.NewOrderLineItems); err != nil {
 			return fmt.Errorf("error in inserting new order line rows: w=%d d=%d o=%d \n Err: %v", req.WarehouseID, req.DistrictID, newOrderID, err)
 		}
 

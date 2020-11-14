@@ -1,5 +1,7 @@
 package models
 
+import "github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/internal/dbdatamodel"
+
 // NewOrder defines the new order object
 type NewOrder struct {
 	WarehouseID       int
@@ -29,7 +31,7 @@ type NewOrderOrderLineItem struct {
 
 // NewOrderOutput stores the final output of the new order transaction
 type NewOrderOutput struct {
-	Customer         *NewOrderCustomerInfo
+	Customer         *dbdatamodel.Customer
 	OrderID          int
 	OrderTimestamp   string
 	UniqueItems      int
@@ -37,14 +39,4 @@ type NewOrderOutput struct {
 	DistrictTax      float64
 	WarehouseTax     float64
 	OrderLineItems   map[int]*NewOrderOrderLineItem
-}
-
-// NewOrderCustomerInfo to be used by the Output state
-type NewOrderCustomerInfo struct {
-	WarehouseID int
-	DistrictID  int
-	CustomerID  int
-	LastName    string
-	Credit      string
-	Discount    float64
 }
