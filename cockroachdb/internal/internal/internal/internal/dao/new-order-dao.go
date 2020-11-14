@@ -11,7 +11,6 @@ import (
 
 // NewOrderDao provides the interface for the required functions
 type NewOrderDao interface {
-	GetNewOrderIDAndTaxRates(req *models.NewOrder) (newOrderID int, wTax, dTax float64, err error)
 	GetCustomerInformation(req *models.NewOrder) (cLastName, cCredit string, cDiscount float64, err error)
 	InsertOrderPairItems(req *models.NewOrder) error
 	GetItemDetails(tx *sql.Tx, req *models.NewOrder) error
@@ -26,30 +25,6 @@ type NewOrderDaoImpl struct {
 // GetNewNewOrderDao gets the new DAO implementation for the NewOrder
 func GetNewNewOrderDao(db *sql.DB) NewOrderDao {
 	return &NewOrderDaoImpl{db: db}
-}
-
-// GetNewOrderIDAndTaxRates gets the new order id and the tax rates
-func (n *NewOrderDaoImpl) GetNewOrderIDAndTaxRates(req *models.NewOrder) (newOrderID int, wTax, dTax float64, err error) {
-	sqlStatement := fmt.Sprintf("UPDATE District SET D_NEXT_O_ID = D_NEXT_O_ID + 1 WHERE D_W_ID = $1 AND D_ID = $2 RETURNING D_NEXT_O_ID, D_TAX, D_W_TAX")
-
-	row := n.db.QueryRow(sqlStatement, req.WarehouseID, req.DistrictID)
-	if err := row.Scan(&newOrderID, &dTax, &wTax); err != nil {
-		return 0, 0.0, 0.0, fmt.Errorf("error occured in updating the district table for the next order id. Err: %v", err)
-	}
-
-	return
-}
-
-// GetCustomerInformation gets the customer information
-func (n *NewOrderDaoImpl) GetCustomerInformation(req *models.NewOrder) (cLastName, cCredit string, cDiscount float64, err error) {
-	sqlStatement := fmt.Sprintf("SELECT C_LAST, C_CREDIT, C_DISCOUNT FROM CUSTOMER WHERE C_W_ID = $1 AND C_D_ID = $2 AND C_ID = $3")
-
-	row := n.db.QueryRow(sqlStatement, req.WarehouseID, req.DistrictID, req.CustomerID)
-	if err := row.Scan(&cLastName, &cCredit, &cDiscount); err != nil {
-		return "", "", 0.0, fmt.Errorf("error occured in getting the customer details. Err: %v", err)
-	}
-
-	return
 }
 
 // InsertOrderPairItems inserts new order item pairs
