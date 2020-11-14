@@ -1,6 +1,6 @@
 package processedtables
 
-import "github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/connection/config"
+import "github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/config"
 
 // PerformETL performs ETL for processed tables
 func PerformETL(c config.Configuration) error {

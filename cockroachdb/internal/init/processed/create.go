@@ -3,7 +3,7 @@ package processedtables
 import (
 	"log"
 
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/connection/config"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/config"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/tables"
 )
 
