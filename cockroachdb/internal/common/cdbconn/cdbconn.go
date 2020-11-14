@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/config"
 
 	// Because we're using the Postgres Driver
 	_ "github.com/lib/pq"

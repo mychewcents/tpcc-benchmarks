@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"database/sql"
 
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/internal/controller"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/internal/handler"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/controller"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/handler"
 )
 
 // TransactionRouter stores the handlers
@@ -24,10 +24,11 @@ func GetNewRouter(db *sql.DB) *TransactionRouter {
 }
 
 // ProcessTransaction processes each transaction upon input
-func (tr *TransactionRouter) ProcessTransaction(scanner *bufio.Scanner, args []string) bool {
+func (tr *TransactionRouter) ProcessTransaction(scanner *bufio.Scanner, args []string) (completed bool) {
 	switch args[0] {
 	case "N":
-		tr.handlers["N"].HandleTransaction(scanner, args[1:])
+		completed = tr.handlers["N"].HandleTransaction(scanner, args[1:])
 	}
-	return true
+
+	return completed
 }

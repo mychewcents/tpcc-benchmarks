@@ -2,7 +2,7 @@ package dao
 
 import (
 	"github.com/gocql/gocql"
-	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
+	"github.com/mychewcents/tpcc-benchmarks/cassandra/internal/common"
 	"log"
 )
 

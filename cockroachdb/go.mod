@@ -1,4 +1,4 @@
-module github.com/mychewcents/ddbms-project/cockroachdb
+module github.com/mychewcents/tpcc-benchmarks/cockroachdb
 
 go 1.15
 

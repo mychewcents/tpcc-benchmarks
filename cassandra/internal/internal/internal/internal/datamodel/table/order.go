@@ -3,7 +3,7 @@ package table
 import (
 	"github.com/gocql/gocql"
 	"github.com/mitchellh/mapstructure"
-	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/datamodel/udt"
+	"github.com/mychewcents/tpcc-benchmarks/cassandra/internal/internal/internal/internal/datamodel/udt"
 	"time"
 )
 

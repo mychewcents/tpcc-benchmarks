@@ -1,6 +1,6 @@
 package main
 
-import cassandra_client "github.com/mychewcents/ddbms-project/cassandra/internal"
+import cassandra_client "github.com/mychewcents/tpcc-benchmarks/cassandra/internal"
 
 func main() {
 	cassandra_client.Start()

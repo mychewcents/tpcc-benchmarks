@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/cdbconn"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/connection/cdbconn"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/connection/config"
 )
 
 // ExecuteSQL executes the SQL file passed in the path variable

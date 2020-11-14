@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/cdbconn"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/logging"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/statistics/dbstate"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/connection/cdbconn"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/connection/config"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/logging"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/statistics/dbstate"
 )
 
 var db *sql.DB

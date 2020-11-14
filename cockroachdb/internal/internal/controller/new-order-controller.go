@@ -7,25 +7,25 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/internal/handler"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/internal/internal/models"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/internal/internal/services"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/handler"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/models"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/services"
 )
 
 // NewOrderControllerImpl provides the interface to call the service
-type NewOrderControllerImpl struct {
+type newOrderControllerImpl struct {
 	s services.NewOrderService
 }
 
 // GetNewNewOrderController get the new controller to execute the New Order Transaction
 func GetNewNewOrderController(db *sql.DB) handler.NewTransactionController {
-	return &NewOrderControllerImpl{
+	return &newOrderControllerImpl{
 		s: services.GetNewOrderService(db),
 	}
 }
 
 // HandleTransaction performs the transaction and returns the execution result in Boolean
-func (noc *NewOrderControllerImpl) HandleTransaction(scanner *bufio.Scanner, args []string) bool {
+func (noc *newOrderControllerImpl) HandleTransaction(scanner *bufio.Scanner, args []string) bool {
 	cID, _ := strconv.Atoi(args[0])
 	wID, _ := strconv.Atoi(args[1])
 	dID, _ := strconv.Atoi(args[2])

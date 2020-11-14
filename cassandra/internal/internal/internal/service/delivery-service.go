@@ -1,10 +1,10 @@
 package service
 
 import (
-	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
-	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/dao"
-	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/datamodel/table"
-	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/model"
+	"github.com/mychewcents/tpcc-benchmarks/cassandra/internal/common"
+	"github.com/mychewcents/tpcc-benchmarks/cassandra/internal/internal/internal/internal/dao"
+	"github.com/mychewcents/tpcc-benchmarks/cassandra/internal/internal/internal/internal/datamodel/table"
+	"github.com/mychewcents/tpcc-benchmarks/cassandra/internal/internal/internal/model"
 	"io"
 	"log"
 )

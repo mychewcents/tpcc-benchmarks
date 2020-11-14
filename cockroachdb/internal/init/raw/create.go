@@ -3,8 +3,8 @@ package rawtables
 import (
 	"log"
 
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/tables"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/connection/config"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/tables"
 )
 
 // CreateParent creates tables

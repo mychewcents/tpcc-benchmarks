@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/cdbconn"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/connection/cdbconn"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/connection/config"
 )
 
 // ExecuteSQLForPartitions executes the SQL for the required partitions

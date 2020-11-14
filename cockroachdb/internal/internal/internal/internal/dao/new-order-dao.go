@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/internal/internal/models"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/models"
 )
 
 // NewOrderDao provides the interface for the required functions

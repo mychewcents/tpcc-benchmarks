@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/cockroach-go/crdb"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/internal/internal/internal/dao"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/internal/internal/models"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/internal/dao"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/models"
 )
 
 // NewOrderService provides the implementation of the New Order transaciton

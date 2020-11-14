@@ -1,4 +1,4 @@
-module github.com/mychewcents/ddbms-project/cassandra
+module github.com/mychewcents/tpcc-benchmarks/cassandra
 
 go 1.13
 
