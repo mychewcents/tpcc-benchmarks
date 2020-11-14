@@ -26,11 +26,8 @@ func GetNewRouter(db *sql.DB) *TransactionRouter {
 
 // ProcessTransaction processes each transaction upon input
 func (tr *TransactionRouter) ProcessTransaction(scanner *bufio.Scanner, args []string) (completed bool) {
-	switch args[0] {
-	case "N":
-		completed = tr.handlers["N"].HandleTransaction(scanner, args[1:])
-	case "S":
-		completed = tr.handlers["S"].HandleTransaction(nil, args[1:])
+	if args[0] = "N" || args[0] = "S" {
+		completed = tr.handlers[args[0]].HandleTransaction(scanner, args[1:])
 	}
 
 	return completed
