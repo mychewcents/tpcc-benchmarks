@@ -1,4 +1,4 @@
-package neworder
+package models
 
 // NewOrder defines the new order object
 type NewOrder struct {
@@ -9,11 +9,11 @@ type NewOrder struct {
 	UniqueItems       int
 	TotalAmount       float64
 	OrderTimestamp    string
-	NewOrderLineItems map[int]*OrderLineItem
+	NewOrderLineItems map[int]*NewOrderOrderLineItem
 }
 
-// OrderLineItem defines the order lines items for new orders
-type OrderLineItem struct {
+// NewOrderOrderLineItem defines the order lines items for new orders
+type NewOrderOrderLineItem struct {
 	Name                string
 	SupplierWarehouseID int
 	Quantity            int
@@ -27,20 +27,20 @@ type OrderLineItem struct {
 	Amount              float64
 }
 
-// Output stores the final output of the new order transaction
-type Output struct {
-	Customer         *CustomerInfo
+// NewOrderOutput stores the final output of the new order transaction
+type NewOrderOutput struct {
+	Customer         *NewOrderCustomerInfo
 	OrderID          int
 	OrderTimestamp   string
 	UniqueItems      int
 	TotalOrderAmount float64
 	DistrictTax      float64
 	WarehouseTax     float64
-	OrderLineItems   map[int]*OrderLineItem
+	OrderLineItems   map[int]*NewOrderOrderLineItem
 }
 
-// CustomerInfo to be used by the Output state
-type CustomerInfo struct {
+// NewOrderCustomerInfo to be used by the Output state
+type NewOrderCustomerInfo struct {
 	WarehouseID int
 	DistrictID  int
 	CustomerID  int
