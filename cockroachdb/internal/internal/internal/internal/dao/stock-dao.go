@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/models"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/internal/dbdatamodel"
 )
 
 // StockDao creates the Dao object for the Stock table
 type StockDao interface {
-	GetStockDetails(tx *sql.Tx, districtID int, orderLineItems map[int]*models.NewOrderOrderLineItem) (totalAmount float64, err error)
-	UpdateStockDetails(tx *sql.Tx, orderLineItems map[int]*models.NewOrderOrderLineItem) error
+	GetStockDetails(tx *sql.Tx, districtID int, orderLineItems map[int]*dbdatamodel.OrderLineItem) (totalAmount float64, err error)
+	UpdateStockDetails(tx *sql.Tx, orderLineItems map[int]*dbdatamodel.OrderLineItem) error
+	GetStockItemsBelowThreshold(warehouseID, districtID, threshold, startOrderID, lastOrderID int) (count int, err error)
 }
 
 type stockDaoImpl struct {
@@ -24,7 +25,7 @@ func CreateStockDao(db *sql.DB) StockDao {
 }
 
 // GetStockDetails gets the stock details
-func (s *stockDaoImpl) GetStockDetails(tx *sql.Tx, districtID int, orderLineItems map[int]*models.NewOrderOrderLineItem) (totalAmount float64, err error) {
+func (s *stockDaoImpl) GetStockDetails(tx *sql.Tx, districtID int, orderLineItems map[int]*dbdatamodel.OrderLineItem) (totalAmount float64, err error) {
 	var itemsWhereClause strings.Builder
 
 	for key, value := range orderLineItems {
@@ -75,7 +76,7 @@ func (s *stockDaoImpl) GetStockDetails(tx *sql.Tx, districtID int, orderLineItem
 	return
 }
 
-func (s *stockDaoImpl) UpdateStockDetails(tx *sql.Tx, orderLineItems map[int]*models.NewOrderOrderLineItem) error {
+func (s *stockDaoImpl) UpdateStockDetails(tx *sql.Tx, orderLineItems map[int]*dbdatamodel.OrderLineItem) error {
 	var stockOrderItemIdentifiers, stockQuantityUpdates, stockYTDUpdates, stockOrderCountUpdates, stockRemoteCountUpdates strings.Builder
 
 	var itemIdentifier string
@@ -115,4 +116,24 @@ func (s *stockDaoImpl) UpdateStockDetails(tx *sql.Tx, orderLineItems map[int]*mo
 	}
 
 	return nil
+}
+
+func (s *stockDaoImpl) GetStockItemsBelowThreshold(warehouseID, districtID, threshold, startOrderID, lastOrderID int) (count int, err error) {
+	sqlStatement := fmt.Sprintf(`
+		SELECT COUNT(*) FROM Stock 
+		WHERE S_W_ID=%d 
+		AND S_QUANTITY < %d 
+		AND S_I_ID IN (
+			SELECT OL_I_ID FROM ORDER_LINE_%d_%d 
+			WHERE OL_O_ID < %d AND OL_O_ID >= %d
+		)`,
+		warehouseID, threshold, warehouseID, districtID, lastOrderID, startOrderID,
+	)
+
+	row := s.db.QueryRow(sqlStatement)
+	if err := row.Scan(&count); err != nil && err != sql.ErrNoRows {
+		return count, fmt.Errorf("error occured in scanning the total items. Err: %v", err)
+	}
+
+	return count, nil
 }

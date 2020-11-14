@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/internal/dbdatamodel"
+
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/handler"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/models"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/services"
@@ -20,7 +22,7 @@ type newOrderControllerImpl struct {
 // GetNewNewOrderController get the new controller to execute the New Order Transaction
 func GetNewNewOrderController(db *sql.DB) handler.NewTransactionController {
 	return &newOrderControllerImpl{
-		s: services.GetNewOrderService(db),
+		s: services.CreateNewOrderService(db),
 	}
 }
 
@@ -42,7 +44,7 @@ func (noc *newOrderControllerImpl) HandleTransaction(scanner *bufio.Scanner, arg
 		NewOrderLineItems: newOrderLines,
 	}
 
-	_, err := noc.s.ProcessNewOrderTransaction(n)
+	_, err := noc.s.ProcessTransaction(n)
 	if err != nil {
 		log.Printf("error found in the new order transaction. Err: %v", err)
 		return false
@@ -51,8 +53,8 @@ func (noc *newOrderControllerImpl) HandleTransaction(scanner *bufio.Scanner, arg
 	return true
 }
 
-func readAndPrepareOrderLineItems(scanner *bufio.Scanner, numOfItems, warehouseID int) (orderLineItems map[int]*models.NewOrderOrderLineItem, isOrderLocal, totalUniqueOrderItems int) {
-	orderLineItems = make(map[int]*models.NewOrderOrderLineItem)
+func readAndPrepareOrderLineItems(scanner *bufio.Scanner, numOfItems, warehouseID int) (orderLineItems map[int]*dbdatamodel.OrderLineItem, isOrderLocal, totalUniqueOrderItems int) {
+	orderLineItems = make(map[int]*dbdatamodel.OrderLineItem)
 	isOrderLocal = 1
 
 	var id, supplier, quantity, remote int
@@ -77,7 +79,7 @@ func readAndPrepareOrderLineItems(scanner *bufio.Scanner, numOfItems, warehouseI
 			if _, ok := orderLineItems[id]; ok {
 				orderLineItems[id].Quantity += quantity
 			} else {
-				orderLineItems[id] = &models.NewOrderOrderLineItem{
+				orderLineItems[id] = &dbdatamodel.OrderLineItem{
 					SupplierWarehouseID: supplier,
 					Quantity:            quantity,
 					IsRemote:            remote,

@@ -17,6 +17,7 @@ type TransactionRouter struct {
 func GetNewRouter(db *sql.DB) *TransactionRouter {
 	handlers := make(map[string]handler.NewTransactionController)
 	handlers["N"] = controller.GetNewNewOrderController(db)
+	handlers["S"] = controller.GetNewStockLevelController(db)
 
 	return &TransactionRouter{
 		handlers: handlers,
@@ -28,6 +29,8 @@ func (tr *TransactionRouter) ProcessTransaction(scanner *bufio.Scanner, args []s
 	switch args[0] {
 	case "N":
 		completed = tr.handlers["N"].HandleTransaction(scanner, args[1:])
+	case "S":
+		completed = tr.handlers["S"].HandleTransaction(nil, args[1:])
 	}
 
 	return completed

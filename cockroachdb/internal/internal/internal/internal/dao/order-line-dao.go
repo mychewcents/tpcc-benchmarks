@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/models"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/internal/dbdatamodel"
 )
 
 // OrderLineDao provides the interface to interact with the OrderLine table
 type OrderLineDao interface {
-	Insert(tx *sql.Tx, warehouseID, districtID, orderID int, orderLineItems map[int]*models.NewOrderOrderLineItem) error
+	Insert(tx *sql.Tx, warehouseID, districtID, orderID int, orderLineItems map[int]*dbdatamodel.OrderLineItem) error
 }
 
 type orderLineDaoImpl struct {
@@ -22,7 +22,7 @@ func CreateOrderLineDao(db *sql.DB) OrderLineDao {
 	return &orderLineDaoImpl{db: db}
 }
 
-func (ol *orderLineDaoImpl) Insert(tx *sql.Tx, warehouseID, districtID, orderID int, orderLineItems map[int]*models.NewOrderOrderLineItem) error {
+func (ol *orderLineDaoImpl) Insert(tx *sql.Tx, warehouseID, districtID, orderID int, orderLineItems map[int]*dbdatamodel.OrderLineItem) error {
 	var orderLineEntries strings.Builder
 
 	idx := 0

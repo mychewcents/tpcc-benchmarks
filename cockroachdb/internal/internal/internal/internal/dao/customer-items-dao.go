@@ -6,12 +6,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/models"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/internal/dbdatamodel"
 )
 
 // CustomerItemsPairDao interface of the Customer's Item pairs
 type CustomerItemsPairDao interface {
-	Insert(warehouseID, districtID, uniqueItems, customerID int, orderLineItems map[int]*models.NewOrderOrderLineItem) error
+	Insert(warehouseID, districtID, uniqueItems, customerID int, orderLineItems map[int]*dbdatamodel.OrderLineItem) error
 }
 
 type customerItemsPairDaoImpl struct {
@@ -23,7 +23,7 @@ func CreateCustomerItemsPairDao(db *sql.DB) CustomerItemsPairDao {
 	return &customerItemsPairDaoImpl{db: db}
 }
 
-func (cip *customerItemsPairDaoImpl) Insert(warehouseID, districtID, customerID, uniqueItems int, orderLineItems map[int]*models.NewOrderOrderLineItem) error {
+func (cip *customerItemsPairDaoImpl) Insert(warehouseID, districtID, customerID, uniqueItems int, orderLineItems map[int]*dbdatamodel.OrderLineItem) error {
 	var orderItemCustomerPair strings.Builder
 	orderItemCustomerPairTable := fmt.Sprintf("ORDER_ITEMS_CUSTOMERS_%d_%d", warehouseID, districtID)
 

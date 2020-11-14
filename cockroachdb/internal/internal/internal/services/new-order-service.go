@@ -14,7 +14,7 @@ import (
 
 // NewOrderService provides the implementation of the New Order transaciton
 type NewOrderService interface {
-	ProcessNewOrderTransaction(req *models.NewOrder) (*models.NewOrderOutput, error)
+	ProcessTransaction(req *models.NewOrder) (*models.NewOrderOutput, error)
 }
 
 // NewOrderServiceImpl stores the new order input and output models
@@ -29,7 +29,7 @@ type NewOrderServiceImpl struct {
 }
 
 // GetNewOrderService returns the object for a new order transaction
-func GetNewOrderService(db *sql.DB) NewOrderService {
+func CreateNewOrderService(db *sql.DB) NewOrderService {
 	return &NewOrderServiceImpl{
 		db:  db,
 		d:   dao.CreateDistrictDao(db),
@@ -41,8 +41,8 @@ func GetNewOrderService(db *sql.DB) NewOrderService {
 	}
 }
 
-// ProcessNewOrderTransaction process the new order transaction
-func (nos *NewOrderServiceImpl) ProcessNewOrderTransaction(req *models.NewOrder) (*models.NewOrderOutput, error) {
+// ProcessTransaction process the new order transaction
+func (nos *NewOrderServiceImpl) ProcessTransaction(req *models.NewOrder) (*models.NewOrderOutput, error) {
 	log.Printf("Starting the New Order Transaction for row: c=%d w=%d d=%d n=%d", req.CustomerID, req.WarehouseID, req.DistrictID, req.UniqueItems)
 
 	result, err := nos.execute(req)
