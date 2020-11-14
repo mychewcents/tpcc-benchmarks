@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/connection/cdbconn"
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/connection/config"
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/logging"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/cdbconn"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/config"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/logging"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/statistics/dbstate"
 )
 

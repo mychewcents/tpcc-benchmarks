@@ -9,7 +9,7 @@ import (
 	caller "github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/cdbconn"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/config"
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/logging"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/logging"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/statistics/performance"
 )
 

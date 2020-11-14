@@ -8,10 +8,10 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/connection/config"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/config"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/logging"
 	processedtables "github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/init/processed"
 	rawtables "github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/init/raw"
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/logging"
 )
 
 var (
