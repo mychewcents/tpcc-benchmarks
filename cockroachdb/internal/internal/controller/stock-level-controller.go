@@ -16,8 +16,8 @@ type stockLevelControllerImpl struct {
 	s services.StockLevelService
 }
 
-// GetNewStockLevelController get the new controller to execute the New Order Transaction
-func GetNewStockLevelController(db *sql.DB) handler.NewTransactionController {
+// CreateStockLevelController get the new controller to execute the New Order Transaction
+func CreateStockLevelController(db *sql.DB) handler.NewTransactionController {
 	return &stockLevelControllerImpl{
 		s: services.CreateStockLevelService(db),
 	}

@@ -17,8 +17,8 @@ type newOrderControllerImpl struct {
 	s services.NewOrderService
 }
 
-// GetNewNewOrderController get the new controller to execute the New Order Transaction
-func GetNewNewOrderController(db *sql.DB) handler.NewTransactionController {
+// CreateNewOrderController get the new controller to execute the New Order Transaction
+func CreateNewOrderController(db *sql.DB) handler.NewTransactionController {
 	return &newOrderControllerImpl{
 		s: services.CreateNewOrderService(db),
 	}

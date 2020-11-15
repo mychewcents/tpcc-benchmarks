@@ -9,6 +9,7 @@ import (
 
 	"github.com/cockroachdb/cockroach-go/crdb"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/internal/dao"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/internal/dbdatamodel"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/models"
 )
 
@@ -55,6 +56,17 @@ func (nos *NewOrderServiceImpl) ProcessTransaction(req *models.NewOrder) (*model
 }
 
 func (nos *NewOrderServiceImpl) execute(req *models.NewOrder) (*models.NewOrderOutput, error) {
+
+	var orderLineItems map[int]*dbdatamodel.OrderLineItem
+
+	for key, value := range req.NewOrderLineItems {
+		orderLineItems[key] = &dbdatamodel.OrderLineItem{
+			SupplierWarehouseID: value.SupplierWarehouseID,
+			Quantity:            value.Quantity,
+			IsRemote:            value.IsRemote,
+		}
+	}
+
 	newOrderID, districtTax, warehouseTax, err := nos.d.GetNewOrderIDAndTaxRates(req.WarehouseID, req.DistrictID)
 	if err != nil {
 		return nil, err
@@ -70,26 +82,26 @@ func (nos *NewOrderServiceImpl) execute(req *models.NewOrder) (*models.NewOrderO
 		return nil, err
 	}
 
-	if err := nos.cip.Insert(req.WarehouseID, req.DistrictID, req.CustomerID, req.UniqueItems, req.NewOrderLineItems); err != nil {
+	if err := nos.cip.Insert(req.WarehouseID, req.DistrictID, req.CustomerID, req.UniqueItems, orderLineItems); err != nil {
 		return nil, err
 	}
 
 	if err := crdb.ExecuteTx(context.Background(), nos.db, nil, func(tx *sql.Tx) error {
-		req.TotalAmount, err = nos.s.GetStockDetails(tx, req.DistrictID, req.NewOrderLineItems)
+		result.TotalOrderAmount, err = nos.s.GetStockDetails(tx, req.DistrictID, orderLineItems)
 		if err != nil {
 			return err
 		}
 
-		if err := nos.s.UpdateStockDetails(tx, req.NewOrderLineItems); err != nil {
+		if err := nos.s.UpdateStockDetails(tx, orderLineItems); err != nil {
 			return err
 		}
 
-		result.OrderTimestamp, err = nos.o.Insert(tx, req.WarehouseID, req.DistrictID, req.CustomerID, newOrderID, req.UniqueItems, req.IsOrderLocal, req.TotalAmount)
+		result.OrderTimestamp, err = nos.o.Insert(tx, req.WarehouseID, req.DistrictID, req.CustomerID, newOrderID, req.UniqueItems, req.IsOrderLocal, result.TotalOrderAmount)
 		if err != nil {
 			return err
 		}
 
-		if err := nos.ol.Insert(tx, req.WarehouseID, req.DistrictID, newOrderID, req.NewOrderLineItems); err != nil {
+		if err := nos.ol.Insert(tx, req.WarehouseID, req.DistrictID, newOrderID, orderLineItems); err != nil {
 			return err
 		}
 
@@ -98,7 +110,7 @@ func (nos *NewOrderServiceImpl) execute(req *models.NewOrder) (*models.NewOrderO
 		return nil, fmt.Errorf("error occured in updating the order/order lines/item pairs table. Err: %v", err)
 	}
 
-	result.TotalOrderAmount = req.TotalAmount * (1.0 + result.DistrictTax + result.WarehouseTax) * (1.0 - result.Customer.Discount)
+	result.TotalOrderAmount = result.TotalOrderAmount * (1.0 + result.DistrictTax + result.WarehouseTax) * (1.0 - result.Customer.Discount)
 	result.UniqueItems = req.UniqueItems
 	result.OrderLineItems = req.NewOrderLineItems
 

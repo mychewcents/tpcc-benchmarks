@@ -35,7 +35,7 @@ func (pic *popularItemControllerImpl) HandleTransaction(scanner *bufio.Scanner, 
 
 	_, err := pic.s.ProcessTransaction(pi)
 	if err != nil {
-		log.Println("error occurred in executing the popular item transaction. Err: %v", err)
+		log.Printf("error occurred in executing the popular item transaction. Err: %v", err)
 		return false
 	}
 

@@ -15,7 +15,8 @@ type paymentControllerImpl struct {
 	s services.PaymentService
 }
 
-func CreateNewPaymentController(db *sql.DB) handler.NewTransactionController {
+// CreatePaymentController creates the new controller for the payment transaction
+func CreatePaymentController(db *sql.DB) handler.NewTransactionController {
 	return &paymentControllerImpl{
 		s: services.CreateNewPaymentService(db),
 	}
@@ -36,7 +37,7 @@ func (pc *paymentControllerImpl) HandleTransaction(scanner *bufio.Scanner, args 
 
 	_, err := pc.s.ProcessTransaction(p)
 	if err != nil {
-		log.Println("error occurred in executing the payment transaction. Err: %v", err)
+		log.Printf("error occurred in executing the payment transaction. Err: %v", err)
 		return false
 	}
 
