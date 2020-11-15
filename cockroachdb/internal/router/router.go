@@ -18,15 +18,14 @@ func GetNewRouter(db *sql.DB) *TransactionRouter {
 	handlers := make(map[string]handler.NewTransactionController)
 	handlers["N"] = controller.GetNewNewOrderController(db)
 	handlers["S"] = controller.GetNewStockLevelController(db)
+	handlers["P"] = controller.GetNewPaymentController(db)
 
-	return &TransactionRouter{
-		handlers: handlers,
-	}
+	return &TransactionRouter{handlers: handlers}
 }
 
 // ProcessTransaction processes each transaction upon input
 func (tr *TransactionRouter) ProcessTransaction(scanner *bufio.Scanner, args []string) (completed bool) {
-	if args[0] = "N" || args[0] = "S" {
+	if args[0] = "N" || args[0] = "S" || args[0] = "P" {
 		completed = tr.handlers[args[0]].HandleTransaction(scanner, args[1:])
 	}
 
