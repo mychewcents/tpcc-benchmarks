@@ -11,6 +11,7 @@ import (
 type OrderDao interface {
 	Insert(tx *sql.Tx, warehouseID, districtID, customerID, orderID, uniqueItems, isOrderLocal int, totalAmount float64) (string, error)
 	GetDetails(warehouseID, districtID, orderID int) (*dbdatamodel.Order, error)
+	GetLastOrderDetails(warehouseID, districtID, customerID int) (*dbdatamodel.Order, error)
 }
 
 type orderDaoImpl struct {
@@ -66,6 +67,35 @@ func (od *orderDaoImpl) GetDetails(warehouseID, districtID, orderID int) (result
 		DistrictID:  districtID,
 		CustomerID:  customerID,
 		Timestamp:   orderTimestamp,
+	}
+
+	return
+}
+
+func (od *orderDaoImpl) GetLastOrderDetails(warehouseID, districtID, customerID int) (result *dbdatamodel.Order, err error) {
+	sqlStatement := fmt.Sprintf("SELECT O_ID, O_DELIVERY_D, O_ENTRY_D, O_CARRIER_ID FROM ORDERS_%d_%d WHERE O_C_ID=%d ORDER BY O_ID DESC LIMIT 1",
+		warehouseID, districtID, customerID)
+
+	var orderID, carrierID int
+	var orderTimestamp string
+	var deliveryTimestamp sql.NullString
+
+	row := od.db.QueryRow(sqlStatement)
+	if err = row.Scan(&orderID, &deliveryTimestamp, &orderTimestamp, &carrierID); err != nil {
+		return nil, fmt.Errorf("error occured in getting the details from orders table. Err: %v", err)
+	}
+
+	result = &dbdatamodel.Order{
+		ID:          orderID,
+		WarehouseID: warehouseID,
+		DistrictID:  districtID,
+		CustomerID:  customerID,
+		Timestamp:   orderTimestamp,
+		CarrierID:   carrierID,
+	}
+
+	if deliveryTimestamp.Valid {
+		result.DeliveryTimestamp = deliveryTimestamp.String
 	}
 
 	return

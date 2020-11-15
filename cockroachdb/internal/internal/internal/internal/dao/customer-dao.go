@@ -24,13 +24,13 @@ func CreateCustomerDao(db *sql.DB) CustomerDao {
 
 // GetDetails gets the customer details from the database
 func (cs *customerDaoImpl) GetDetails(warehouseID, districtID, customerID int) (customer *dbdatamodel.Customer, err error) {
-	sqlStatement := fmt.Sprintf("SELECT C_LAST, C_CREDIT, C_DISCOUNT FROM CUSTOMER WHERE C_W_ID = $1 AND C_D_ID = $2 AND C_ID = $3")
+	sqlStatement := fmt.Sprintf("SELECT C_FIRST, C_MIDDLE, C_LAST, C_CREDIT, C_DISCOUNT, C_BALANCE FROM CUSTOMER WHERE C_W_ID = $1 AND C_D_ID = $2 AND C_ID = $3")
 
-	var lastName, credit string
-	var discount float64
+	var firstName, middleName, lastName, credit string
+	var discount, balance float64
 
 	row := cs.db.QueryRow(sqlStatement, warehouseID, districtID, customerID)
-	if err := row.Scan(&lastName, &credit, &discount); err != nil {
+	if err := row.Scan(&firstName, &middleName, &lastName, &credit, &discount, &balance); err != nil {
 		return nil, fmt.Errorf("error occured in getting the customer details. Err: %v", err)
 	}
 
@@ -38,9 +38,12 @@ func (cs *customerDaoImpl) GetDetails(warehouseID, districtID, customerID int) (
 		WarehouseID: warehouseID,
 		DistrictID:  districtID,
 		CustomerID:  customerID,
+		FirstName:   firstName,
+		MiddleName:  middleName,
 		LastName:    lastName,
 		Credit:      credit,
 		Discount:    discount,
+		Balance:     balance,
 	}
 
 	return

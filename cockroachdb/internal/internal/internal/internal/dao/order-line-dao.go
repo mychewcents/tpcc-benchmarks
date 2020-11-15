@@ -12,6 +12,7 @@ import (
 type OrderLineDao interface {
 	Insert(tx *sql.Tx, warehouseID, districtID, orderID int, orderLineItems map[int]*dbdatamodel.OrderLineItem) error
 	GetMaxQuantityOrderLinesPerOrder(warehouseID, districtID, startOrderID, lastOrderID int) (result map[int]int, err error)
+	GetOrderLinesForOrder(warehouseID, districtID, orderID int) (map[int]*dbdatamodel.OrderLineItem, error)
 }
 
 type orderLineDaoImpl struct {
@@ -78,6 +79,32 @@ func (ol *orderLineDaoImpl) GetMaxQuantityOrderLinesPerOrder(warehouseID, distri
 		}
 
 		result[orderID] = maxQuantity
+	}
+
+	return
+}
+
+func (ol *orderLineDaoImpl) GetOrderLinesForOrder(warehouseID, districtID, orderID int) (result map[int]*dbdatamodel.OrderLineItem, err error) {
+	sqlStatement := fmt.Sprintf("SELECT OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT FROM ORDER_LINE_%d_%d WHERE OL_O_ID=%d", warehouseID, districtID, orderID)
+
+	rows, err := ol.db.Query(sqlStatement)
+	if err != nil {
+		return nil, fmt.Errorf("error occurred in getting the order lines. Err: %v", err)
+	}
+	defer rows.Close()
+
+	var id, supplier, quantity int
+	var amount float64
+
+	for rows.Next() {
+		if err := rows.Scan(&id, &supplier, &quantity, &amount); err != nil {
+			return nil, fmt.Errorf("error occurred in scanning the order line return results. Err: %v", err)
+		}
+		result[id] = &dbdatamodel.OrderLineItem{
+			SupplierWarehouseID: supplier,
+			Quantity:            quantity,
+			Amount:              amount,
+		}
 	}
 
 	return
