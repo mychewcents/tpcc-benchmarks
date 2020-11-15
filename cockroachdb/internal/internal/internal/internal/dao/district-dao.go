@@ -3,12 +3,15 @@ package dao
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/internal/dbdatamodel"
 )
 
 // DistrictDao interface to the functions accessing district table
 type DistrictDao interface {
 	GetNewOrderIDAndTaxRates(warehouseID, districtID int) (int, float64, float64, error)
 	GetLastOrderID(warehouseID, districtID int) (int, error)
+	AddPaymentToDistrict(tx *sql.Tx, warehouseID, districtID int, amount float64) (*dbdatamodel.Address, error)
 }
 
 type districtDaoImpl struct {
@@ -36,6 +39,21 @@ func (dd *districtDaoImpl) GetLastOrderID(warehouseID, districtID int) (lastOrde
 
 	if err := row.Scan(&lastOrderID); err != nil {
 		return lastOrderID, fmt.Errorf("error occurred in getting the next order id for the district. Err: %v", err)
+	}
+
+	return
+}
+
+func (dd *districtDaoImpl) AddPaymentToDistrict(tx *sql.Tx, warehouseID, districtID int, amount float64) (addr *dbdatamodel.Address, err error) {
+	sqlStatement := fmt.Sprintf(`
+		UPDATE DISTRICT SET 
+		D_YTD = D_YTD + %f 
+		WHERE (D_W_ID, D_ID) = (%d, %d)
+		RETURNING D_STREET_1, D_STREET_2, D_CITY, D_STATE, D_ZIP`,
+		amount, warehouseID, districtID)
+
+	if err := tx.QueryRow(sqlStatement).Scan(&addr.Street1, &addr.Street2, &addr.City, &addr.State, &addr.Zip); err != nil {
+		return nil, fmt.Errorf("error occurred in updating the district table. Err: %v", err)
 	}
 
 	return

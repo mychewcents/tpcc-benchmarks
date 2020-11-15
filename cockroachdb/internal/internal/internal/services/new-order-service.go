@@ -28,7 +28,7 @@ type NewOrderServiceImpl struct {
 	db  *sql.DB
 }
 
-// GetNewOrderService returns the object for a new order transaction
+// CreateNewOrderService returns the object for a new order transaction
 func CreateNewOrderService(db *sql.DB) NewOrderService {
 	return &NewOrderServiceImpl{
 		db:  db,
@@ -55,8 +55,6 @@ func (nos *NewOrderServiceImpl) ProcessTransaction(req *models.NewOrder) (*model
 }
 
 func (nos *NewOrderServiceImpl) execute(req *models.NewOrder) (*models.NewOrderOutput, error) {
-	// log.Printf("Executing the transaction with the input data...")
-
 	newOrderID, districtTax, warehouseTax, err := nos.d.GetNewOrderIDAndTaxRates(req.WarehouseID, req.DistrictID)
 	if err != nil {
 		return nil, err
@@ -67,24 +65,20 @@ func (nos *NewOrderServiceImpl) execute(req *models.NewOrder) (*models.NewOrderO
 		OrderID:      newOrderID,
 	}
 
-	customer, err := nos.c.GetCustomerDetails(req.WarehouseID, req.DistrictID, req.CustomerID)
+	result.Customer, err = nos.c.GetDetails(req.WarehouseID, req.DistrictID, req.CustomerID)
 	if err != nil {
 		return nil, err
 	}
-	result.Customer = customer
 
 	if err := nos.cip.Insert(req.WarehouseID, req.DistrictID, req.CustomerID, req.UniqueItems, req.NewOrderLineItems); err != nil {
 		return nil, err
 	}
 
 	if err := crdb.ExecuteTx(context.Background(), nos.db, nil, func(tx *sql.Tx) error {
-
-		totalAmount, err := nos.s.GetStockDetails(tx, req.DistrictID, req.NewOrderLineItems)
+		req.TotalAmount, err = nos.s.GetStockDetails(tx, req.DistrictID, req.NewOrderLineItems)
 		if err != nil {
-			return err
+			return fmt.Errorf("error in getting stock table: w=%d d=%d o=%d \n Err: %v", req.WarehouseID, req.DistrictID, newOrderID, err)
 		}
-
-		result.TotalOrderAmount = totalAmount
 
 		if err := nos.s.UpdateStockDetails(tx, req.NewOrderLineItems); err != nil {
 			return fmt.Errorf("error in updating stock table: w=%d d=%d o=%d \n Err: %v", req.WarehouseID, req.DistrictID, newOrderID, err)
@@ -107,8 +101,6 @@ func (nos *NewOrderServiceImpl) execute(req *models.NewOrder) (*models.NewOrderO
 	result.TotalOrderAmount = req.TotalAmount * (1.0 + result.DistrictTax + result.WarehouseTax) * (1.0 - result.Customer.Discount)
 	result.UniqueItems = req.UniqueItems
 	result.OrderLineItems = req.NewOrderLineItems
-
-	// nos.Print(result)
 
 	return result, nil
 }
