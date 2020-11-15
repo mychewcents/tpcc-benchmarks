@@ -28,7 +28,7 @@ func (pc *paymentControllerImpl) HandleTransaction(scanner *bufio.Scanner, args 
 		Amount: paymentAmt,
 	}
 
-	_, err := pc.s.ProcessTransaction(req)
+	_, err := pc.s.ProcessTransaction(p)
 	if err != nil {
 		log.Println("error occurred in executing the payment transaction. Err: %v", err)
 		return false

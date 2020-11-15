@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/internal/dao"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/models"
@@ -73,14 +74,52 @@ func (pis *popularItemServiceImpl) execute(req *models.PopularItem) (result *mod
 			return nil, err
 		}
 
-		result.Orders[key]
-
 		items, err := pis.i.GetItemsWithMaxOrderLineQuantities(req.WarehouseID, req.DistrictID, key, value)
+		if err != nil {
+			return nil, err
+		}
 
+		result.Orders[key] = &models.PopularItemOrderDetails{Order: orderDetails, Customer: customer, Items: items, MaxOLQuantity: value}
+		for key, value := range items {
+			if _, ok := result.ItemOccurances[key]; ok {
+				result.ItemOccurances[key].Occurances++
+			} else {
+				result.ItemOccurances[key] = &models.PopularItemOccuranceAndPercentage{Occurances: 1, Name: value.Name}
+			}
+		}
 	}
+
+	for _, value := range result.ItemOccurances {
+		value.Percentage = float64((value.Occurances / req.LastNOrders) * 100)
+	}
+
 	return
 }
 
 func (pis *popularItemServiceImpl) Print(result *models.PopularItemOutput) {
+	var popularItemResult strings.Builder
+	var ordersResult strings.Builder
 
+	popularItemResult.WriteString(fmt.Sprintf("WarehouseID: %d, DistrictID: %d", result.WarehouseID, result.DistrictID))
+	popularItemResult.WriteString(fmt.Sprintf("OrderIDs: Start: %d, End: %d, Total: %d", result.StartOrderID, result.LastOrderID, result.LastOrderID-result.StartOrderID))
+
+	for key, value := range result.Orders {
+		ordersResult.WriteString(fmt.Sprintf("\nOrder ID: %d, Timestamp: %s, Max Quantity: %d", key, value.Order.Timestamp, value.MaxOLQuantity))
+		ordersResult.WriteString(fmt.Sprintf("\nCustomer: %s %s %s", value.Customer.FirstName, value.Customer.MiddleName, value.Customer.LastName))
+		ordersResult.WriteString(fmt.Sprintf("\nItems ordered: "))
+
+		for itemKey, itemValue := range value.Items {
+			ordersResult.WriteString(fmt.Sprintf("\nID: %d; Name: %s", itemKey, itemValue.Name))
+		}
+	}
+
+	ordersResult.WriteString(fmt.Sprintf("\nMost Popular Items: "))
+	for key, value := range result.ItemOccurances {
+		ordersResult.WriteString(fmt.Sprintf("\nID: %d, Name: %s, Percentage: %0.6f", key, value.Name, value.Percentage))
+	}
+
+	popularItemResult.WriteString(fmt.Sprintf("\n%s", ordersResult.String()))
+
+	popularItemResultString := popularItemResult.String()
+	fmt.Println(popularItemResultString)
 }
