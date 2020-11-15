@@ -77,20 +77,20 @@ func (nos *NewOrderServiceImpl) execute(req *models.NewOrder) (*models.NewOrderO
 	if err := crdb.ExecuteTx(context.Background(), nos.db, nil, func(tx *sql.Tx) error {
 		req.TotalAmount, err = nos.s.GetStockDetails(tx, req.DistrictID, req.NewOrderLineItems)
 		if err != nil {
-			return fmt.Errorf("error in getting stock table: w=%d d=%d o=%d \n Err: %v", req.WarehouseID, req.DistrictID, newOrderID, err)
+			return err
 		}
 
 		if err := nos.s.UpdateStockDetails(tx, req.NewOrderLineItems); err != nil {
-			return fmt.Errorf("error in updating stock table: w=%d d=%d o=%d \n Err: %v", req.WarehouseID, req.DistrictID, newOrderID, err)
+			return err
 		}
 
 		result.OrderTimestamp, err = nos.o.Insert(tx, req.WarehouseID, req.DistrictID, req.CustomerID, newOrderID, req.UniqueItems, req.IsOrderLocal, req.TotalAmount)
 		if err != nil {
-			return fmt.Errorf("error in inserting new order row: w=%d d=%d o=%d \n Err: %v", req.WarehouseID, req.DistrictID, newOrderID, err)
+			return err
 		}
 
 		if err := nos.ol.Insert(tx, req.WarehouseID, req.DistrictID, newOrderID, req.NewOrderLineItems); err != nil {
-			return fmt.Errorf("error in inserting new order line rows: w=%d d=%d o=%d \n Err: %v", req.WarehouseID, req.DistrictID, newOrderID, err)
+			return err
 		}
 
 		return nil
