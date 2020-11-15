@@ -11,6 +11,7 @@ import (
 // OrderLineDao provides the interface to interact with the OrderLine table
 type OrderLineDao interface {
 	Insert(tx *sql.Tx, warehouseID, districtID, orderID int, orderLineItems map[int]*dbdatamodel.OrderLineItem) error
+	GetMaxQuantityOrderLinesPerOrder(warehouseID, districtID, startOrderID, lastOrderID int) (result map[int]int, err error)
 }
 
 type orderLineDaoImpl struct {
@@ -52,4 +53,32 @@ func (ol *orderLineDaoImpl) Insert(tx *sql.Tx, warehouseID, districtID, orderID 
 	}
 
 	return nil
+}
+
+func (ol *orderLineDaoImpl) GetMaxQuantityOrderLinesPerOrder(warehouseID, districtID, startOrderID, lastOrderID int) (result map[int]int, err error) {
+	sqlStatement := fmt.Sprintf(`
+		SELECT OL_O_ID, MAX(OL_QUANTITY) 
+		FROM ORDER_LINE_%d_%d 
+		WHERE OL_O_ID < %d 
+		AND OL_O_ID >= %d 
+		GROUP BY OL_O_ID`,
+		warehouseID, districtID, lastOrderID, startOrderID,
+	)
+
+	rows, err := ol.db.Query(sqlStatement)
+	if err != nil {
+		return nil, fmt.Errorf("error occured in getting the maximum order line quantity. Err: %v", err)
+	}
+	defer rows.Close()
+
+	var orderID, maxQuantity int
+	for rows.Next() {
+		if err = rows.Scan(&orderID, &maxQuantity); err != nil {
+			return nil, fmt.Errorf("error occured in reading the max order line quantity. Err: %v", err)
+		}
+
+		result[orderID] = maxQuantity
+	}
+
+	return
 }

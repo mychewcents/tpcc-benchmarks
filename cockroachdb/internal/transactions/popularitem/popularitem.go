@@ -45,14 +45,6 @@ func execute(db *sql.DB, warehouseID, districtID, lastNOrders int) error {
 	orderTable := fmt.Sprintf("ORDERS_%d_%d", warehouseID, districtID)
 	orderLineTable := fmt.Sprintf("ORDER_LINE_%d_%d", warehouseID, districtID)
 
-	row := db.QueryRow("SELECT d_next_o_id FROM district WHERE d_w_id=$1 AND d_id=$2", warehouseID, districtID)
-
-	if err := row.Scan(&lastOrderID); err != nil {
-		return fmt.Errorf("error occured in getting the last order id. Err: %v", err)
-	}
-
-	startOrderID = lastOrderID - lastNOrders
-
 	sqlStatement := fmt.Sprintf(`
 		SELECT OL_O_ID, MAX(OL_QUANTITY) 
 		FROM %s 
