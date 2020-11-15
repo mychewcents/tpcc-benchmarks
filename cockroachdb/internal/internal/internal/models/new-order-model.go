@@ -11,7 +11,15 @@ type NewOrder struct {
 	UniqueItems       int
 	TotalAmount       float64
 	OrderTimestamp    string
-	NewOrderLineItems map[int]*dbdatamodel.OrderLineItem
+	NewOrderLineItems map[int]*NewOrderOrderLineItem
+}
+
+// NewOrderOrderLineItem stores the input for the NewOrder Order Lines
+type NewOrderOrderLineItem struct {
+	Name                string
+	SupplierWarehouseID int
+	Quantity            int
+	IsRemote            int
 }
 
 // NewOrderOutput stores the final output of the new order transaction

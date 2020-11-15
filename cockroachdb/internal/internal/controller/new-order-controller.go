@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/internal/dbdatamodel"
-
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/handler"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/models"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/services"
@@ -53,8 +51,8 @@ func (noc *newOrderControllerImpl) HandleTransaction(scanner *bufio.Scanner, arg
 	return true
 }
 
-func readAndPrepareOrderLineItems(scanner *bufio.Scanner, numOfItems, warehouseID int) (orderLineItems map[int]*dbdatamodel.OrderLineItem, isOrderLocal, totalUniqueOrderItems int) {
-	orderLineItems = make(map[int]*dbdatamodel.OrderLineItem)
+func readAndPrepareOrderLineItems(scanner *bufio.Scanner, numOfItems, warehouseID int) (orderLineItems map[int]*models.NewOrderOrderLineItem, isOrderLocal, totalUniqueOrderItems int) {
+	orderLineItems = make(map[int]*models.NewOrderOrderLineItem)
 	isOrderLocal = 1
 
 	var id, supplier, quantity, remote int
@@ -79,7 +77,7 @@ func readAndPrepareOrderLineItems(scanner *bufio.Scanner, numOfItems, warehouseI
 			if _, ok := orderLineItems[id]; ok {
 				orderLineItems[id].Quantity += quantity
 			} else {
-				orderLineItems[id] = &dbdatamodel.OrderLineItem{
+				orderLineItems[id] = &models.NewOrderOrderLineItem{
 					SupplierWarehouseID: supplier,
 					Quantity:            quantity,
 					IsRemote:            remote,

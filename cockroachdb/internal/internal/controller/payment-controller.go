@@ -1,7 +1,13 @@
 package controller
 
 import (
+	"bufio"
+	"database/sql"
+	"log"
+	"strconv"
+
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/handler"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/models"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/services"
 )
 
@@ -11,7 +17,7 @@ type paymentControllerImpl struct {
 
 func CreateNewPaymentController(db *sql.DB) handler.NewTransactionController {
 	return &paymentControllerImpl{
-		s: services.CreateNewPaymentService(db)
+		s: services.CreateNewPaymentService(db),
 	}
 }
 
@@ -23,9 +29,9 @@ func (pc *paymentControllerImpl) HandleTransaction(scanner *bufio.Scanner, args 
 
 	p := &models.Payment{
 		WarehouseID: wID,
-		DistrictID: dID,
-		CustomerID: cID,
-		Amount: paymentAmt,
+		DistrictID:  dID,
+		CustomerID:  cID,
+		Amount:      paymentAmt,
 	}
 
 	_, err := pc.s.ProcessTransaction(p)
@@ -33,6 +39,6 @@ func (pc *paymentControllerImpl) HandleTransaction(scanner *bufio.Scanner, args 
 		log.Println("error occurred in executing the payment transaction. Err: %v", err)
 		return false
 	}
-	
+
 	return true
 }
