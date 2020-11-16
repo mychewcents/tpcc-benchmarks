@@ -35,12 +35,14 @@ func CreateServerSetupRouter(configFilePath string, nodeID int) *ServerSetupRout
 // ProcessServerSetupRequest processes each transaction upon input
 func (ssr *ServerSetupRouter) ProcessServerSetupRequest(functionName string, configFilePath, env string, nodeID, experiment int) {
 	switch functionName {
+	case "setup-dir":
+		server.SetupDirectories(ssr.c, env)
 	case "start":
 		server.Start(ssr.c)
 	case "stop":
 		server.Stop(ssr.c)
 	case "init":
-		server.Initialize(ssr.c)
+		server.InitCluster(ssr.c)
 	case "load":
 		if err := ssr.handlers["LoadRawTables"].LoadTables(); err != nil {
 			log.Fatalf("Err: %v", err)

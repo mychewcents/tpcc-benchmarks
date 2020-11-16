@@ -9,6 +9,13 @@ import (
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/helper"
 )
 
+// SetupDirectories sets up the directories required for further setup
+func SetupDirectories(c config.Configuration, env string) {
+	cliArgs := []string{"scripts/init_setup.sh", env, c.WorkingDir, c.HostNode.Name}
+
+	execute(cliArgs)
+}
+
 // Start starts the server on the host machine
 func Start(c config.Configuration) {
 	joinNodes := make([]string, len(c.Nodes))
@@ -28,8 +35,8 @@ func Start(c config.Configuration) {
 	execute(cliArgs)
 }
 
-// Initialize executes the init call to CRDB
-func Initialize(c config.Configuration) {
+// InitCluster executes the init call to CRDB
+func InitCluster(c config.Configuration) {
 	cliArgs := []string{"scripts/cli/server.sh",
 		"init",
 		fmt.Sprintf("%s:%d", c.HostNode.Host, c.HostNode.Port),
