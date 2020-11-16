@@ -35,6 +35,8 @@ func CreateServerSetupRouter(configFilePath string, nodeID int) *ServerSetupRout
 // ProcessServerSetupRequest processes each transaction upon input
 func (ssr *ServerSetupRouter) ProcessServerSetupRequest(functionName string, configFilePath, env string, nodeID, experiment int) {
 	switch functionName {
+	case "download-dataset":
+		server.DownloadDataset(ssr.c)
 	case "setup-dir":
 		server.SetupDirectories(ssr.c, env)
 	case "start":

@@ -9,9 +9,16 @@ import (
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/helper"
 )
 
+// DownloadDataset downloads the project files as a zip and extracts it
+func DownloadDataset(c config.Configuration) {
+	cliArgs := []string{"scripts/cli/server.sh", "download-dataset", c.DownloadURL}
+
+	execute(cliArgs)
+}
+
 // SetupDirectories sets up the directories required for further setup
 func SetupDirectories(c config.Configuration, env string) {
-	cliArgs := []string{"scripts/init_setup.sh", env, c.WorkingDir, c.HostNode.Name}
+	cliArgs := []string{"scripts/cli/server.sh", "setup-dirs", c.WorkingDir, c.HostNode.Name}
 
 	execute(cliArgs)
 }

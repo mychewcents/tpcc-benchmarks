@@ -38,7 +38,7 @@
 
    - This script will create all the executable required to perform all the experiments.
 
-6. Update the `configs/prod/setup_5.json` OR `configs/prod/setup_4.json` file to provide the IP addresses of the nodes and their related port numbers. A sample coonfiguration file looks like below:
+6. Update the `configs/prod/setup.json` file to provide the IP addresses of the nodes and their related port numbers. A sample coonfiguration file looks like below:
 
    ```json
    {
@@ -66,7 +66,6 @@
    NOTE:
 
    - `node` is the NODE ID of the current node in the cluster and should be between 1 and 5
-   - One can also use `setup_4.json` instead of `setup_5.json` for a 4 node cluster
 
 ## Running Experiments
 
