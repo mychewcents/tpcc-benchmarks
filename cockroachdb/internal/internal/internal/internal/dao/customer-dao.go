@@ -12,6 +12,7 @@ type CustomerDao interface {
 	GetDetails(warehouseID, districtID, customerID int) (*dbdatamodel.Customer, error)
 	UpdatePaymentDetails(tx *sql.Tx, warehouseID, districtID, customerID int, amount float64) (*dbdatamodel.Customer, error)
 	GetCustomersWithTopBalance(num int) ([]*dbdatamodel.Customer, error)
+	DeliverOrder(tx *sql.Tx, warehouseID, districtID, customerID int, totalAmount float64) error
 }
 
 type customerDaoImpl struct {
@@ -116,4 +117,14 @@ func (cs *customerDaoImpl) GetCustomersWithTopBalance(num int) (result []*dbdata
 	}
 
 	return
+}
+
+func (cs *customerDaoImpl) DeliverOrder(tx *sql.Tx, warehouseID, districtID, customerID int, amount float64) error {
+	sqlStatement := fmt.Sprintf("UPDATE CUSTOMER SET (C_BALANCE, C_DELIVERY_CNT) = (C_BALANCE + %f, C_DELIVERY_CNT + 1) WHERE C_W_ID=%d AND C_D_ID=%d AND C_ID=%d", amount, warehouseID, districtID, customerID)
+
+	if _, err := tx.Exec(sqlStatement); err != nil {
+		return err
+	}
+
+	return nil
 }

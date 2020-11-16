@@ -12,6 +12,8 @@ type OrderDao interface {
 	Insert(tx *sql.Tx, warehouseID, districtID, customerID, orderID, uniqueItems, isOrderLocal int, totalAmount float64) (string, error)
 	GetDetails(warehouseID, districtID, orderID int) (*dbdatamodel.Order, error)
 	GetLastOrderDetails(warehouseID, districtID, customerID int) (*dbdatamodel.Order, error)
+	GetUndeliveredOrderIDsPerDistrict(warehouseID int) (map[int]int, error)
+	DeliverOrder(tx *sql.Tx, warehouseID, districtID, orderID, carrierID int) (int, float64, error)
 }
 
 type orderDaoImpl struct {
@@ -72,6 +74,7 @@ func (od *orderDaoImpl) GetDetails(warehouseID, districtID, orderID int) (result
 	return
 }
 
+// GEtLastOrderDetails returns the details of the last order placed by the customer
 func (od *orderDaoImpl) GetLastOrderDetails(warehouseID, districtID, customerID int) (result *dbdatamodel.Order, err error) {
 	sqlStatement := fmt.Sprintf("SELECT O_ID, O_DELIVERY_D, O_ENTRY_D, O_CARRIER_ID FROM ORDERS_%d_%d WHERE O_C_ID=%d ORDER BY O_ID DESC LIMIT 1",
 		warehouseID, districtID, customerID)
@@ -98,5 +101,31 @@ func (od *orderDaoImpl) GetLastOrderDetails(warehouseID, districtID, customerID 
 		result.DeliveryTimestamp = deliveryTimestamp.String
 	}
 
+	return
+}
+
+func (od *orderDaoImpl) GetUndeliveredOrderIDsPerDistrict(warehouseID int) (result map[int]int, err error) {
+	baseSQLStatement := "SELECT O_ID FROM ORDERS_%d_%d WHERE O_CARRIER_ID=0 ORDER BY O_ID LIMIT 1"
+
+	var orderID int
+
+	for dID := 1; dID <= 10; dID++ {
+		finalSQLStatement := fmt.Sprintf(baseSQLStatement, warehouseID, dID)
+
+		err := od.db.QueryRow(finalSQLStatement).Scan(&orderID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				continue
+			} else {
+				return nil, fmt.Errorf("error occured while fetching the orders. Err: %v", err)
+			}
+		}
+		result[dID] = orderID
+	}
+
+	return
+}
+
+func (od *orderDaoImpl) DeliverOrder(tx *sql.Tx, warehouseID, districtID, orderID, carrierID int) (customerID int, totalAmount float64, err error) {
 	return
 }
