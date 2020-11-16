@@ -8,10 +8,10 @@ import (
 	"os/exec"
 	"strings"
 
+	caller "github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/cdbconn"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/config"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/logging"
-	processedtables "github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/init/processed"
-	rawtables "github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/init/raw"
 )
 
 var (
@@ -52,6 +52,10 @@ func init() {
 
 func main() {
 	c := config.GetConfig(*configFilePath, *nodeID)
+	db, err := cdbconn.CreateConnection(c.HostNode)
+	if err != nil {
+		panic(err)
+	}
 
 	var cmd exec.Cmd
 
@@ -63,13 +67,13 @@ func main() {
 	case "init":
 		cmd = execute(c)
 	case "load":
-		if err := rawtables.PerformETL(c); err != nil {
+		if err := caller.LoadRawTables(db); err != nil {
 			log.Fatalf("Err: %v", err)
 			return
 		}
 		return
 	case "load-csv":
-		if err := processedtables.PerformETL(c); err != nil {
+		if err := caller.LoadProcessedTables(db); err != nil {
 			log.Fatalf("Err: %v", err)
 			return
 		}
@@ -85,7 +89,7 @@ func main() {
 		log.Fatalf("Err: %v", err)
 	}
 	log.Printf("Waiting for command to finish...")
-	err := cmd.Wait()
+	err = cmd.Wait()
 	log.Printf("Command finished with error: %v", err)
 }
 

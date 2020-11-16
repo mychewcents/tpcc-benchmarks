@@ -1,0 +1,14 @@
+{
+    "data_files_url": "http://www.comp.nus.edu.sg/~cs4224/project-files.zip",
+    "working_dir": "/tmp/cs5424-team-m",
+    "nodes": [
+        {
+            "id": 1,
+            "host": "localhost",
+            "port": 26257,
+            "http_addr": "0.0.0.0:40001",
+            "username": "root",
+            "database": "defaultdb"
+        }
+    ]
+}
