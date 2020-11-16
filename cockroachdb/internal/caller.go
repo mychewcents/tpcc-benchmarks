@@ -2,36 +2,43 @@ package caller
 
 import (
 	"bufio"
-	"database/sql"
+	"os"
+	"strings"
+	"time"
 
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/delivery"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/neworder"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/orderstatus"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/payment"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/popularitem"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/stocklevel"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/transactions/topbalance"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/cdbconn"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/config"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/router"
 )
 
-// ProcessRequest Calls the required DB function
-func ProcessRequest(db *sql.DB, scanner *bufio.Scanner, transactionArgs []string) bool {
-	switch transactionArgs[0] {
-	case "N":
-		return neworder.ProcessTransaction(db, scanner, transactionArgs[1:])
-	case "P":
-		return payment.ProcessTransaction(db, nil, transactionArgs[1:])
-	case "D":
-		return delivery.ProcessTransaction(db, nil, transactionArgs[1:])
-	case "O":
-		return orderstatus.ProcessTransaction(db, nil, transactionArgs[1:])
-	case "S":
-		return stocklevel.ProcessTransaction(db, nil, transactionArgs[1:])
-	case "I":
-		return popularitem.ProcessTransaction(db, nil, transactionArgs[1:])
-	case "T":
-		return topbalance.ProcessTransaction(db, nil)
-	case "R":
-		// return relatedcustomer.ProcessTransaction(db, nil, transactionArgs[1:])
+// ProcessTransactions Calls the required DB function
+func ProcessTransactions(c config.Configuration) (latencies []float64) {
+	db, err := cdbconn.CreateConnection(c.HostNode)
+	if err != nil {
+		panic(err)
 	}
-	return false
+
+	var txArgs []string
+
+	txRouter := router.CreateTransactionRouter(db)
+	scanner := bufio.NewScanner(os.Stdin)
+
+	for scanner.Scan() {
+		txArgs = strings.Split(scanner.Text(), ",")
+
+		start := time.Now()
+		completed := txRouter.ProcessTransaction(scanner, txArgs)
+		if completed == true {
+			latencies = append(latencies, float64(time.Since(start))/float64(time.Millisecond))
+		}
+	}
+
+	return latencies
+}
+
+// ProcessServerSetupRequest processes the commands for the initialization of the database
+func ProcessServerSetupRequest(functionName string, configFilePath, env string, nodeID, experiment int) {
+	ssRouter := router.CreateServerSetupRouter(configFilePath, nodeID)
+
+	ssRouter.ProcessServerSetupRequest(functionName, configFilePath, env, nodeID, experiment)
 }

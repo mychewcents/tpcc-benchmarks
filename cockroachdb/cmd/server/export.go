@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/config"
 )
 
 type sqlStatement struct {

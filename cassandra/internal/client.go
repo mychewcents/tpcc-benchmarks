@@ -3,9 +3,9 @@ package cassandra_client
 import (
 	"bufio"
 	"fmt"
-	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
-	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/controller"
-	"github.com/mychewcents/ddbms-project/cassandra/internal/router"
+	"github.com/mychewcents/tpcc-benchmarks/cassandra/internal/common"
+	"github.com/mychewcents/tpcc-benchmarks/cassandra/internal/internal/controller"
+	"github.com/mychewcents/tpcc-benchmarks/cassandra/internal/router"
 	"log"
 	"os"
 	"strconv"

@@ -1,20 +1,15 @@
 package main
 
 import (
-	"bufio"
 	"database/sql"
 	"flag"
 	"fmt"
 	"log"
-	"os"
-	"strings"
-	"time"
 
-	caller "github.com/mychewcents/ddbms-project/cockroachdb/internal"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/cdbconn"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/connection/config"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/logging"
-	"github.com/mychewcents/ddbms-project/cockroachdb/internal/statistics/performance"
+	caller "github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/config"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/logging"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/statistics/performance"
 )
 
 var db *sql.DB
@@ -46,25 +41,14 @@ func init() {
 
 func main() {
 	log.Printf("Starting the experiment: '%d' on node: '%d' ", *experiment, *nodeID)
-	var txArgs []string
 
 	c := config.GetConfig(*configFilePath, *nodeID)
-	db, err := cdbconn.CreateConnection(c.HostNode)
-	if err != nil {
-		panic(err)
-	}
 
-	scanner := bufio.NewScanner(os.Stdin)
-	var latencies []float64
-
-	for scanner.Scan() {
-		txArgs = strings.Split(scanner.Text(), ",")
-
-		start := time.Now()
-		status := caller.ProcessRequest(db, scanner, txArgs)
-		if status == true {
-			latencies = append(latencies, float64(time.Since(start))/float64(time.Millisecond))
-		}
+	latencies := caller.ProcessTransactions(c)
+	if len(latencies) == 0 {
+		log.Printf("error in the transactions")
+		fmt.Println("error occurred in performing transactions. Please check the logs")
+		return
 	}
 
 	if err := performance.RecordPerformanceMetrics(*experiment, *client, latencies, "results/metrics"); err != nil {

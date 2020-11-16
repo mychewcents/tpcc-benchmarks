@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
-	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/handler"
-	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/model"
-	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/service"
+	"github.com/mychewcents/tpcc-benchmarks/cassandra/internal/common"
+	"github.com/mychewcents/tpcc-benchmarks/cassandra/internal/internal/handler"
+	"github.com/mychewcents/tpcc-benchmarks/cassandra/internal/internal/internal/model"
+	"github.com/mychewcents/tpcc-benchmarks/cassandra/internal/internal/internal/service"
 	"strconv"
 )
 

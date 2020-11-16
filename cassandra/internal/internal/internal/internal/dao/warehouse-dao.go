@@ -1,8 +1,8 @@
 package dao
 
 import (
-	"github.com/mychewcents/ddbms-project/cassandra/internal/common"
-	"github.com/mychewcents/ddbms-project/cassandra/internal/internal/internal/internal/datamodel/table"
+	"github.com/mychewcents/tpcc-benchmarks/cassandra/internal/common"
+	"github.com/mychewcents/tpcc-benchmarks/cassandra/internal/internal/internal/internal/datamodel/table"
 	"log"
 )
 

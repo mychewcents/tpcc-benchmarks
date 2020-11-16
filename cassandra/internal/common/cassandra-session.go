@@ -3,7 +3,7 @@ package common
 import (
 	"encoding/xml"
 	"github.com/gocql/gocql"
-	"github.com/mychewcents/ddbms-project/cassandra/internal/config"
+	"github.com/mychewcents/tpcc-benchmarks/cassandra/internal/config"
 	"io/ioutil"
 	"log"
 	"os"
