@@ -12,6 +12,8 @@ import (
 // CustomerItemsPairDao interface of the Customer's Item pairs
 type CustomerItemsPairDao interface {
 	Insert(warehouseID, districtID, uniqueItems, customerID int, orderLineItems map[int]*dbdatamodel.OrderLineItem) error
+	GetItemPairsString(warehouseID, districtID, customerID int) (string, error)
+	GetCustomerIDsWithSamePairs(warehouseID, districtID int, itemPairs string) ([]int, error)
 }
 
 type customerItemsPairDaoImpl struct {
@@ -53,4 +55,59 @@ func (cip *customerItemsPairDaoImpl) Insert(warehouseID, districtID, customerID,
 	}
 
 	return nil
+}
+
+func (cip *customerItemsPairDaoImpl) GetItemPairsString(warehouseID, districtID, customerID int) (itemPairsString string, err error) {
+	var itemPairs strings.Builder
+
+	sqlStatement := fmt.Sprintf("SELECT IC_I_1_ID, IC_I_2_ID FROM ORDER_ITEMS_CUSTOMERS_%d_%d WHERE IC_C_ID = %d", warehouseID, districtID, customerID)
+
+	rows, err := cip.db.Query(sqlStatement)
+	if err != nil {
+		return "", fmt.Errorf("error in fetching the order line item pairs. Err: %v", err)
+	}
+	defer rows.Close()
+
+	var itemID1, itemID2 int
+	for rows.Next() {
+		err := rows.Scan(&itemID1, &itemID2)
+		if err != nil {
+			return "", fmt.Errorf("error occurred in scanning the order line item pair. Err: %v", err)
+		}
+		itemPairs.WriteString(fmt.Sprintf("(%d, %d),", itemID1, itemID2))
+	}
+
+	itemPairsString = itemPairs.String()
+
+	if len(itemPairsString) == 0 {
+		return "", nil
+	}
+
+	itemPairsString = itemPairsString[:len(itemPairsString)-1]
+
+	return
+}
+
+func (cip *customerItemsPairDaoImpl) GetCustomerIDsWithSamePairs(warehouseID, districtID int, itemPairs string) (customerIDs []int, err error) {
+	sqlStatement := fmt.Sprintf("SELECT IC_C_ID FROM ORDER_ITEMS_CUSTOMERS_%d_%d WHERE (IC_I_1_ID, IC_I_2_ID) IN (%s)", warehouseID, districtID, itemPairs)
+
+	rows, err := cip.db.Query(sqlStatement)
+	if err == sql.ErrNoRows {
+		return customerIDs, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	var cID int
+
+	for rows.Next() {
+		err := rows.Scan(&cID)
+		if err != nil {
+			return nil, err
+		}
+		customerIDs = append(customerIDs, cID)
+	}
+
+	return
 }

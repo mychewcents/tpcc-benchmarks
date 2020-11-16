@@ -28,24 +28,4 @@ func ProcessTransactions(db *sql.DB) (latencies []float64) {
 	}
 
 	return latencies
-
-	// switch transactionArgs[0] {
-	// case "N":
-	// 	return txRouter.ProcessTransaction(scanner, transactionArgs)
-	// case "P":
-	// 	return payment.ProcessTransaction(db, nil, transactionArgs[1:])
-	// case "D":
-	// 	return delivery.ProcessTransaction(db, nil, transactionArgs[1:])
-	// case "O":
-	// 	return orderstatus.ProcessTransaction(db, nil, transactionArgs[1:])
-	// case "S":
-	// 	return stocklevel.ProcessTransaction(db, nil, transactionArgs[1:])
-	// case "I":
-	// 	return popularitem.ProcessTransaction(db, nil, transactionArgs[1:])
-	// case "T":
-	// 	return topbalance.ProcessTransaction(db, nil)
-	// case "R":
-	// 	// return relatedcustomer.ProcessTransaction(db, nil, transactionArgs[1:])
-	// }
-	// return false
 }
