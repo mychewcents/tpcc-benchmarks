@@ -83,6 +83,7 @@ func (cs *customerDaoImpl) UpdatePaymentDetails(tx *sql.Tx, warehouseID, distric
 	return
 }
 
+// GetCustomerWithTopBalance returns the top number of balance Customers
 func (cs *customerDaoImpl) GetCustomersWithTopBalance(num int) (result []*dbdatamodel.Customer, err error) {
 	result = make([]*dbdatamodel.Customer, num)
 
@@ -119,6 +120,7 @@ func (cs *customerDaoImpl) GetCustomersWithTopBalance(num int) (result []*dbdata
 	return
 }
 
+// DeliverOrder delivers the order and updates the customer with balance
 func (cs *customerDaoImpl) DeliverOrder(tx *sql.Tx, warehouseID, districtID, customerID int, amount float64) error {
 	sqlStatement := fmt.Sprintf("UPDATE CUSTOMER SET (C_BALANCE, C_DELIVERY_CNT) = (C_BALANCE + %f, C_DELIVERY_CNT + 1) WHERE C_W_ID=%d AND C_D_ID=%d AND C_ID=%d", amount, warehouseID, districtID, customerID)
 
