@@ -6,13 +6,9 @@ import (
 	"log"
 
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/helper"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/handler"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/services"
 )
-
-// LoadRawTablesController interface to the raw tables controller
-type LoadRawTablesController interface {
-	LoadTables() error
-}
 
 type loadRawTablesControllerImpl struct {
 	s  services.ExecuteSQLService
@@ -20,7 +16,7 @@ type loadRawTablesControllerImpl struct {
 }
 
 // CreateLoadRawTablesController creates new controller for the raw tables
-func CreateLoadRawTablesController(db *sql.DB) LoadRawTablesController {
+func CreateLoadRawTablesController(db *sql.DB) handler.NewLoadTablesController {
 	return &loadRawTablesControllerImpl{
 		s:  services.CreateExecuteSQLService(db),
 		ci: services.CreateCustomerItemsPairService(db),

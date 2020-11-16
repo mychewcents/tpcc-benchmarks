@@ -13,8 +13,8 @@ type TransactionRouter struct {
 	handlers map[string]handler.NewTransactionController
 }
 
-// GetNewRouter creates a new router
-func GetNewRouter(db *sql.DB) *TransactionRouter {
+// CreateTransactionRouter creates a new router
+func CreateTransactionRouter(db *sql.DB) *TransactionRouter {
 	handlers := make(map[string]handler.NewTransactionController)
 	handlers["N"] = controller.CreateNewOrderController(db)
 	handlers["S"] = controller.CreateStockLevelController(db)

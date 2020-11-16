@@ -7,7 +7,6 @@ import (
 	"log"
 
 	caller "github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal"
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/cdbconn"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/config"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/logging"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/statistics/performance"
@@ -44,12 +43,8 @@ func main() {
 	log.Printf("Starting the experiment: '%d' on node: '%d' ", *experiment, *nodeID)
 
 	c := config.GetConfig(*configFilePath, *nodeID)
-	db, err := cdbconn.CreateConnection(c.HostNode)
-	if err != nil {
-		panic(err)
-	}
 
-	latencies := caller.ProcessTransactions(db)
+	latencies := caller.ProcessTransactions(c)
 	if len(latencies) == 0 {
 		log.Printf("error in the transactions")
 		fmt.Println("error occurred in performing transactions. Please check the logs")

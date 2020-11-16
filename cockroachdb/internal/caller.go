@@ -2,20 +2,25 @@ package caller
 
 import (
 	"bufio"
-	"database/sql"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/controller"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/cdbconn"
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/config"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/router"
 )
 
 // ProcessTransactions Calls the required DB function
-func ProcessTransactions(db *sql.DB) (latencies []float64) {
+func ProcessTransactions(c config.Configuration) (latencies []float64) {
+	db, err := cdbconn.CreateConnection(c.HostNode)
+	if err != nil {
+		panic(err)
+	}
+
 	var txArgs []string
 
-	txRouter := router.GetNewRouter(db)
+	txRouter := router.CreateTransactionRouter(db)
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for scanner.Scan() {
@@ -31,26 +36,9 @@ func ProcessTransactions(db *sql.DB) (latencies []float64) {
 	return latencies
 }
 
-// LoadProcessedTables loads the tables from CSV
-func LoadProcessedTables(db *sql.DB) error {
-	loadTablesController := controller.CreateLoadProcessedTablesController(db)
+// ProcessServerSetupRequest processes the commands for the initialization of the database
+func ProcessServerSetupRequest(functionName string, configFilePath, env string, nodeID, experiment int) {
+	ssRouter := router.CreateServerSetupRouter(configFilePath, nodeID)
 
-	err := loadTablesController.LoadTables()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// LoadRawTables loads the tables from CSV
-func LoadRawTables(db *sql.DB) error {
-	loadTablesController := controller.CreateLoadProcessedTablesController(db)
-
-	err := loadTablesController.LoadTables()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	ssRouter.ProcessServerSetupRequest(functionName, configFilePath, env, nodeID, experiment)
 }
