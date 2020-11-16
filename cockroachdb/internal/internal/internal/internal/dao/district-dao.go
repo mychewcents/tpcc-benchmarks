@@ -3,6 +3,7 @@ package dao
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/internal/dbdatamodel"
 )
@@ -12,6 +13,7 @@ type DistrictDao interface {
 	GetNewOrderIDAndTaxRates(warehouseID, districtID int) (int, float64, float64, error)
 	GetLastOrderID(warehouseID, districtID int) (int, error)
 	AddPaymentToDistrict(tx *sql.Tx, warehouseID, districtID int, amount float64) (*dbdatamodel.Address, error)
+	GetDistrictNames(warehouseIDs, districtIDs []int) (map[int]map[int]string, error)
 }
 
 type districtDaoImpl struct {
@@ -54,6 +56,43 @@ func (dd *districtDaoImpl) AddPaymentToDistrict(tx *sql.Tx, warehouseID, distric
 
 	if err := tx.QueryRow(sqlStatement).Scan(&addr.Street1, &addr.Street2, &addr.City, &addr.State, &addr.Zip); err != nil {
 		return nil, fmt.Errorf("error occurred in updating the district table. Err: %v", err)
+	}
+
+	return
+}
+
+func (dd *districtDaoImpl) GetDistrictNames(warehouseIDs, districtIDs []int) (result map[int]map[int]string, err error) {
+
+	var whereClauseBuilder strings.Builder
+
+	for _, wValue := range warehouseIDs {
+		for _, dValue := range districtIDs {
+			whereClauseBuilder.WriteString(fmt.Sprintf("(%d, %d),", wValue, dValue))
+		}
+	}
+
+	whereClauseString := whereClauseBuilder.String()
+	whereClauseString = whereClauseString[:len(whereClauseString)-1]
+
+	sqlStatement := fmt.Sprintf("SELECT D_W_ID, D_ID, D_NAME FROM District WHERE (D_W_ID, D_ID) IN (%s)", whereClauseString)
+
+	rows, err := dd.db.Query(sqlStatement)
+	if err != nil {
+		return nil, fmt.Errorf("error occurred in reading the names of the districts. Err: %v", err)
+	}
+	defer rows.Close()
+
+	var wID, dID int
+	var name string
+
+	for rows.Next() {
+		if err := rows.Scan(&wID, &dID, &name); err != nil {
+			return nil, fmt.Errorf("error occurred in scanning the rows from the result set. Err: %v", err)
+		}
+		if result[wID] == nil {
+			result[wID] = make(map[int]string)
+		}
+		result[wID][dID] = name
 	}
 
 	return

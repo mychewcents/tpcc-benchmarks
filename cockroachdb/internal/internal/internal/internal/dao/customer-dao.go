@@ -11,6 +11,7 @@ import (
 type CustomerDao interface {
 	GetDetails(warehouseID, districtID, customerID int) (*dbdatamodel.Customer, error)
 	UpdatePaymentDetails(tx *sql.Tx, warehouseID, districtID, customerID int, amount float64) (*dbdatamodel.Customer, error)
+	GetCustomersWithTopBalance(num int) ([]*dbdatamodel.Customer, error)
 }
 
 type customerDaoImpl struct {
@@ -76,6 +77,42 @@ func (cs *customerDaoImpl) UpdatePaymentDetails(tx *sql.Tx, warehouseID, distric
 		&customer.Discount,
 		&customer.Balance); err != nil {
 		return nil, fmt.Errorf("error occurred in updating the customer details. Err: %v", err)
+	}
+
+	return
+}
+
+func (cs *customerDaoImpl) GetCustomersWithTopBalance(num int) (result []*dbdatamodel.Customer, err error) {
+	result = make([]*dbdatamodel.Customer, num)
+
+	sqlStatement := fmt.Sprintf("SELECT C_FIRST, C_MIDDLE, C_LAST, C_W_ID, C_D_ID, C_BALANCE FROM CUSTOMER ORDER BY C_BALANCE DESC LIMIT %d", num)
+
+	rows, err := cs.db.Query(sqlStatement)
+	if err != nil {
+		return nil, fmt.Errorf("error occured while reading the customer details. Err: %v", err)
+	}
+	defer rows.Close()
+
+	var firstName, middleName, lastName string
+	var wID, dID, cID int
+	var balance float64
+
+	idx := 0
+	for rows.Next() {
+		if err := rows.Scan(&firstName, &middleName, &lastName, &wID, &dID, &balance); err != nil {
+			return nil, fmt.Errorf("error occured while scanning the customer details. Err: %v", err)
+		}
+
+		result[idx] = &dbdatamodel.Customer{
+			WarehouseID: wID,
+			DistrictID:  dID,
+			CustomerID:  cID,
+			FirstName:   firstName,
+			MiddleName:  middleName,
+			LastName:    lastName,
+			Balance:     balance,
+		}
+		idx++
 	}
 
 	return

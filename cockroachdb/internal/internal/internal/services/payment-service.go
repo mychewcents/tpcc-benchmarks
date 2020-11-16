@@ -28,7 +28,7 @@ type paymentServiceImpl struct {
 func CreateNewPaymentService(db *sql.DB) PaymentService {
 	return &paymentServiceImpl{
 		db: db,
-		w:  dao.CreateWarhouseDao(db),
+		w:  dao.CreateWarehouseDao(db),
 		d:  dao.CreateDistrictDao(db),
 		c:  dao.CreateCustomerDao(db),
 	}
