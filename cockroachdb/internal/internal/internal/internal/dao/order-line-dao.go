@@ -11,8 +11,9 @@ import (
 // OrderLineDao provides the interface to interact with the OrderLine table
 type OrderLineDao interface {
 	Insert(tx *sql.Tx, warehouseID, districtID, orderID int, orderLineItems map[int]*dbdatamodel.OrderLineItem) error
-	GetMaxQuantityOrderLinesPerOrder(warehouseID, districtID, startOrderID, lastOrderID int) (result map[int]int, err error)
+	GetMaxQuantityOrderLinesPerOrder(warehouseID, districtID, startOrderID, lastOrderID int) (map[int]int, error)
 	GetOrderLinesForOrder(warehouseID, districtID, orderID int) (map[int]*dbdatamodel.OrderLineItem, error)
+	GetDistinctItemIDsPerOrder(warehouseID, districtID int) (map[int][]int, error)
 }
 
 type orderLineDaoImpl struct {
@@ -24,6 +25,7 @@ func CreateOrderLineDao(db *sql.DB) OrderLineDao {
 	return &orderLineDaoImpl{db: db}
 }
 
+// Insert inserts new Order Lines into the table
 func (ol *orderLineDaoImpl) Insert(tx *sql.Tx, warehouseID, districtID, orderID int, orderLineItems map[int]*dbdatamodel.OrderLineItem) error {
 	var orderLineEntries strings.Builder
 
@@ -56,6 +58,7 @@ func (ol *orderLineDaoImpl) Insert(tx *sql.Tx, warehouseID, districtID, orderID 
 	return nil
 }
 
+// GetMaxQuantityOrderLinesPerOrder returns the max quantity ordered for items in per order
 func (ol *orderLineDaoImpl) GetMaxQuantityOrderLinesPerOrder(warehouseID, districtID, startOrderID, lastOrderID int) (result map[int]int, err error) {
 	sqlStatement := fmt.Sprintf(`
 		SELECT OL_O_ID, MAX(OL_QUANTITY) 
@@ -84,6 +87,7 @@ func (ol *orderLineDaoImpl) GetMaxQuantityOrderLinesPerOrder(warehouseID, distri
 	return
 }
 
+// GetOrderLinesForOrder returns the order lines for the order
 func (ol *orderLineDaoImpl) GetOrderLinesForOrder(warehouseID, districtID, orderID int) (result map[int]*dbdatamodel.OrderLineItem, err error) {
 	sqlStatement := fmt.Sprintf("SELECT OL_I_ID, OL_SUPPLY_W_ID, OL_QUANTITY, OL_AMOUNT FROM ORDER_LINE_%d_%d WHERE OL_O_ID=%d", warehouseID, districtID, orderID)
 
@@ -105,6 +109,34 @@ func (ol *orderLineDaoImpl) GetOrderLinesForOrder(warehouseID, districtID, order
 			Quantity:            quantity,
 			Amount:              amount,
 		}
+	}
+
+	return
+}
+
+// GetDistinctItemIDsPerOrder returns the distint items per order as a map
+func (ol *orderLineDaoImpl) GetDistinctItemIDsPerOrder(warehouseID, districtID int) (result map[int][]int, err error) {
+	sqlStatement := fmt.Sprintf("SELECT OL_O_ID, OL_I_ID FROM ORDER_LINE_%d_%d GROUP BY OL_O_ID, OL_I_ID ORDER BY OL_O_ID, OL_I_ID", warehouseID, districtID)
+
+	rows, err := ol.db.Query(sqlStatement)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	var orderID, itemID int
+	for rows.Next() {
+		if err := rows.Scan(&orderID, &itemID); err != nil {
+			return nil, err
+		}
+
+		if result[orderID] == nil {
+			result[orderID] = []int{}
+		}
+
+		result[orderID] = append(result[orderID], itemID)
 	}
 
 	return

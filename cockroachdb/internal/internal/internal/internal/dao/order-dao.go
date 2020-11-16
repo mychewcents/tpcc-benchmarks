@@ -14,6 +14,7 @@ type OrderDao interface {
 	GetLastOrderDetails(warehouseID, districtID, customerID int) (*dbdatamodel.Order, error)
 	GetUndeliveredOrderIDsPerDistrict(warehouseID int) (map[int]int, error)
 	DeliverOrder(tx *sql.Tx, warehouseID, districtID, orderID, carrierID int) (int, float64, error)
+	GetOrderIDForCustomers(warehouseID, districtID int) (map[int]int, error)
 }
 
 type orderDaoImpl struct {
@@ -74,7 +75,7 @@ func (od *orderDaoImpl) GetDetails(warehouseID, districtID, orderID int) (result
 	return
 }
 
-// GEtLastOrderDetails returns the details of the last order placed by the customer
+// GetLastOrderDetails returns the details of the last order placed by the customer
 func (od *orderDaoImpl) GetLastOrderDetails(warehouseID, districtID, customerID int) (result *dbdatamodel.Order, err error) {
 	sqlStatement := fmt.Sprintf("SELECT O_ID, O_DELIVERY_D, O_ENTRY_D, O_CARRIER_ID FROM ORDERS_%d_%d WHERE O_C_ID=%d ORDER BY O_ID DESC LIMIT 1",
 		warehouseID, districtID, customerID)
@@ -104,6 +105,7 @@ func (od *orderDaoImpl) GetLastOrderDetails(warehouseID, districtID, customerID 
 	return
 }
 
+// GetUndeliveredOrderIDsPerDistrict returns the last undelivered order ids for each of the districts of the warehouse
 func (od *orderDaoImpl) GetUndeliveredOrderIDsPerDistrict(warehouseID int) (result map[int]int, err error) {
 	baseSQLStatement := "SELECT O_ID FROM ORDERS_%d_%d WHERE O_CARRIER_ID=0 ORDER BY O_ID LIMIT 1"
 
@@ -126,6 +128,31 @@ func (od *orderDaoImpl) GetUndeliveredOrderIDsPerDistrict(warehouseID int) (resu
 	return
 }
 
+// DeliverOrder updates the order after delivery
 func (od *orderDaoImpl) DeliverOrder(tx *sql.Tx, warehouseID, districtID, orderID, carrierID int) (customerID int, totalAmount float64, err error) {
+	panic("implement me")
+}
+
+// GetOrderLineCountForCustomer returns the order line count for each customer
+func (od *orderDaoImpl) GetOrderIDForCustomers(warehouseID, districtID int) (countPerCustomer map[int]int, err error) {
+
+	sqlStatement := fmt.Sprintf("SELECT O_ID, O_C_ID FROM ORDERS_%d_%d", warehouseID, districtID)
+
+	rows, err := od.db.Query(sqlStatement)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	var orderID, customerID int
+	for rows.Next() {
+		if err := rows.Scan(&orderID, &customerID); err != nil {
+			return nil, fmt.Errorf("error in getting the order id for w = %d d = %d", warehouseID, districtID)
+		}
+		countPerCustomer[customerID] = orderID
+	}
+
 	return
 }

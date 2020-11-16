@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/controller"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/router"
 )
 
@@ -28,4 +29,28 @@ func ProcessTransactions(db *sql.DB) (latencies []float64) {
 	}
 
 	return latencies
+}
+
+// LoadProcessedTables loads the tables from CSV
+func LoadProcessedTables(db *sql.DB) error {
+	loadTablesController := controller.CreateLoadProcessedTablesController(db)
+
+	err := loadTablesController.LoadTables()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// LoadRawTables loads the tables from CSV
+func LoadRawTables(db *sql.DB) error {
+	loadTablesController := controller.CreateLoadProcessedTablesController(db)
+
+	err := loadTablesController.LoadTables()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
