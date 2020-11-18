@@ -9,7 +9,6 @@ import (
 	caller "github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/config"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/logging"
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/statistics/performance"
 )
 
 var db *sql.DB
@@ -51,7 +50,7 @@ func main() {
 		return
 	}
 
-	if err := performance.RecordPerformanceMetrics(*experiment, *client, latencies, "results/metrics"); err != nil {
+	if err := caller.RecordPerformanceMetrics(*experiment, *client, latencies, "results/metrics"); err != nil {
 		log.Printf("error in performance recording. Err: %v", err)
 		fmt.Println("error occurred in performance recording. Please check the logs")
 		return

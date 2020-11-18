@@ -3,6 +3,8 @@ package dao
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/internal/dbdatamodel"
 )
@@ -15,6 +17,7 @@ type OrderDao interface {
 	GetUndeliveredOrderIDsPerDistrict(warehouseID int) (map[int]int, error)
 	DeliverOrder(tx *sql.Tx, warehouseID, districtID, orderID, carrierID int) (int, float64, error)
 	GetOrderIDForCustomers(warehouseID, districtID int) (map[int]int, error)
+	GetFinalState() (int, int, float64, error)
 }
 
 type orderDaoImpl struct {
@@ -152,6 +155,34 @@ func (od *orderDaoImpl) GetOrderIDForCustomers(warehouseID, districtID int) (cou
 			return nil, fmt.Errorf("error in getting the order id for w = %d d = %d", warehouseID, districtID)
 		}
 		countPerCustomer[customerID] = orderID
+	}
+
+	return
+}
+
+// GetFinalState returns the final order table status
+func (od *orderDaoImpl) GetFinalState() (maxOrderID, totalOrderLineCount int, totalOrderAmount float64, err error) {
+	baseSQLStatement := "SELECT max(O_ID), sum(O_OL_CNT), sum(O_TOTAL_AMOUNT) FROM Orders_WID_DID"
+
+	var tempMaxOrderID, tempTotalOrderLineCount int
+	var tempTotalOrderAmount float64
+
+	for w := 1; w <= 10; w++ {
+		for d := 1; d <= 10; d++ {
+			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(w))
+			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(d))
+
+			row := od.db.QueryRow(finalSQLStatement)
+			if err := row.Scan(&tempMaxOrderID, &tempTotalOrderLineCount, &tempTotalOrderAmount); err != nil {
+				return 0, 0, 0.0, err
+			}
+
+			if tempMaxOrderID > maxOrderID {
+				maxOrderID = tempMaxOrderID
+			}
+			totalOrderLineCount += tempTotalOrderLineCount
+			totalOrderAmount += tempTotalOrderAmount
+		}
 	}
 
 	return

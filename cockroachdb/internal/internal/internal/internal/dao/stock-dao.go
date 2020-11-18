@@ -10,9 +10,10 @@ import (
 
 // StockDao creates the Dao object for the Stock table
 type StockDao interface {
-	GetStockDetails(tx *sql.Tx, districtID int, orderLineItems map[int]*dbdatamodel.OrderLineItem) (totalAmount float64, err error)
+	GetStockDetails(tx *sql.Tx, districtID int, orderLineItems map[int]*dbdatamodel.OrderLineItem) (float64, error)
 	UpdateStockDetails(tx *sql.Tx, orderLineItems map[int]*dbdatamodel.OrderLineItem) error
-	GetStockItemsBelowThreshold(warehouseID, districtID, threshold, startOrderID, lastOrderID int) (count int, err error)
+	GetStockItemsBelowThreshold(warehouseID, districtID, threshold, startOrderID, lastOrderID int) (int, error)
+	GetFinalState() (int, int, int, float64, error)
 }
 
 type stockDaoImpl struct {
@@ -76,6 +77,7 @@ func (s *stockDaoImpl) GetStockDetails(tx *sql.Tx, districtID int, orderLineItem
 	return
 }
 
+// UpdateStockDetails updates the stock details within a single transaction for all the items in the order
 func (s *stockDaoImpl) UpdateStockDetails(tx *sql.Tx, orderLineItems map[int]*dbdatamodel.OrderLineItem) error {
 	var stockOrderItemIdentifiers, stockQuantityUpdates, stockYTDUpdates, stockOrderCountUpdates, stockRemoteCountUpdates strings.Builder
 
@@ -118,6 +120,7 @@ func (s *stockDaoImpl) UpdateStockDetails(tx *sql.Tx, orderLineItems map[int]*db
 	return nil
 }
 
+// GetStockItemsBelowThreshold returns the items that have their stock below threashold
 func (s *stockDaoImpl) GetStockItemsBelowThreshold(warehouseID, districtID, threshold, startOrderID, lastOrderID int) (count int, err error) {
 	sqlStatement := fmt.Sprintf(`
 		SELECT COUNT(*) FROM Stock 
@@ -136,4 +139,16 @@ func (s *stockDaoImpl) GetStockItemsBelowThreshold(warehouseID, districtID, thre
 	}
 
 	return count, nil
+}
+
+// GetFinalState returns the final state of the stock table
+func (s *stockDaoImpl) GetFinalState() (totalStock, totalOrderCount, totalRemoteOrderCount int, totalYTD float64, err error) {
+	sqlStatement := "SELECT SUM(S_QUANTITY), SUM(S_ORDER_CNT), SUM(S_REMOTE_CNT), SUM(S_YTD) FROM Stock"
+
+	row := s.db.QueryRow(sqlStatement)
+	if err := row.Scan(&totalStock, &totalOrderCount, &totalRemoteOrderCount, &totalYTD); err != nil {
+		return 0, 0, 0, 0.0, err
+	}
+
+	return
 }

@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/cdbconn"
+	caller "github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/config"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/logging"
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/statistics/dbstate"
 )
 
 var db *sql.DB
@@ -41,13 +40,9 @@ func init() {
 
 func main() {
 	c := config.GetConfig(*configFilePath, *nodeID)
-	db, err := cdbconn.CreateConnection(c.HostNode)
-	if err != nil {
-		panic(err)
-	}
 
-	if err := dbstate.RecordDBState(db, *experiment, "results/dbstate"); err != nil {
-		log.Fatalf("Error in recording the DB State. Err: %v", err)
+	if err := caller.RecordDBState(c, *experiment, "results/dbstate"); err != nil {
+		log.Fatalf("error o in recording the DB State. Err: %v", err)
 		fmt.Println(err)
 	}
 }
