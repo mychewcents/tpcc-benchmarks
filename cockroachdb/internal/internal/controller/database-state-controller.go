@@ -52,7 +52,7 @@ func (dbsc *databaseStateControllerImpl) CalculateDBState(experiment int, dirPat
 	)
 
 	finalCSVPath := fmt.Sprintf("%s/%d.csv", dirPath, experiment)
-	err = helper.WriteCSVFile(outputCSVString, finalCSVPath)
+	err = helper.WriteFile(outputCSVString, finalCSVPath)
 	if err != nil {
 		log.Printf("DB State: %s", outputCSVString)
 		log.Fatalf("error occurred in writing the csv file. Err: %v", err)

@@ -43,7 +43,7 @@ func (pc *performanceControllerImpl) Record(experiment, client int, latencies []
 	)
 
 	finalCSVPath := fmt.Sprintf("%s/%d_%d.csv", dirPath, experiment, client)
-	err = helper.WriteCSVFile(outputCSVString, finalCSVPath)
+	err = helper.WriteFile(outputCSVString, finalCSVPath)
 	if err != nil {
 		log.Printf("DB State: %s", outputCSVString)
 		log.Fatalf("error occurred in writing the csv file. Err: %v", err)
