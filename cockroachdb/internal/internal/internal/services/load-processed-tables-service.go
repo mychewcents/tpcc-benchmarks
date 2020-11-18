@@ -1,4 +1,4 @@
-package controller
+package services
 
 import (
 	"database/sql"
@@ -6,22 +6,25 @@ import (
 	"log"
 
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/helper"
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/handler"
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/services"
 )
 
-type loadProcessedTablesControllerImpl struct {
-	s services.ExecuteSQLService
+// LoadProcessedTablesService interface to a service to load tables
+type LoadProcessedTablesService interface {
+	Load() error
 }
 
-// CreateLoadProcessedTablesController creates the load processed tables controller
-func CreateLoadProcessedTablesController(db *sql.DB) handler.NewLoadTablesController {
-	return &loadProcessedTablesControllerImpl{
-		s: services.CreateExecuteSQLService(db),
+type loadProcessedTablesServiceImpl struct {
+	s ExecuteSQLService
+}
+
+// CreateLoadProcessedTablesService creates the load processed tables controller
+func CreateLoadProcessedTablesService(db *sql.DB) LoadProcessedTablesService {
+	return &loadProcessedTablesServiceImpl{
+		s: CreateExecuteSQLService(db),
 	}
 }
 
-func (lptc *loadProcessedTablesControllerImpl) LoadTables() (err error) {
+func (lpts *loadProcessedTablesServiceImpl) Load() (err error) {
 	var sqlString string
 	log.Println("Dropping tables...")
 
@@ -29,7 +32,7 @@ func (lptc *loadProcessedTablesControllerImpl) LoadTables() (err error) {
 	if err != nil {
 		return err
 	}
-	if err := lptc.s.ExecutePartitions(10, 10, sqlString); err != nil {
+	if err := lpts.s.ExecutePartitions(10, 10, sqlString); err != nil {
 		return fmt.Errorf("error occured while dropping partitions. Err: %v", err)
 	}
 
@@ -37,7 +40,7 @@ func (lptc *loadProcessedTablesControllerImpl) LoadTables() (err error) {
 	if err != nil {
 		return err
 	}
-	if err := lptc.s.Execute(sqlString); err != nil {
+	if err := lpts.s.Execute(sqlString); err != nil {
 		return fmt.Errorf("error occured while dropping parent tables. Err: %v", err)
 	}
 
@@ -47,7 +50,7 @@ func (lptc *loadProcessedTablesControllerImpl) LoadTables() (err error) {
 	if err != nil {
 		return err
 	}
-	if err := lptc.s.Execute(sqlString); err != nil {
+	if err := lpts.s.Execute(sqlString); err != nil {
 		return fmt.Errorf("error occured while creating parent tables. Err: %v", err)
 	}
 
@@ -55,7 +58,7 @@ func (lptc *loadProcessedTablesControllerImpl) LoadTables() (err error) {
 	if err != nil {
 		return err
 	}
-	if err := lptc.s.ExecutePartitions(10, 10, sqlString); err != nil {
+	if err := lpts.s.ExecutePartitions(10, 10, sqlString); err != nil {
 		return fmt.Errorf("error occured while creating partitions. Err: %v", err)
 	}
 
@@ -65,7 +68,7 @@ func (lptc *loadProcessedTablesControllerImpl) LoadTables() (err error) {
 	if err != nil {
 		return err
 	}
-	if err := lptc.s.Execute(sqlString); err != nil {
+	if err := lpts.s.Execute(sqlString); err != nil {
 		return fmt.Errorf("error occured while loading parent tables. Err: %v", err)
 	}
 
@@ -73,7 +76,7 @@ func (lptc *loadProcessedTablesControllerImpl) LoadTables() (err error) {
 	if err != nil {
 		return err
 	}
-	if err := lptc.s.ExecutePartitions(10, 10, sqlString); err != nil {
+	if err := lpts.s.ExecutePartitions(10, 10, sqlString); err != nil {
 		return fmt.Errorf("error occured while loading partitions. Err: %v", err)
 	}
 
@@ -83,7 +86,7 @@ func (lptc *loadProcessedTablesControllerImpl) LoadTables() (err error) {
 	if err != nil {
 		return err
 	}
-	if err := lptc.s.ExecutePartitions(10, 10, sqlString); err != nil {
+	if err := lpts.s.ExecutePartitions(10, 10, sqlString); err != nil {
 		return fmt.Errorf("error occured while updating partitions. Err: %v", err)
 	}
 

@@ -13,14 +13,16 @@ import (
 func DownloadDataset(c config.Configuration) {
 	cliArgs := []string{"scripts/cli/server.sh", "download-dataset", c.DownloadURL}
 
-	execute(cliArgs)
+	err := Execute(cliArgs)
+	log.Fatalf("error occurred. Err: %v", err)
 }
 
 // SetupDirectories sets up the directories required for further setup
 func SetupDirectories(c config.Configuration, env string) {
 	cliArgs := []string{"scripts/cli/server.sh", "setup-dirs", c.WorkingDir, c.HostNode.Name}
 
-	execute(cliArgs)
+	err := Execute(cliArgs)
+	log.Fatalf("error occurred. Err: %v", err)
 }
 
 // Start starts the server on the host machine
@@ -39,7 +41,8 @@ func Start(c config.Configuration) {
 		strings.Join(joinNodes, ","),
 	}
 
-	execute(cliArgs)
+	err := Execute(cliArgs)
+	log.Fatalf("error occurred. Err: %v", err)
 }
 
 // InitCluster executes the init call to CRDB
@@ -49,7 +52,8 @@ func InitCluster(c config.Configuration) {
 		fmt.Sprintf("%s:%d", c.HostNode.Host, c.HostNode.Port),
 	}
 
-	execute(cliArgs)
+	err := Execute(cliArgs)
+	log.Fatalf("error occurred. Err: %v", err)
 }
 
 // Stop stops the server on the host machine
@@ -59,7 +63,8 @@ func Stop(c config.Configuration) {
 		fmt.Sprintf("%s:%d", c.HostNode.Host, c.HostNode.Port),
 	}
 
-	execute(cliArgs)
+	err := Execute(cliArgs)
+	log.Fatalf("error occurred. Err: %v", err)
 }
 
 // RunExperiments runs the TPCC experiment as per the project
@@ -71,11 +76,13 @@ func RunExperiments(configFilePath, env string, nodeID, experiment int) {
 		configFilePath,
 	}
 
-	execute(cliArgs)
+	err := Execute(cliArgs)
+	log.Fatalf("error occurred. Err: %v", err)
 }
 
-func execute(cliArgs []string) {
-	if err := helper.ExecuteCmd(helper.CreateCmdObj(cliArgs)); err != nil {
-		log.Fatalf("error occurred. Err: %v", err)
-	}
+// Execute executes the shell command with passed cli arguments
+func Execute(cliArgs []string) (err error) {
+	err = helper.ExecuteCmd(helper.CreateCmdObj(cliArgs))
+
+	return
 }

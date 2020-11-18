@@ -1,4 +1,4 @@
-package controller
+package services
 
 import (
 	"database/sql"
@@ -6,24 +6,27 @@ import (
 	"log"
 
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/helper"
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/handler"
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/services"
 )
 
-type loadRawTablesControllerImpl struct {
-	s  services.ExecuteSQLService
-	ci services.CustomerItemsPairService
+// LoadRawTablesService interface to load the raw tables
+type LoadRawTablesService interface {
+	Load() error
 }
 
-// CreateLoadRawTablesController creates new controller for the raw tables
-func CreateLoadRawTablesController(db *sql.DB) handler.NewLoadTablesController {
-	return &loadRawTablesControllerImpl{
-		s:  services.CreateExecuteSQLService(db),
-		ci: services.CreateCustomerItemsPairService(db),
+type loadRawTablesServiceImpl struct {
+	s  ExecuteSQLService
+	ci CustomerItemsPairService
+}
+
+// CreateLoadRawTablesService creates new controller for the raw tables
+func CreateLoadRawTablesService(db *sql.DB) LoadRawTablesService {
+	return &loadRawTablesServiceImpl{
+		s:  CreateExecuteSQLService(db),
+		ci: CreateCustomerItemsPairService(db),
 	}
 }
 
-func (lrtc *loadRawTablesControllerImpl) LoadTables() (err error) {
+func (lrtc *loadRawTablesServiceImpl) Load() (err error) {
 	var sqlString string
 	log.Println("Dropping tables...")
 
