@@ -1,4 +1,4 @@
-# TPCC-Benchmarks
+# TPC-C Benchmarks
 
 The repository is a part of the Distributed Databases Graduate Project submitted at the National University of Singapore.
 
