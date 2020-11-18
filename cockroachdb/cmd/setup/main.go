@@ -38,7 +38,7 @@ func init() {
 			panic("provide Experiment and Client number to proceed")
 		}
 	}
-	if err := logging.SetupLogOutput("server", "logs"); err != nil {
+	if err := logging.SetupLogOutput("setup", "logs"); err != nil {
 		panic(err)
 	}
 }

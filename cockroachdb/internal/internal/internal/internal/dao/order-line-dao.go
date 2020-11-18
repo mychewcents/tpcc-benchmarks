@@ -3,6 +3,7 @@ package dao
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/internal/internal/dbdatamodel"
@@ -14,6 +15,7 @@ type OrderLineDao interface {
 	GetMaxQuantityOrderLinesPerOrder(warehouseID, districtID, startOrderID, lastOrderID int) (map[int]int, error)
 	GetOrderLinesForOrder(warehouseID, districtID, orderID int) (map[int]*dbdatamodel.OrderLineItem, error)
 	GetDistinctItemIDsPerOrder(warehouseID, districtID int) (map[int][]int, error)
+	GetFinalState() (int, error)
 }
 
 type orderLineDaoImpl struct {
@@ -137,6 +139,29 @@ func (ol *orderLineDaoImpl) GetDistinctItemIDsPerOrder(warehouseID, districtID i
 		}
 
 		result[orderID] = append(result[orderID], itemID)
+	}
+
+	return
+}
+
+// GetFinalState returns the final state of the orderline table
+func (ol *orderLineDaoImpl) GetFinalState() (totalQuantity int, err error) {
+	var tempTotalQuantity int
+
+	baseSQLStatement := "SELECT SUM(OL_QUANTITY) FROM Order_Line_WID_DID"
+
+	for w := 1; w <= 10; w++ {
+		for d := 1; d <= 10; d++ {
+			finalSQLStatement := strings.ReplaceAll(baseSQLStatement, "WID", strconv.Itoa(w))
+			finalSQLStatement = strings.ReplaceAll(finalSQLStatement, "DID", strconv.Itoa(d))
+
+			row := ol.db.QueryRow(finalSQLStatement)
+			if err := row.Scan(&tempTotalQuantity); err != nil {
+				return 0, err
+			}
+
+			totalQuantity += tempTotalQuantity
+		}
 	}
 
 	return

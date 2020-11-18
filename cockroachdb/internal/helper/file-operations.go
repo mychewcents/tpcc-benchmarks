@@ -24,3 +24,18 @@ func ReadFile(filePath string) (fileContents string, err error) {
 
 	return
 }
+
+// WriteFile writes the CSV file
+func WriteFile(contentString string, fileName string) error {
+	file, err := os.Create(fileName)
+	if err != nil {
+		return fmt.Errorf("error in creating file. Err: %v", err)
+	}
+	defer file.Close()
+
+	if _, err := file.WriteString(contentString); err != nil {
+		return fmt.Errorf("Error in writing the db state CSV file, Err: %v", err)
+	}
+
+	return nil
+}

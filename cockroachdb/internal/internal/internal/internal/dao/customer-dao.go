@@ -13,6 +13,7 @@ type CustomerDao interface {
 	UpdatePaymentDetails(tx *sql.Tx, warehouseID, districtID, customerID int, amount float64) (*dbdatamodel.Customer, error)
 	GetCustomersWithTopBalance(num int) ([]*dbdatamodel.Customer, error)
 	DeliverOrder(tx *sql.Tx, warehouseID, districtID, customerID int, totalAmount float64) error
+	GetFinalState() (float64, float64, int, int, error)
 }
 
 type customerDaoImpl struct {
@@ -129,4 +130,15 @@ func (cs *customerDaoImpl) DeliverOrder(tx *sql.Tx, warehouseID, districtID, cus
 	}
 
 	return nil
+}
+
+func (cs *customerDaoImpl) GetFinalState() (balance, ytdPayment float64, paymentCount, deliveryCount int, err error) {
+	sqlStatement := "SELECT SUM(C_BALANCE), SUM(C_YTD_PAYMENT), SUM(C_PAYMENT_CNT), SUM(C_DELIVERY_CNT) FROM Customer"
+
+	row := cs.db.QueryRow(sqlStatement)
+	if err := row.Scan(&balance, &ytdPayment, &paymentCount, &deliveryCount); err != nil {
+		return 0.0, 0.0, 0, 0, err
+	}
+
+	return
 }

@@ -14,6 +14,7 @@ type DistrictDao interface {
 	GetLastOrderID(warehouseID, districtID int) (int, error)
 	AddPaymentToDistrict(tx *sql.Tx, warehouseID, districtID int, amount float64) (*dbdatamodel.Address, error)
 	GetDistrictNames(warehouseIDs, districtIDs []int) (map[int]map[int]string, error)
+	GetFinalState() (float64, int, error)
 }
 
 type districtDaoImpl struct {
@@ -93,6 +94,17 @@ func (dd *districtDaoImpl) GetDistrictNames(warehouseIDs, districtIDs []int) (re
 			result[wID] = make(map[int]string)
 		}
 		result[wID][dID] = name
+	}
+
+	return
+}
+
+func (dd *districtDaoImpl) GetFinalState() (totalYTD float64, sumNextOrderIDs int, err error) {
+	sqlStatement := "SELECT SUM(D_YTD), SUM(D_NEXT_O_ID) FROM District"
+
+	row := dd.db.QueryRow(sqlStatement)
+	if err := row.Scan(&totalYTD, &sumNextOrderIDs); err != nil {
+		return 0.0, 0, err
 	}
 
 	return

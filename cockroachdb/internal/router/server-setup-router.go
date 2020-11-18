@@ -3,7 +3,6 @@ package router
 import (
 	"log"
 
-	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/cdbconn"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/common/config"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/controller"
 	"github.com/mychewcents/tpcc-benchmarks/cockroachdb/internal/internal/handler"
@@ -13,21 +12,14 @@ import (
 // ServerSetupRouter stores the handlers
 type ServerSetupRouter struct {
 	c        config.Configuration
-	handlers map[string]handler.NewLoadTablesController
+	handlers handler.NewTablesController
 }
 
 // CreateServerSetupRouter creates a new router to process server requests
 func CreateServerSetupRouter(configFilePath string, nodeID int) *ServerSetupRouter {
 	c := config.GetConfig(configFilePath, nodeID)
 
-	handlers := make(map[string]handler.NewLoadTablesController)
-	db, err := cdbconn.CreateConnection(c.HostNode)
-	if err != nil {
-		panic(err)
-	}
-
-	handlers["LoadProcessedTables"] = controller.CreateLoadProcessedTablesController(db)
-	handlers["LoadRawTables"] = controller.CreateLoadRawTablesController(db)
+	handlers := controller.CreateTablesController(c)
 
 	return &ServerSetupRouter{c: c, handlers: handlers}
 }
@@ -45,17 +37,19 @@ func (ssr *ServerSetupRouter) ProcessServerSetupRequest(functionName string, con
 		server.Stop(ssr.c)
 	case "init":
 		server.InitCluster(ssr.c)
+	case "run-exp":
+		server.RunExperiments(configFilePath, env, nodeID, experiment)
 	case "load":
-		if err := ssr.handlers["LoadRawTables"].LoadTables(); err != nil {
+		if err := ssr.handlers.LoadRawTables(); err != nil {
 			log.Fatalf("Err: %v", err)
 		}
 	case "load-csv":
-		if err := ssr.handlers["LoadProcessedTables"].LoadTables(); err != nil {
+		if err := ssr.handlers.LoadProcessedTables(); err != nil {
 			log.Fatalf("Err: %v", err)
 		}
-	case "run-exp":
-		server.RunExperiments(configFilePath, env, nodeID, experiment)
 	case "export":
-		// exportCSV(c)
+		if err := ssr.handlers.ExportTables(); err != nil {
+			log.Fatalf("Err: %v", err)
+		}
 	}
 }
