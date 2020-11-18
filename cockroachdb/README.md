@@ -127,7 +127,7 @@ NOTE: The last value is the Unix Timestamp to allow for unique logs files everyt
 You can run the following command to view the live log updates:
 
 ```bash
-$ tail -f logs/<log file name>`
+$ tail -f logs/<log file name>
 ```
 
 ## Performance Metrics Tracking
